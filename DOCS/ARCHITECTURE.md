@@ -1,6 +1,39 @@
 # Architektura
 
-> Stan wdrożenia 2026-10-29: komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mailbox plików (ADR 0002). MyAAC nie jest używany: konto tworzy `scripts/setup.ps1`, logowanie obsługuje login-server. Struktura katalogów poniżej jest zrealizowana częściowo: `apps/brain`, `packages/contracts` (allowlista), `game/overlays/tibia-ai`, `infra/versions.lock.json`, `scripts/`, `tools/`, `runtime/`, `vendor/`. `tests/` znajdują się w `apps/brain/test*` (jeden pakiet, bez workspace). `game/patches/` nie istnieje, bo upstream nie był modyfikowany.
+## Stan wdrożenia (2026-10-29, po iteracji 0004)
+Komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mailbox plików (ADR 0002). Agenci są opisani danymi (ADR 0004). MyAAC nie jest używany: konto tworzy `scripts/setup.ps1`, logowanie obsługuje login-server.
+
+```
+packages/contracts/agents.json   jedno źródło definicji agentów, timing, limity, akcje
+game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts/sync-server.ps1)
+  scripts/tibia-ai/init.lua      jedyny plik auto-ładowany; dofile modułów w stałej kolejności
+  tibia-ai/lib/
+    core.lua         JSON, dziennik world-journal.jsonl, zapis atomowy, szablony
+    registry.lua     walidacja definicji, stan agentów, wyszukiwanie po npcId
+    movement.lua     wykonawca ruchu (Npc:move + getPathTo), weryfikacja punktów, skan mapy
+    controller.lua   generyczna maszyna stanów; typy zachowań (patrol, stationary); alarm; powitanie; komendy
+    bridge.lua       mailbox: zdarzenia, komendy, wyniki, world.json, heartbeat, backpressure
+    npc_types.lua    rejestracja NpcType z definicji (bez sklepu, walki i losowego chodzenia)
+    startup.lua      worldSessionId, spawn agentów, waypoint_check
+    control.lua      pliki runtime/control/*.request (shutdown, alarm, selftest, scan)
+    talkactions.lua  /alarm, /ai (grupa god)
+    selftest.lua     testy Lua wykonywane w Canary
+apps/brain/src/
+  agents.ts          rejestr agentów (ten sam agents.json), walidacja
+  contracts.ts       kontrakt v1: envelope, event, command, result, world.json
+  providers/         interfejs Provider + RulesProvider (teksty persony z definicji)
+  memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
+  mailbox.ts         pliki mailbox po stronie Node
+  brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji
+scripts/             setup, sync-server, start, stop, status, logs, client, alarm, selftest, scan
+tools/               journal.py (dziennik sesji), otbm_towns.py
+infra/versions.lock.json  przypięte artefakty z SHA-256
+runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream
+```
+
+Zależności między modułami Lua idą w jedną stronę: `core` ← `registry` ← `movement` ← `controller` ↔ `bridge` (wywołania w czasie zdarzeń, nie przy ładowaniu). Kod nie zawiera nazw konkretnych agentów. Testy są w `apps/brain/test*` (jeden pakiet, bez workspace) i w `selftest.lua`. `game/patches/` nie istnieje, bo upstream nie był modyfikowany.
+
+Opis poniżej to pierwotny projekt. Rozbieżności z wdrożeniem zostały opisane powyżej i w ADR.
 
 ## Komponenty
 | Komponent | Odpowiedzialność | Dane |

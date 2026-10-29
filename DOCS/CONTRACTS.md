@@ -1,6 +1,6 @@
 # Kontrakt v1 (IMPLEMENTED, transport mailbox, ADR 0002)
 
-Wiadomości JSON w plikach `runtime/mailbox`. Ta sama walidacja po obu stronach: Lua w `game/overlays/tibia-ai/scripts/tibia-ai/bridge.lua`, TypeScript w `apps/brain/src/contracts.ts`. Allowlista identyfikatorów: `packages/contracts/allowlist.json`; jej zgodność z `ardan_config.lua` sprawdza test `apps/brain/test/allowlist.test.ts`.
+Wiadomości JSON w plikach `runtime/mailbox`. Ta sama walidacja po obu stronach: Lua w `game/overlays/tibia-ai/tibia-ai/lib/bridge.lua`, TypeScript w `apps/brain/src/contracts.ts`. Agenci, ich punkty i trasy, akcje oraz limity pochodzą z jednego pliku `packages/contracts/agents.json` (ADR 0004, opis pól w AGENTS.md). Allowlista punktów i tras obowiązuje **dla każdego agenta osobno**.
 
 ## Envelope
 | Pole | Typ | Uwagi |
@@ -9,7 +9,7 @@ Wiadomości JSON w plikach `runtime/mailbox`. Ta sama walidacja po obu stronach:
 | messageId | string ≤64 | UUID |
 | kind | `event` \| `command` \| `result` | |
 | worldSessionId | `[A-Za-z0-9_-]{1,64}` | losowany przez Lua przy każdym starcie świata (16 hex) |
-| agentKey | `ardan` | stabilny klucz agenta |
+| agentKey | klucz z `agents.json` (`ardan`, `mira`) | stabilny klucz agenta; nieznany → `unknown_agent` (komenda) / odrzucenie (event) |
 | createdAtMs | integer, epoch ms | Lua ma rozdzielczość 1 s (`os.time()*1000`) |
 | correlationId | string ≤64 | event: = messageId; command: = eventId, na który odpowiada; result: = correlationId komendy |
 | sequence | integer ≥1 | tylko event, monotoniczny w sesji |
@@ -21,8 +21,8 @@ Zmiana względem v0: znaczniki czasu to liczby epoch ms (`createdAtMs`, `expires
 | type | pola | źródło |
 | --- | --- | --- |
 | `player_greeted` | playerGuid (int, z silnika), playerName, text (≤300) | `npcType.onSay` + dystans ≤4 + cooldown 8 s na gracza |
-| `training_alarm_started` | zoneId, triggeredBy | `/alarm start` (GOD) lub `scripts/alarm.ps1 start` |
-| `training_alarm_cleared` | zoneId, clearedBy | `/alarm clear` lub `scripts/alarm.ps1 clear` |
+| `training_alarm_started` | zoneId, triggeredBy | `/alarm start [zone]` (GOD) lub `scripts/alarm.ps1 start`; jedno zdarzenie na każdego agenta reagującego na strefę |
+| `training_alarm_cleared` | zoneId, clearedBy | `/alarm clear [zone]` lub `scripts/alarm.ps1 clear` |
 | `position_observed` | x, y, z | w kontrakcie, jeszcze nie emitowany |
 
 GUID i pozycja zawsze pochodzą z silnika. Tekst czatu to niezaufane dane: nie zmienia allowlisty i nie staje się akcją. `threat_observed` dopiero po faktycznej percepcji silnika.
@@ -35,7 +35,7 @@ payload: `commandId` (`[A-Za-z0-9_-]{1,64}`), `planRevision` (int ≥0), `expire
 | action | args | skutek |
 | --- | --- | --- |
 | `say` | text 1–200 znaków, bez znaków sterujących | lokalna mowa (TALKTYPE_SAY); limit 1 wypowiedź/3 s, z wyjątkiem odpowiedzi na oczekujące powitanie |
-| `patrol` | routeId ∈ allowlist | stan PATROL |
+| `patrol` | routeId ∈ trasy agenta | stan PATROL (tylko agenci typu `patrol`, inaczej `not_a_patrol_agent`) |
 | `move_to` | waypointId ∈ allowlist (nigdy współrzędne) | `accepted`, potem `completed` lub `failed` |
 | `stop` | brak | stan STOPPED |
 
@@ -51,7 +51,7 @@ payload: `commandId`, `status` (`accepted` | `completed` | `rejected` | `failed`
 Kody wykonania ruchu: `arrived`, `no_path` (pathfinder nie znalazł drogi przez `moveTimeoutTicks` = 8 s), `blocked_timeout` (droga jest, ale brak postępu). Nigdy teleport.
 
 ## Pliki stanu
-- `world.json` (Lua, co ~2 s): worldSessionId, startedAtMs, atMs, nextCommandSeq, lastEventSeq, lastResultSeq, droppedEvents, brainOnline, agent{state, alarmActive, routeId, routeIndex, moving, position, planRevision}.
+- `world.json` (Lua, co ~2 s): worldSessionId, startedAtMs, atMs, nextCommandSeq, lastEventSeq, lastResultSeq, droppedEvents, brainOnline, `agents`: mapa klucz → {state, alarmActive, routeId, routeIndex, moving, position, planRevision}. Stany: IDLE, PATROL, HOME, ALERT, RETURN, COMMAND_MOVE, STOPPED.
 - `brain-heartbeat.json` (Brain, co 1 s): atMs, worldSessionId, lastEventSeq (potwierdzenie do backpressure), provider.
 
 ## Odporność

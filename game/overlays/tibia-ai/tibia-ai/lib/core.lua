@@ -1,7 +1,6 @@
--- TibiaAI core: shared table, JSON codec, journal and helpers.
--- Loaded by Canary from data-canary/scripts (recursive). Other TibiaAI files only use these
--- functions at event time, so load order between files does not matter.
--- Lua API used here was checked against Canary v3.6.1 (fe0f932): logger.*, io/os (luaL_openlibs).
+-- TibiaAI core: shared table, JSON codec, journal, file and text helpers.
+-- Loaded first by scripts/tibia-ai/init.lua. Lua API checked against Canary v3.6.1 (fe0f932):
+-- logger.*, io/os (luaL_openlibs), DATA_DIRECTORY (data/core.lua).
 
 TibiaAI = TibiaAI or {}
 local T = TibiaAI
@@ -11,7 +10,16 @@ T.paths = {
 	journal = "../logs/world-journal.jsonl",
 	mailbox = "../mailbox/",
 	control = "../control/",
+	agents = DATA_DIRECTORY .. "/tibia-ai/agents.json",
 }
+
+-- "{name} said {n}" + { name = "A", n = 2 } -> "A said 2". Unknown placeholders stay as-is.
+function T.format(template, vars)
+	return (tostring(template or ""):gsub("{(%w+)}", function(k)
+		local v = vars and vars[k]
+		return v ~= nil and tostring(v) or "{" .. k .. "}"
+	end))
+end
 
 T.worldSessionId = T.worldSessionId or nil
 

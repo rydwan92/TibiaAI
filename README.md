@@ -1,7 +1,9 @@
 # TibiaAI
 Projekt Tibia z agentami AI: prywatne, lokalne laboratorium OpenTibia (Canary + OTClient), w którym NPC działają w prawdziwym świecie gry, a ich decyzje i pamięć dostarcza osobny proces Brain.
 
-Pierwsza scena: strażnik **Ardan** patroluje plac w Montag, reaguje na powitanie, przerywa patrol po alarmie treningowym, ostrzega i wraca na trasę, a po restarcie Brain pamięta spotkanie z graczem. Każde zdarzenie i wynik działania trafiają do dziennika.
+Pierwsza scena: strażnik **Ardan** patroluje plac w Montag, reaguje na powitanie, przerywa patrol po alarmie treningowym, ostrzega i wraca na trasę, a po restarcie Brain pamięta spotkanie z graczem. Zielarka **Mira** czeka przy stoisku i przy alarmie chowa się w świątyni. Każde zdarzenie i wynik działania trafiają do dziennika.
+
+Agenci są opisani danymi w `packages/contracts/agents.json`. Nowy NPC to wpis w tym pliku, bez nowego kodu: [DOCS/AGENTS.md](DOCS/AGENTS.md).
 
 Stan bieżący: [DOCS/STATUS.md](DOCS/STATUS.md). Uruchamianie: [DOCS/RUNBOOK.md](DOCS/RUNBOOK.md).
 
@@ -18,9 +20,9 @@ Klient potrzebuje assets Tibii 15.11, które nie są częścią repo (RUNBOOK §
 | Komponent | Gdzie | Rola |
 | --- | --- | --- |
 | Canary v3.6.1 + `data-canary` | `vendor/` (ignorowany) → `runtime/server` | autorytatywny świat |
-| Overlay Lua | `game/overlays/tibia-ai` | NPC, kontroler ruchu, walidacja komend, mailbox |
-| Brain (Node/TypeScript, SQLite) | `apps/brain` | reguły, pamięć, komendy z kontraktu |
-| Kontrakt i allowlista | `packages/contracts`, `DOCS/CONTRACTS.md` | jedyne dozwolone akcje |
+| Overlay Lua (moduły generyczne) | `game/overlays/tibia-ai` | rejestr agentów, kontroler ruchu, walidacja komend, mailbox |
+| Brain (Node/TypeScript, SQLite) | `apps/brain` | providery (rules), pamięć, komendy z kontraktu |
+| Definicje agentów i kontrakt | `packages/contracts/agents.json`, `DOCS/CONTRACTS.md` | NPC, punkty, trasy, teksty; jedyne dozwolone akcje |
 | Skrypty i przypięcia | `scripts/`, `infra/versions.lock.json` | powtarzalne uruchomienie |
 
 Decyzje: [DOCS/adr](DOCS/adr). Plan etapów: [DOCS/PLAN.md](DOCS/PLAN.md). Zasady pracy: [CLAUDE.md](CLAUDE.md).

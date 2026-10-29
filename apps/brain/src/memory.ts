@@ -153,8 +153,10 @@ export class Memory {
       VALUES (?, ?, ?, ?, ?, ?)`).run(agentKey, playerGuid, playerName, eventId, worldSessionId, observedAtMs);
   }
 
-  countObservations(worldSessionId: string, type: string): number {
-    const row = this.db.prepare('SELECT COUNT(*) AS c FROM observations WHERE world_session_id = ? AND type = ?').get(worldSessionId, type) as { c: number };
+  countObservations(worldSessionId: string, type: string, agentKey?: string): number {
+    const row = (agentKey
+      ? this.db.prepare('SELECT COUNT(*) AS c FROM observations WHERE world_session_id = ? AND type = ? AND agent_key = ?').get(worldSessionId, type, agentKey)
+      : this.db.prepare('SELECT COUNT(*) AS c FROM observations WHERE world_session_id = ? AND type = ?').get(worldSessionId, type)) as { c: number };
     return row.c;
   }
 

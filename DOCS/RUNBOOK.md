@@ -28,7 +28,8 @@ Skrypt pobiera artefakty z `infra/versions.lock.json` i sprawdza SHA-256, rozpak
 | Stop całości (łagodnie, z zapisem świata) | `... scripts\stop.ps1` |
 | Stop bez zatrzymania bazy | `... scripts\stop.ps1 -KeepDb` |
 | Stop tylko Brain (gra działa dalej) | `... scripts\stop.ps1 -BrainOnly` |
-| Wdrożenie zmian w Lua (`game\overlays\tibia-ai`) | `stop.ps1 -KeepDb`, potem `scripts\sync-server.ps1`, potem `start.ps1` |
+| Wdrożenie zmian w Lua (`game\overlays\tibia-ai`) lub w `packages\contracts\agents.json` | `stop.ps1 -KeepDb`, potem `scripts\sync-server.ps1`, potem `start.ps1` (sync odmawia, gdy Canary działa) |
+| Self-test Lua w działającym Canary | `... scripts\selftest.ps1` |
 
 `stop.ps1` nie kasuje danych. Canary zamyka się przez `runtime\control\shutdown.request` (globalevent wykonuje `GAME_STATE_SHUTDOWN` z zapisem), MariaDB przez `mariadb-admin shutdown`, a Brain przez `brain-stop.request`. Wymuszone zatrzymanie następuje dopiero po timeoucie.
 
@@ -71,14 +72,20 @@ Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz
 
 Rozróżnienie: HTTP login (8088) zwraca tylko listę postaci i adres świata 127.0.0.1:7172. Wejście do gry to osobne połączenie TCP z 7172. Odpowiedź HTTP nie jest dowodem wejścia do gry.
 
-## 5. Ardan: jak go znaleźć i przetestować
-- Spawn 5010,5003,7, na południe od świątyni Montag. Trasa `montag_square`: temple_south (5010,5003), square_west (5006,5005), road_south (5010,5009), square_east (5016,5005). Punkt alarmowy: gate_watch (5019,5012).
+## 5. Agenci (Ardan, Mira): jak ich znaleźć i przetestować
+Definicje i procedura dodawania: DOCS/AGENTS.md.
+- **Ardan** (strażnik): spawn 5010,5003,7, na południe od świątyni Montag. Patroluje trasę `montag_square`: temple_south (5010,5003), square_west (5006,5005), road_south (5010,5009), square_east (5016,5005). Przy alarmie idzie do gate_watch (5019,5012).
+- **Mira** (zielarka): stoi przy herb_stall (5020,5003,7). Przy alarmie chowa się w świątyni (temple_shelter 5007,4998,7).
 - Ze świątyni wyjdź na zachód, potem na południe i na wschód przez otwarcie przy x≈4998–5001, y=5001.
-- Powitanie: stań do 4 kratek od Ardana i napisz `hi`, `witaj`, `czesc` lub `dzien dobry` na kanale Default. Ardan się zatrzymuje, odwraca i odpowiada. Przy włączonym Brain odpowiedź pochodzi z pamięci („Znowu ty, …”), bez Brain z reguły lokalnej.
-- Alarm treningowy (zdarzenie testowe, nie wykrycie potwora):
+- Powitanie: stań blisko NPC (Ardan: 4 kratki, Mira: 3) i napisz `hi`, `witaj`, `czesc` lub `dzien dobry` na kanale Default. NPC się odwraca i odpowiada. Przy włączonym Brain odpowiedź pochodzi z pamięci („Znowu ty…”, „Milo cie znow widziec…”), bez Brain z reguły lokalnej.
+- Alarm treningowy (zdarzenie testowe, nie wykrycie potwora), działa na wszystkich agentów strefy `montag_gate`:
   - w grze postacią GOD: `/alarm start` i `/alarm clear`;
   - z konsoli: `powershell -ExecutionPolicy Bypass -File scripts\alarm.ps1 start` (oraz `clear`).
-- `/ardan status`, `/ardan check` (sprawdza punkty trasy w silniku), `/ardan patrol`.
+- W grze postacią GOD: `/ai status`, `/ai check ardan` (punkty w silniku), `/ai patrol ardan`, `/ai scan`.
+- Z konsoli:
+  - `scripts\selftest.ps1`: testy Lua wewnątrz Canary;
+  - `scripts\scan.ps1 -X 5010 -Y 5003`: mapa przejść w okolicy;
+  - `python -I tools\journal.py`: dziennik bieżącej sesji.
 
 ## 6. Brain i pamięć
 - Dane: `runtime\brain\brain.sqlite` (kopia przed każdą migracją: `brain.sqlite.bak-v*`). Log: `runtime\logs\brain.log`.
@@ -103,7 +110,7 @@ Copy-Item runtime\brain\brain.sqlite runtime\backup-brain.sqlite
 | „Only protocol version 15.11 or outdated 11.00 is allowed” | klient próbuje TCP login: zaznacz HTTP login i użyj adresu `http://127.0.0.1:8088/login` |
 | „Email or password is not correct” w grze, choć lista postaci się pokazała | wpisano nazwę konta zamiast emaila |
 | „Things are not loaded, please put assets in things/1511” | brak assets (sekcja 4) |
-| Ardan stoi | `python -I tools\journal.py --kinds state_changed,move_failed,controller_error`; `/ardan check` |
+| NPC stoi lub go nie ma | `python -I tools\journal.py --kinds agent_definition_invalid,agent_spawn_failed,state_changed,move_failed,controller_error`; `/ai check <agent>` |
 | `brainOnline=false` w `runtime\mailbox\world.json` | Brain nie działa albo heartbeat jest starszy niż 5 s; gra działa dalej na regułach Lua |
 | Zaległe pliki w `runtime\mailbox\events` | Brain wyłączony; maksymalnie 100 zdarzeń, potem `event_dropped_backpressure` w dzienniku |
 | Spam „createFiendishMonsters … no progress” w logu | `data-canary` nie ma potworów; ostrzeżenie upstream, nieszkodliwe |

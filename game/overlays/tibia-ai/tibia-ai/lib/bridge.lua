@@ -1,12 +1,12 @@
--- Mailbox bridge Lua <-> Brain (ADR 0002). Small JSON files in runtime/mailbox, no network and
--- no shell. Lua cannot list directories, so files use contiguous per-session sequence numbers:
+-- Mailbox bridge Lua <-> Brain (ADR 0002), multi-agent. Small JSON files in runtime/mailbox,
+-- no network and no shell. Lua cannot list directories, so files use contiguous per-session
+-- sequence numbers:
 --   events/evt-<session>-<seq>.json    written by Lua (tmp + rename)
 --   commands/cmd-<session>-<seq>.json  written by Brain; Lua opens the next expected seq only
 --   results/res-<session>-<seq>.json   written by Lua
---   world.json                         Lua status (session, next command seq, agent state)
+--   world.json                         Lua status (session, next command seq, per-agent state)
 --   brain-heartbeat.json               Brain liveness + last processed event seq
 -- Limits: 16 KiB per file, max 10 commands per poll (500 ms), max 100 unacknowledged events.
-TibiaAI = TibiaAI or {}
 local T = TibiaAI
 
 local MAX_FILE_BYTES = 16384
@@ -15,6 +15,7 @@ local MAX_EVENT_BACKLOG = 100
 local MAX_TTL_MS = 10000
 local HEARTBEAT_STALE_MS = 5000 -- 3 s watchdog + 1 s clock resolution on each side
 local ALLOWED_ACTIONS = { say = true, patrol = true, move_to = true, stop = true }
+local MOVEMENT_ACTIONS = { patrol = true, move_to = true, stop = true }
 
 T.bridge = T.bridge or {
 	enabled = false,
@@ -47,14 +48,14 @@ function T.bridgeIsBrainOnline()
 	return B.enabled and (T.nowMs() - B.brainAtMs) <= HEARTBEAT_STALE_MS
 end
 
-local function envelope(kind, payload, correlationId)
+local function envelope(kind, agentKey, payload, correlationId)
 	local id = T.uuid()
 	return {
 		schemaVersion = 1,
 		messageId = id,
 		kind = kind,
 		worldSessionId = T.worldSessionId,
-		agentKey = T.ardanConfig.agentKey,
+		agentKey = agentKey,
 		createdAtMs = T.nowMs(),
 		correlationId = correlationId or id,
 		payload = payload,
@@ -62,22 +63,22 @@ local function envelope(kind, payload, correlationId)
 end
 
 -- Returns the event messageId (used as correlationId by Brain replies) or nil when not written.
-function T.bridgeEmit(eventType, fields)
+function T.bridgeEmit(agentKey, eventType, fields)
 	local payload = { type = eventType }
 	for k, v in pairs(fields or {}) do
 		payload[k] = v
 	end
-	T.journal("event", { agentKey = T.ardanConfig.agentKey, eventType = eventType, payload = payload })
+	T.journal("event", { agentKey = agentKey, eventType = eventType, payload = payload })
 	if not B.enabled then
 		return nil
 	end
 	if B.eventSeq - B.brainAckSeq >= MAX_EVENT_BACKLOG then
 		B.droppedEvents = B.droppedEvents + 1
-		T.journal("event_dropped_backpressure", { eventType = eventType, backlog = B.eventSeq - B.brainAckSeq })
+		T.journal("event_dropped_backpressure", { agentKey = agentKey, eventType = eventType, backlog = B.eventSeq - B.brainAckSeq })
 		return nil
 	end
 	B.eventSeq = B.eventSeq + 1
-	local msg = envelope("event", payload)
+	local msg = envelope("event", agentKey, payload)
 	msg.sequence = B.eventSeq
 	local name = string.format("evt-%s-%08d.json", T.worldSessionId, B.eventSeq)
 	local ok, err = T.writeFileAtomic(mailboxPath("events/", name), T.json.encode(msg), false)
@@ -88,12 +89,12 @@ function T.bridgeEmit(eventType, fields)
 	return msg.messageId
 end
 
-local function writeResult(cmdEnvelope, payload)
+local function writeResult(cmdEnvelope, agentKey, payload)
 	B.resultSeq = B.resultSeq + 1
-	local msg = envelope("result", payload, cmdEnvelope and cmdEnvelope.correlationId)
+	local msg = envelope("result", agentKey, payload, cmdEnvelope and cmdEnvelope.correlationId)
 	local name = string.format("res-%s-%08d.json", T.worldSessionId, B.resultSeq)
 	T.writeFileAtomic(mailboxPath("results/", name), T.json.encode(msg), false)
-	T.journal("command_result", { commandId = payload.commandId, status = payload.status, reasonCode = payload.reasonCode })
+	T.journal("command_result", { agentKey = agentKey, commandId = payload.commandId, status = payload.status, reasonCode = payload.reasonCode })
 end
 
 local function rememberResult(commandId, payload)
@@ -107,29 +108,29 @@ local function rememberResult(commandId, payload)
 end
 
 -- Validation ------------------------------------------------------------------------------------
-local function validateArgs(action, args)
+local ALLOWED_ARG_KEYS = { say = { text = true }, patrol = { routeId = true }, move_to = { waypointId = true }, stop = {} }
+
+local function validateArgs(def, action, args)
 	if type(args) ~= "table" then
 		return false
 	end
-	local allowedKeys = { say = { text = true }, patrol = { routeId = true }, move_to = { waypointId = true }, stop = {} }
 	for k in pairs(args) do
-		if not allowedKeys[action][k] then
+		if not ALLOWED_ARG_KEYS[action][k] then
 			return false
 		end
 	end
-	local cfg = T.ardanConfig
 	if action == "say" then
 		return type(args.text) == "string" and #args.text >= 1 and #args.text <= 200 and not args.text:find("%c")
 	elseif action == "patrol" then
-		return type(args.routeId) == "string" and cfg.routes[args.routeId] ~= nil
+		return type(args.routeId) == "string" and def.routes ~= nil and def.routes[args.routeId] ~= nil
 	elseif action == "move_to" then
-		return type(args.waypointId) == "string" and cfg.waypoints[args.waypointId] ~= nil
+		return type(args.waypointId) == "string" and def.waypoints[args.waypointId] ~= nil
 	end
 	return true
 end
 
--- Returns (ok, status, reasonCode) where status is used when ok == false.
-local function validateCommand(msg)
+-- Returns (ok, status, reasonCode) where status is used when ok == false. Exposed for selftest.
+function T.validateCommand(msg)
 	if type(msg) ~= "table" or msg.schemaVersion ~= 1 or msg.kind ~= "command" then
 		return false, "rejected", "invalid_envelope"
 	end
@@ -140,7 +141,8 @@ local function validateCommand(msg)
 	if msg.worldSessionId ~= T.worldSessionId then
 		return false, "rejected", "stale_session"
 	end
-	if msg.agentKey ~= T.ardanConfig.agentKey then
+	local agent = type(msg.agentKey) == "string" and T.agents[msg.agentKey] or nil
+	if not agent then
 		return false, "rejected", "unknown_agent"
 	end
 	if type(msg.correlationId) ~= "string" or type(msg.createdAtMs) ~= "number" or type(p.expiresAtMs) ~= "number" then
@@ -158,32 +160,29 @@ local function validateCommand(msg)
 	if not ALLOWED_ACTIONS[p.action] then
 		return false, "rejected", "unknown_action"
 	end
-	if not validateArgs(p.action, p.args or {}) then
+	if not validateArgs(T.agentDef(agent), p.action, p.args or {}) then
 		return false, "rejected", "invalid_args"
 	end
 	-- planRevision orders movement plans (patrol/move_to/stop); speech is not a plan.
-	local A = T.ardan
-	if p.action ~= "say" and p.planRevision < A.planRevision then
+	if MOVEMENT_ACTIONS[p.action] and p.planRevision < agent.planRevision then
 		return false, "rejected", "stale_plan"
 	end
 	return true
 end
 
 local function handleCommand(raw, fileName)
-	local commandId = nil
 	if #raw > MAX_FILE_BYTES then
 		os.rename(mailboxPath("commands/", fileName), mailboxPath("quarantine/", fileName))
-		return writeResult(nil, { commandId = "unknown", status = "rejected", reasonCode = "too_large" })
+		return writeResult(nil, "unknown", { commandId = "unknown", status = "rejected", reasonCode = "too_large" })
 	end
 	local msg, err = T.json.decode(raw)
-	if not msg then
+	if type(msg) ~= "table" then
 		os.rename(mailboxPath("commands/", fileName), mailboxPath("quarantine/", fileName))
-		return writeResult(nil, { commandId = "unknown", status = "rejected", reasonCode = "invalid_json", detail = err })
+		return writeResult(nil, "unknown", { commandId = "unknown", status = "rejected", reasonCode = "invalid_json", detail = err })
 	end
 	os.rename(mailboxPath("commands/", fileName), mailboxPath("processed/", fileName))
-	if type(msg.payload) == "table" and type(msg.payload.commandId) == "string" then
-		commandId = msg.payload.commandId
-	end
+	local agentKey = type(msg.agentKey) == "string" and msg.agentKey:sub(1, 32) or "unknown"
+	local commandId = type(msg.payload) == "table" and type(msg.payload.commandId) == "string" and msg.payload.commandId or nil
 
 	if commandId and B.results[commandId] and msg.worldSessionId == T.worldSessionId then
 		local previous = {}
@@ -191,30 +190,31 @@ local function handleCommand(raw, fileName)
 			previous[k] = v
 		end
 		previous.duplicate = true
-		return writeResult(msg, previous)
+		return writeResult(msg, agentKey, previous)
 	end
 
-	local ok, status, reason = validateCommand(msg)
+	local ok, status, reason = T.validateCommand(msg)
 	if not ok then
 		local payload = { commandId = commandId or "unknown", status = status, reasonCode = reason, completedAtMs = T.nowMs() }
 		if commandId and reason ~= "stale_session" then
 			rememberResult(commandId, payload)
 		end
-		return writeResult(msg, payload)
+		return writeResult(msg, agentKey, payload)
 	end
 
 	local p = msg.payload
-	if p.action ~= "say" and p.planRevision > T.ardan.planRevision then
-		T.ardan.planRevision = p.planRevision -- newer movement plan cancels older ones
+	local agent = T.agents[agentKey]
+	if MOVEMENT_ACTIONS[p.action] and p.planRevision > agent.planRevision then
+		agent.planRevision = p.planRevision -- newer movement plan cancels older ones
 	end
-	T.journal("command_accepted", { commandId = p.commandId, action = p.action, planRevision = p.planRevision, correlationId = msg.correlationId })
-	T.ardanExecute({ action = p.action, args = p.args or {}, correlationId = msg.correlationId }, function(st, rc, position)
+	T.journal("command_accepted", { agentKey = agentKey, commandId = p.commandId, action = p.action, planRevision = p.planRevision, correlationId = msg.correlationId })
+	T.agentExecute(agent, { action = p.action, args = p.args or {}, correlationId = msg.correlationId }, function(st, rc, position)
 		local payload = { commandId = p.commandId, status = st, reasonCode = rc, actualPosition = position }
 		if st ~= "accepted" then
 			payload.completedAtMs = T.nowMs()
 		end
 		rememberResult(p.commandId, payload)
-		writeResult(msg, payload)
+		writeResult(msg, agentKey, payload)
 	end)
 end
 
@@ -233,6 +233,10 @@ local function readHeartbeat()
 end
 
 local function writeWorldStatus()
+	local agents = {}
+	for key, agent in pairs(T.agents) do
+		agents[key] = T.agentStatus(agent)
+	end
 	local status = {
 		worldSessionId = T.worldSessionId,
 		startedAtMs = T.worldStartedAtMs,
@@ -242,7 +246,7 @@ local function writeWorldStatus()
 		lastResultSeq = B.resultSeq,
 		droppedEvents = B.droppedEvents,
 		brainOnline = T.bridgeIsBrainOnline(),
-		agent = T.ardanStatus(),
+		agents = agents,
 	}
 	T.writeFileAtomic(T.paths.mailbox .. "world.json", T.json.encode(status), true)
 end
@@ -277,38 +281,3 @@ function poll.onThink(interval)
 end
 poll:interval(500)
 poll:register()
-
--- Local administrator controls through runtime/control/*.request (written by scripts\*.ps1):
---   shutdown.request    graceful shutdown (world save)      <- scripts\stop.ps1
---   alarm-start.request training alarm start                <- scripts\alarm.ps1 start
---   alarm-clear.request training alarm clear                <- scripts\alarm.ps1 clear
-local function takeRequest(name)
-	local path = T.paths.control .. name
-	local f = io.open(path, "r")
-	if not f then
-		return false
-	end
-	f:close()
-	os.remove(path)
-	return true
-end
-
-local control = GlobalEvent("TibiaAIControl")
-function control.onThink(interval)
-	if takeRequest("shutdown.request") then
-		T.journal("shutdown_requested", { source = "control_file" })
-		Game.setGameState(GAME_STATE_SHUTDOWN)
-		return true
-	end
-	if takeRequest("alarm-start.request") then
-		local ok, reason = T.ardanAlarmStart(T.ardanConfig.alarm.zoneId, "admin-console")
-		T.journal("admin_alarm_request", { action = "start", ok = ok, reason = reason })
-	end
-	if takeRequest("alarm-clear.request") then
-		local ok, reason = T.ardanAlarmClear(T.ardanConfig.alarm.zoneId, "admin-console")
-		T.journal("admin_alarm_request", { action = "clear", ok = ok, reason = reason })
-	end
-	return true
-end
-control:interval(1000)
-control:register()

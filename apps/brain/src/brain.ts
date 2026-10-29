@@ -1,10 +1,14 @@
 // Brain loop: events -> memory -> rules -> commands; results -> memory. Never blocks the game:
 // the engine keeps its local controller and falls back when Brain is slow or absent.
 import { randomUUID } from 'node:crypto';
-import { parseEvent, parseResult, SCHEMA_VERSION, validateCommand, type CommandPayload, type Envelope, type EventPayload } from './contracts.ts';
+import {
+  agentRegistry, parseEvent, parseResult, SCHEMA_VERSION, validateCommand,
+  type CommandPayload, type Envelope, type EventPayload, type WorldStatus,
+} from './contracts.ts';
 import type { Mailbox } from './mailbox.ts';
 import type { Memory } from './memory.ts';
-import { decide, type Intent } from './rules.ts';
+import type { Intent, Provider } from './providers/provider.ts';
+import { RulesProvider } from './providers/rules.ts';
 
 export type Logger = (kind: string, fields?: Record<string, unknown>) => void;
 
@@ -28,15 +32,15 @@ export class Brain {
   private readonly memory: Memory;
   private readonly log: Logger;
   private readonly now: () => number;
-  readonly provider: string;
+  readonly provider: Provider;
 
-  constructor(mailbox: Mailbox, memory: Memory, log: Logger, now: () => number = Date.now, provider = 'rules') {
+  constructor(mailbox: Mailbox, memory: Memory, log: Logger, now: () => number = Date.now, provider: Provider = new RulesProvider()) {
     this.mailbox = mailbox;
     this.memory = memory;
     this.log = log;
     this.now = now;
     this.provider = provider;
-    memory.ensureAgent('ardan');
+    for (const key of agentRegistry().keys()) memory.ensureAgent(key);
   }
 
   tick(): void {
@@ -56,7 +60,7 @@ export class Brain {
           atMs: nowMs,
           worldSessionId: this.worldSessionId,
           lastEventSeq: this.worldSessionId ? this.memory.lastEventSeq(this.worldSessionId) : 0,
-          provider: this.provider,
+          provider: this.provider.name,
         });
         this.lastHeartbeatMs = nowMs;
       } catch {
@@ -66,7 +70,7 @@ export class Brain {
 
     this.processEvents(nowMs);
     this.processResults(nowMs);
-    this.flushScheduled(nowMs, world?.nextCommandSeq ?? 1, world?.agent?.planRevision ?? 0);
+    this.flushScheduled(nowMs, world);
   }
 
   private processEvents(nowMs: number): void {
@@ -100,9 +104,10 @@ export class Brain {
       this.log('event_received', { eventId: ev.messageId, type: ev.payload.type, sequence: ev.sequence, stale });
       if (stale) continue; // remembered, but no action for old sessions/observations
 
-      const intents = decide(ev, {
+      const intents = this.provider.decide(ev, {
+        agent: agentRegistry().get(ev.agentKey)!,
         encounterBefore,
-        alarmsThisSession: this.memory.countObservations(ev.worldSessionId, 'training_alarm_started'),
+        alarmsThisSession: this.memory.countObservations(ev.worldSessionId, 'training_alarm_started', ev.agentKey),
         nowMs,
       });
       for (const intent of intents) this.scheduled.push({ dueAtMs: nowMs + intent.delayMs, intent, event: ev });
@@ -126,13 +131,14 @@ export class Brain {
     }
   }
 
-  private flushScheduled(nowMs: number, worldNextSeq: number, planRevision: number): void {
+  private flushScheduled(nowMs: number, world: WorldStatus | null): void {
     const due = this.scheduled.filter((s) => s.dueAtMs <= nowMs);
     this.scheduled = this.scheduled.filter((s) => s.dueAtMs > nowMs);
     for (const s of due) {
       if (s.event.worldSessionId !== this.worldSessionId) continue;
+      const planRevision = world?.agents[s.event.agentKey]?.planRevision ?? 0;
       this.sendCommand(s.event.worldSessionId, s.event.agentKey, s.event.messageId, 'say', { text: s.intent.text },
-        worldNextSeq, nowMs, planRevision);
+        world?.nextCommandSeq ?? 1, nowMs, planRevision);
     }
   }
 

@@ -24,10 +24,10 @@ if (existsSync(join(root, 'runtime', 'pids', 'brain.pid'))) {
 const session = world.worldSessionId;
 let seq = world.nextCommandSeq;
 
-function command(action: string, args: Record<string, string>, opts: { commandId?: string; planRevision?: number; session?: string; createdAtMs?: number; ttlMs?: number } = {}): Envelope<CommandPayload> {
+function command(action: string, args: Record<string, string>, opts: { commandId?: string; planRevision?: number; session?: string; createdAtMs?: number; ttlMs?: number; agentKey?: string } = {}): Envelope<CommandPayload> {
   const createdAtMs = opts.createdAtMs ?? Date.now();
   return {
-    schemaVersion: 1, messageId: randomUUID(), kind: 'command', worldSessionId: opts.session ?? session, agentKey: 'ardan',
+    schemaVersion: 1, messageId: randomUUID(), kind: 'command', worldSessionId: opts.session ?? session, agentKey: opts.agentKey ?? 'ardan',
     createdAtMs, correlationId: `itest-${randomUUID()}`,
     payload: { commandId: opts.commandId ?? randomUUID(), planRevision: opts.planRevision ?? 0, expiresAtMs: createdAtMs + (opts.ttlMs ?? 5000), action: action as CommandPayload['action'], args },
   };
@@ -127,7 +127,7 @@ const acc = await waitFor(byId(unreachable.payload.commandId, 'accepted'), 5000)
 const failed = await waitFor(byId(unreachable.payload.commandId, 'failed'), 20_000);
 const statusAfter = mb.readWorld();
 check('unreachable move fails without teleport', Boolean(acc) && failed?.payload.reasonCode !== undefined &&
-  statusAfter?.agent.position?.y !== 4994, { accepted: acc?.payload.reasonCode, failed: failed?.payload, positionAfter: statusAfter?.agent.position }, Date.now() - t0);
+  statusAfter?.agents.ardan?.position?.y !== 4994, { accepted: acc?.payload.reasonCode, failed: failed?.payload, positionAfter: statusAfter?.agents.ardan?.position }, Date.now() - t0);
 
 // 10. older planRevision after a newer one -> stale_plan
 const old = command('patrol', { routeId: 'montag_square' }, { planRevision: 0 });
@@ -140,6 +140,24 @@ const patrol = command('patrol', { routeId: 'montag_square' }, { planRevision: 2
 writeRaw(JSON.stringify(patrol));
 r = await waitFor(byId(patrol.payload.commandId), 5000);
 check('patrol resumes', r?.payload.status === 'completed' && r.payload.reasonCode === 'patrol_started', r?.payload);
+
+// 12. multi-agent: a second agent defined only by data accepts its own commands
+const miraSay = command('say', { text: 'Test integracyjny: tu Mira.' }, { agentKey: 'mira' });
+writeRaw(JSON.stringify(miraSay));
+r = await waitFor(byId(miraSay.payload.commandId), 5000);
+check('second agent executes say', r?.payload.status === 'completed' && r.agentKey === 'mira', r?.payload);
+
+// 13. waypoints are per agent: Ardan's gate_watch is not on Mira's allowlist
+const foreign = command('move_to', { waypointId: 'gate_watch' }, { agentKey: 'mira' });
+writeRaw(JSON.stringify(foreign));
+r = await waitFor(byId(foreign.payload.commandId), 5000);
+check("another agent's waypoint rejected", r?.payload.status === 'rejected' && r.payload.reasonCode === 'invalid_args', r?.payload);
+
+// 14. unknown agent
+const nobody = command('say', { text: 'kto tu?' }, { agentKey: 'nobody' });
+writeRaw(JSON.stringify(nobody));
+r = await waitFor(byId(nobody.payload.commandId), 5000);
+check('unknown agent rejected', r?.payload.status === 'rejected' && r.payload.reasonCode === 'unknown_agent', r?.payload);
 
 const quarantined = readdirSync(join(mb.root, 'quarantine')).length;
 const out = join(root, 'runtime', 'logs', `itest-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);

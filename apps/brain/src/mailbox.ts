@@ -2,7 +2,7 @@
 // directory; Node's renameSync replaces an existing target on Windows (MoveFileEx semantics).
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { allowlist, parseWorldStatus, type CommandPayload, type Envelope, type WorldStatus } from './contracts.ts';
+import { agentRegistry, parseWorldStatus, type CommandPayload, type Envelope, type WorldStatus } from './contracts.ts';
 
 export const SUBDIRS = ['events', 'commands', 'results', 'processed', 'quarantine', 'brain-processed'] as const;
 
@@ -18,7 +18,7 @@ export class Mailbox {
 
   readJson(path: string): { ok: true; value: unknown } | { ok: false; error: string } {
     try {
-      if (statSync(path).size > allowlist.limits.maxFileBytes) return { ok: false, error: 'too_large' };
+      if (statSync(path).size > agentRegistry().limits.maxFileBytes) return { ok: false, error: 'too_large' };
       return { ok: true, value: JSON.parse(readFileSync(path, 'utf8')) };
     } catch (err) {
       return { ok: false, error: (err as Error).message };

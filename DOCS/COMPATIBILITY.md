@@ -30,6 +30,8 @@ Kod Lua/datapack pochodzi ze źródeł `fe0f932`, a binarka z release `v3.6.1` z
 - NPC dostaje `onThink` tylko wtedy, gdy widzi go gracz (`Npc::manageIdle`). Kontroler Ardana działa więc na własnym `GlobalEvent` co 1 s.
 - NPC z `Game.createNpc` nie ma spawnu, więc `isInSpawnRange` nie teleportuje go do pozycji startowej.
 - `walkInterval = 0` wyłącza losowe chodzenie (`Npc::onThinkWalk`).
+- `Game.createNpcType` + `NpcType:register` działają z dowolnego skryptu datapacku. Katalog `npc/` ładuje ten sam `g_scripts().loadScripts`, a callbacki zawsze wiążą się z interfejsem `g_scripts` (`npc_type_functions.cpp:388`). Zweryfikowane: Ardan i Mira rejestrowani z `agents.json`.
+- `DATA_DIRECTORY` (globalne z `data/core.lua`) i `dofile` (biblioteka bazowa LuaJIT) pozwalają ładować moduły spoza skanowanych katalogów w ustalonej kolejności. Revscript (`GlobalEvent`, `TalkAction`) rejestrowany w czasie takiego `dofile` działa.
 
 ## Do weryfikacji
 Lista postaci w kliencie, wejście do świata, ruch, poprawne kafle i przedmioty, reconnect. Dopiero po tych krokach zestaw będzie VERIFIED end-to-end.

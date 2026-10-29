@@ -1,12 +1,19 @@
 // Contract v1 (DOCS/CONTRACTS.md). The Lua bridge applies the same rules on the engine side.
-import { readFileSync } from 'node:fs';
+// Agent ids, waypoints, routes, actions and limits come from the agent registry (ADR 0004).
+import { AgentRegistry } from './agents.ts';
 
-const allowlistUrl = new URL('../../../packages/contracts/allowlist.json', import.meta.url);
-export const allowlist = JSON.parse(readFileSync(allowlistUrl, 'utf8')) as {
-  agents: Record<string, { routes: string[]; waypoints: string[] }>;
-  actions: string[];
-  limits: { maxTtlMs: number; maxSayLength: number; maxEventTextLength: number; maxFileBytes: number };
-};
+let registry: AgentRegistry | null = null;
+
+/** Registry used for validation; loaded lazily from packages/contracts/agents.json. */
+export function agentRegistry(): AgentRegistry {
+  registry ??= AgentRegistry.load();
+  return registry;
+}
+
+/** Replace the registry (tests, or a different definitions file). */
+export function useAgentRegistry(r: AgentRegistry): void {
+  registry = r;
+}
 
 export const SCHEMA_VERSION = 1;
 
@@ -67,7 +74,7 @@ function checkEnvelope(raw: unknown, kind: Kind): Validation<Envelope<unknown>> 
   if (raw.kind !== kind) return fail('kind');
   if (!isStr(raw.messageId, 64)) return fail('message_id');
   if (!isStr(raw.worldSessionId, 64) || !ID_RE.test(raw.worldSessionId)) return fail('world_session_id');
-  if (!isStr(raw.agentKey, 32) || !allowlist.agents[raw.agentKey]) return fail('agent_key');
+  if (!isStr(raw.agentKey, 32) || !agentRegistry().has(raw.agentKey)) return fail('agent_key');
   if (!isInt(raw.createdAtMs) || raw.createdAtMs <= 0) return fail('created_at');
   if (!isStr(raw.correlationId, 64)) return fail('correlation_id');
   if (!isObj(raw.payload)) return fail('payload');
@@ -84,7 +91,7 @@ export function parseEvent(raw: unknown): Validation<Envelope<EventPayload>> {
     case 'player_greeted':
       if (!isInt(p.playerGuid) || p.playerGuid <= 0) return fail('player_guid');
       if (!isStr(p.playerName, 64)) return fail('player_name');
-      if (typeof p.text !== 'string' || p.text.length > allowlist.limits.maxEventTextLength) return fail('text');
+      if (typeof p.text !== 'string' || p.text.length > agentRegistry().limits.maxEventTextLength) return fail('text');
       break;
     case 'training_alarm_started':
     case 'training_alarm_cleared':
@@ -118,29 +125,39 @@ export function validateCommand(env: Envelope<CommandPayload>, nowMs: number): V
   const p = env.payload;
   if (!isStr(p.commandId, 64) || !ID_RE.test(p.commandId)) return fail('invalid_command');
   if (!isInt(p.planRevision) || p.planRevision < 0) return fail('invalid_plan_revision');
-  if (!isInt(p.expiresAtMs) || p.expiresAtMs - env.createdAtMs > allowlist.limits.maxTtlMs) return fail('ttl_too_long');
+  const reg = agentRegistry();
+  if (!isInt(p.expiresAtMs) || p.expiresAtMs - env.createdAtMs > reg.limits.maxTtlMs) return fail('ttl_too_long');
   if (p.expiresAtMs < nowMs) return fail('ttl_expired');
-  if (!allowlist.actions.includes(p.action)) return fail('unknown_action');
-  const agent = allowlist.agents[env.agentKey];
+  if (!reg.actions.includes(p.action)) return fail('unknown_action');
+  const agent = reg.get(env.agentKey)!;
   const args = p.args ?? {};
   const keys = Object.keys(args);
   const only = (allowed: string[]) => keys.every((k) => allowed.includes(k));
   switch (p.action) {
     case 'say':
       if (!only(['text']) || typeof args.text !== 'string' || args.text.length < 1 ||
-        args.text.length > allowlist.limits.maxSayLength || /[\u0000-\u001f\u007f]/.test(args.text)) return fail('invalid_args');
+        args.text.length > reg.limits.maxSayLength || /[\u0000-\u001f\u007f]/.test(args.text)) return fail('invalid_args');
       break;
     case 'patrol':
-      if (!only(['routeId']) || !agent.routes.includes(args.routeId)) return fail('invalid_args');
+      if (!only(['routeId']) || !Object.hasOwn(agent.routes, args.routeId)) return fail('invalid_args');
       break;
     case 'move_to':
-      if (!only(['waypointId']) || !agent.waypoints.includes(args.waypointId)) return fail('invalid_args');
+      if (!only(['waypointId']) || !Object.hasOwn(agent.waypoints, args.waypointId)) return fail('invalid_args');
       break;
     case 'stop':
       if (keys.length > 0) return fail('invalid_args');
       break;
   }
   return { ok: true, value: env };
+}
+
+export interface AgentStatus {
+  state: string;
+  alarmActive: boolean;
+  routeId?: string;
+  moving?: string;
+  position?: { x: number; y: number; z: number };
+  planRevision: number;
 }
 
 export interface WorldStatus {
@@ -151,11 +168,13 @@ export interface WorldStatus {
   lastEventSeq: number;
   lastResultSeq: number;
   brainOnline: boolean;
-  agent: { state: string; alarmActive: boolean; position?: { x: number; y: number; z: number }; planRevision: number };
+  agents: Record<string, AgentStatus>;
 }
 
 export function parseWorldStatus(raw: unknown): WorldStatus | null {
   if (!isObj(raw) || !isStr(raw.worldSessionId, 64) || !ID_RE.test(raw.worldSessionId)) return null;
   if (!isInt(raw.nextCommandSeq) || !isInt(raw.atMs)) return null;
-  return raw as unknown as WorldStatus;
+  // Lua encodes an empty table as {} and a missing one as absent; normalise to an object.
+  const agents = isObj(raw.agents) ? raw.agents : {};
+  return { ...(raw as unknown as WorldStatus), agents: agents as Record<string, AgentStatus> };
 }

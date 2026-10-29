@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { Brain } from '../src/brain.ts';
 import { Mailbox } from '../src/mailbox.ts';
 import { Memory } from '../src/memory.ts';
-import { decide, sinceText } from '../src/rules.ts';
+import { agentRegistry } from '../src/contracts.ts';
+import { RulesProvider, sinceText } from '../src/providers/rules.ts';
 import { makeEvent, tempDir, writeEvent, writeWorld } from './helpers.ts';
 
 const quiet = () => {};
@@ -110,12 +111,35 @@ test('engine results update command status; duplicates do not overwrite it', () 
   assert.deepEqual({ ...memory.commandStatus(commandId!) }, { status: 'failed', reason_code: 'no_path' });
 });
 
-test('rules: first and repeated greeting texts, alarm comment delay', () => {
+test('rules: persona texts come from the agent definition', () => {
   const now = Date.now();
+  const rules = new RulesProvider();
+  const ardan = agentRegistry().get('ardan')!;
+  const mira = agentRegistry().get('mira')!;
   const ev = makeEvent('s', { type: 'player_greeted', playerGuid: 1, playerName: 'Ann<script>', text: 'hi' });
-  assert.match(decide(ev, { nowMs: now })[0].text, /^Witaj, Annscript\./);
-  assert.match(decide(ev, { nowMs: now, encounterBefore: { count: 2, lastAtMs: now - 3 * 3600_000 } })[0].text, /3\. spotkanie, ostatnio 3 h temu/);
-  const alarm = decide(makeEvent('s', { type: 'training_alarm_started', zoneId: 'z' }), { nowMs: now, alarmsThisSession: 2 });
-  assert.equal(alarm[0].delayMs, 4000);
+  assert.match(rules.decide(ev, { agent: ardan, nowMs: now })[0].text, /^Witaj, Annscript\. Jestem Ardan/);
+  assert.match(rules.decide(ev, { agent: ardan, nowMs: now, encounterBefore: { count: 2, lastAtMs: now - 3 * 3600_000 } })[0].text,
+    /3\. spotkanie, ostatnio 3 h temu/);
+  assert.match(rules.decide({ ...ev, agentKey: 'mira' }, { agent: mira, nowMs: now })[0].text, /Jestem Mira/);
+  const alarm = makeEvent('s', { type: 'training_alarm_started', zoneId: 'montag_gate' });
+  assert.equal(rules.decide(alarm, { agent: ardan, nowMs: now, alarmsThisSession: 2 })[0].delayMs, 4000);
+  assert.deepEqual(rules.decide(alarm, { agent: mira, nowMs: now }), [], 'empty alarmComment means no reply');
   assert.equal(sinceText(now - 30_000, now), 'przed chwila');
+});
+
+test('alarm count is per agent', () => {
+  const dir = tempDir();
+  const mb = new Mailbox(join(dir, 'mailbox'));
+  const brain = new Brain(mb, new Memory(join(dir, 'brain.sqlite')), quiet);
+  writeWorld(mb.root, 'sessF');
+  brain.tick();
+  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'montag_gate' }, { agentKey: 'mira' }));
+  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'montag_gate' }));
+  let t = Date.now();
+  const late = new Brain(mb, new Memory(join(dir, 'brain.sqlite')), quiet, () => t);
+  late.tick();
+  t += 5000; // past the alarm comment delay
+  late.tick();
+  const texts = commands(mb.root).map((c) => `${c.agentKey}:${c.payload.args.text}`);
+  assert.deepEqual(texts, ['ardan:To 1. alarm cwiczebny w tej zmianie. Zachowajcie spokoj.']);
 });

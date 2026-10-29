@@ -26,7 +26,8 @@ def main():
         if d.get('worldSessionId') != session or (kinds and d['kind'] not in kinds):
             continue
         rest = {k: v for k, v in d.items() if k not in ('ts', 'worldSessionId', 'kind', 'agentKey')}
-        rows.append(f"{d['ts'][11:19]} {d['kind']:<24} {json.dumps(rest, ensure_ascii=False)}")
+        agent = d.get('agentKey') or '-'
+        rows.append(f"{d['ts'][11:19]} {agent:<6} {d['kind']:<24} {json.dumps(rest, ensure_ascii=False)}")
     print(f'session {session}')
     print('\n'.join(rows[-args.tail:] if args.tail else rows))
 

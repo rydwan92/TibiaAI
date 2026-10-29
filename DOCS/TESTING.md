@@ -21,6 +21,10 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Restart świata | Stare komendy nie zostają wykonane | Awaria | PASS (mechanizm) | nowa `worldSessionId` w nazwach plików; brak testu z zaległą komendą |
 | Prompt injection | Tekst nie wywołuje shell/spawn/SQL | Kontrakt/model, po M4 | PASS (kontrakt) | `contracts.test.ts`; z modelem po M4 |
 | Przeciążenie | Bounded queue, brak wzrostu bez granic | Integracja | IMPLEMENTED, NOT RUN | limit 100 zdarzeń, 10 komend/poll |
+| Self-test Lua | JSON, szablony, walidacja definicji i komend w LuaJIT Canary | Silnik | PASS 20/20 | `scripts\selftest.ps1` |
+| Definicje agentów | `agents.json` poprawny; błędy raportowane z nazwą pola | Kontrakt | PASS | `agents.test.ts`; w Lua: `agent_definition_invalid` |
+| Wielu agentów | Drugi agent tylko z danych; allowlista per agent; nieznany agent odrzucony | Integracja | PASS | itest przypadki 12–14 |
+| Alarm wielu agentów | Każdy agent strefy reaguje wg definicji i wraca do rutyny | Silnik | PASS | iteracja 0004 |
 
 ## Polecenia
 ```powershell

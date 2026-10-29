@@ -79,6 +79,28 @@ function Start-Detached([string]$exe, [string]$workDir, [string]$outLog, [string
     throw "$leaf did not start (see $errLog)"
 }
 
+function Write-ControlRequest([string]$name, [string]$content) {
+    # Picked up by the TibiaAIControl globalevent within ~1 s (see game\overlays\tibia-ai\tibia-ai\lib\control.lua).
+    $control = Join-Path $Runtime 'control'
+    New-Item -ItemType Directory -Force $control | Out-Null
+    [System.IO.File]::WriteAllText((Join-Path $control $name), $content, (New-Object System.Text.UTF8Encoding $false))
+}
+
+function Wait-JournalEntry([string]$kind, [string]$sinceIso, [int]$timeoutSec) {
+    # Returns the first journal entry of $kind written at or after $sinceIso (UTC, ISO 8601).
+    $journal = Join-Path $LogDir 'world-journal.jsonl'
+    $deadline = (Get-Date).AddSeconds($timeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if (Test-Path $journal) {
+            $hit = Get-Content -Tail 200 -Encoding UTF8 $journal | ForEach-Object { try { $_ | ConvertFrom-Json } catch { } } |
+                Where-Object { $_.kind -eq $kind -and $_.ts -ge $sinceIso } | Select-Object -First 1
+            if ($hit) { return $hit }
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    return $null
+}
+
 function Test-LocalPort([int]$port) {
     return [bool](Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue)
 }

@@ -26,6 +26,11 @@ if (Test-Path $Overlay) {
     & robocopy.exe $Overlay (Join-Path $ServerDir 'data-canary') /E /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy overlay failed ($LASTEXITCODE)" }
 }
+# Agent definitions: single source in packages\contracts (ADR 0004), read by Lua at script load.
+$agentsJson = Join-Path $Root 'packages\contracts\agents.json'
+$null = Get-Content -Raw -Encoding UTF8 $agentsJson | ConvertFrom-Json  # fail early on invalid JSON
+New-Item -ItemType Directory -Force (Join-Path $ServerDir 'data-canary\tibia-ai') | Out-Null
+Copy-Item $agentsJson (Join-Path $ServerDir 'data-canary\tibia-ai\agents.json') -Force
 
 # config.lua from config.lua.dist with explicit overrides; fail if a key is missing upstream.
 $overrides = [ordered]@{

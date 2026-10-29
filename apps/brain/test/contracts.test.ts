@@ -19,7 +19,7 @@ test('valid events parse', () => {
 test('invalid events are rejected', () => {
   const bad = makeEvent('abc123', { type: 'player_greeted', playerGuid: 7, playerName: 'GOD', text: 'hi' });
   assert.equal(parseEvent({ ...bad, schemaVersion: 2 }).ok, false);
-  assert.equal(parseEvent({ ...bad, agentKey: 'mira' }).ok, false);
+  assert.equal(parseEvent({ ...bad, agentKey: 'nobody' }).ok, false);
   assert.equal(parseEvent({ ...bad, payload: { type: 'spawn_monster' } }).ok, false);
   assert.equal(parseEvent({ ...bad, payload: { ...bad.payload, playerGuid: -1 } }).ok, false);
   assert.equal(parseEvent({ ...bad, payload: { ...bad.payload, text: 'x'.repeat(301) } }).ok, false);

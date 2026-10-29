@@ -20,7 +20,8 @@ export function makeEvent(session: string, payload: EventPayload, overrides: Par
 export function writeWorld(mailboxRoot: string, session: string, nextCommandSeq = 1): void {
   writeFileSync(join(mailboxRoot, 'world.json'), JSON.stringify({
     worldSessionId: session, startedAtMs: Date.now(), atMs: Date.now(), nextCommandSeq, lastEventSeq: 0,
-    lastResultSeq: 0, brainOnline: false, agent: { state: 'PATROL', alarmActive: false, planRevision: 0 },
+    lastResultSeq: 0, brainOnline: false,
+    agents: { ardan: { state: 'PATROL', alarmActive: false, planRevision: 0 }, mira: { state: 'HOME', alarmActive: false, planRevision: 0 } },
   }));
 }
 
