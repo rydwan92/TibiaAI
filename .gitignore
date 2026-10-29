@@ -1,0 +1,14 @@
+# Sekrety
+.env
+*.env.local
+
+# Pobrane upstream (binarki, źródła, mapa, assets) — pochodzenie w infra/versions.lock.json
+vendor/
+
+# Dane uruchomieniowe: bazy, logi, mailbox
+runtime/
+
+# Node
+node_modules/
+apps/brain/dist/
+*.tsbuildinfo

@@ -1,0 +1,19 @@
+{
+  "name": "@tibiaai/brain",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0 <23"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/main.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
+    "test:integration": "node --disable-warning=ExperimentalWarning test-integration/bridge.itest.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.13",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "_comment": "Pinned upstream artifacts. sha256 verified against GitHub release digests / MariaDB REST API on 2026-10-29. Downloaded into vendor/downloads (git-ignored).",
+  "canary": {
+    "repo": "https://github.com/opentibiabr/canary",
+    "tag": "v3.6.1",
+    "commit": "fe0f932c380583871ce640a32628d397d3fa02ff",
+    "clientVersion": 1511,
+    "datapack": "data-canary",
+    "map": "data-canary/world/canary.otbm (in source at commit)",
+    "binary": {
+      "url": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/canary-windows-cmake-release.zip",
+      "file": "canary-win/canary-windows-cmake-release.zip",
+      "sha256": "7a7a7985d2042c834488a8769991109074484a79faf11f131436dbcdadfa34e8"
+    },
+    "source": {
+      "url": "https://codeload.github.com/opentibiabr/canary/zip/fe0f932c380583871ce640a32628d397d3fa02ff",
+      "file": "canary-src/canary-fe0f932.zip",
+      "sha256": "88260db3fb269ccfae1f46c458195f25ecf96ecb7cf7840e4dfde6464799f525"
+    }
+  },
+  "mariadb": {
+    "version": "11.4.13",
+    "url": "https://downloads.mariadb.org/rest-api/mariadb/11.4.13/mariadb-11.4.13-winx64.zip",
+    "file": "mariadb/mariadb-11.4.13-winx64.zip",
+    "sha256": "d62986d433eeebfde218560b276103831604a61e929e87f1a17f5aebd80257e2"
+  },
+  "otclient": {
+    "repo": "https://github.com/opentibiabr/otclient",
+    "tag": "4.1",
+    "commit": "dd5641492a71e966b96b8a91398b44bb3df67d88",
+    "binary": {
+      "url": "https://github.com/opentibiabr/otclient/releases/download/4.1/otclient-windows-cmake-release.zip",
+      "file": "otclient/otclient-windows-cmake-release.zip",
+      "sha256": "8ca7a8024a3eae58e2c77d49293789c961a1351d02f2eebc59a6bed75d873bb1"
+    },
+    "source": {
+      "url": "https://codeload.github.com/opentibiabr/otclient/zip/dd5641492a71e966b96b8a91398b44bb3df67d88",
+      "file": "otclient-src/otclient-dd56414.zip",
+      "sha256": "366b1403d958e8fbedf30c7be7efa223b8b19efdd663c782d81bcf0a82985ac9"
+    }
+  },
+  "loginServer": {
+    "repo": "https://github.com/opentibiabr/login-server",
+    "commit": "2612930de4d97123a397f8f2cd0d5f784094af40",
+    "_why": "Last commit before Canary v3.6.1 (2026-07-01). Release binaries are from 2021; main after 2026-10-23 issues opaque sessions/TOTP. Built locally with portable Go.",
+    "source": {
+      "url": "https://codeload.github.com/opentibiabr/login-server/zip/2612930de4d97123a397f8f2cd0d5f784094af40",
+      "file": "login-server-src/login-server-2612930.zip",
+      "sha256": "d0524f49f899e17f1d777b149466de40e0348c68b294923f1289090a5de14a03"
+    },
+    "builtBinarySha256": "f08696c09e995f5cb056b6c68ea6adfdec45752b8ad7437ef555e083825f92cf"
+  },
+  "go": {
+    "version": "1.27.3",
+    "url": "https://go.dev/dl/go1.27.3.windows-amd64.zip",
+    "file": "go/go1.27.3.windows-amd64.zip",
+    "sha256": "f26081f438319757f8a1b46d7d0b2c5ec7583d4038e485e0aa725cfde7885fff"
+  },
+  "ports": {
+    "db": 3317,
+    "login": 7171,
+    "game": 7172,
+    "loginHttp": 8088,
+    "loginGrpc": 9090
+  }
+}

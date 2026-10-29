@@ -1,0 +1,4 @@
+# TibiaAI nie jest aplikacją PHP. Katalog leży pod C:\xampp\htdocs, więc Apache XAMPP
+# (Listen 80, AllowOverride All) mógłby udostępnić kod, .env, bazy i logi. Blokujemy wszystko.
+Require all denied
+Options -Indexes

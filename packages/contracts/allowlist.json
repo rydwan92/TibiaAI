@@ -1,0 +1,16 @@
+{
+  "_comment": "Ids Brain may reference. Must match game/overlays/tibia-ai/scripts/tibia-ai/ardan_config.lua (checked by apps/brain/test/allowlist.test.ts).",
+  "agents": {
+    "ardan": {
+      "routes": ["montag_square"],
+      "waypoints": ["temple_south", "square_west", "square_east", "road_south", "gate_watch", "test_unreachable"]
+    }
+  },
+  "actions": ["say", "patrol", "move_to", "stop"],
+  "limits": {
+    "maxTtlMs": 10000,
+    "maxSayLength": 200,
+    "maxEventTextLength": 300,
+    "maxFileBytes": 16384
+  }
+}
