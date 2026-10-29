@@ -4,6 +4,14 @@
 . "$PSScriptRoot\lib.ps1"
 $cfg = Read-DotEnv
 
+# A running canary.exe cannot be overwritten; fail with a clear message instead of a copy error.
+if (Get-TrackedProcess 'canary') {
+    if (Test-Path (Join-Path $ServerDir 'canary.exe')) {
+        Write-Host "Canary is running; runtime\server left unchanged. To deploy changes: scripts\stop.ps1 -KeepDb, then run this again."
+        return
+    }
+}
+
 New-Item -ItemType Directory -Force $ServerDir | Out-Null
 Copy-Item $CanaryExe $ServerDir -Force
 Copy-Item (Join-Path $CanarySrc 'key.pem') $ServerDir -Force

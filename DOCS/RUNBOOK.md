@@ -35,14 +35,39 @@ Skrypt pobiera artefakty z `infra/versions.lock.json` i sprawdza SHA-256, rozpak
 Adresy (wszystkie 127.0.0.1): MariaDB 3317, HTTP login `http://127.0.0.1:8088/login`, gRPC login-server 9090 (tylko wewnętrznie), Canary 7171 (status/legacy) i 7172 (gra).
 
 ## 4. Klient (OTClient 4.1)
-1. Assets klienta 15.11 (własność CipSoft, poza repo). Wybierz jedną z opcji:
-   - wbudowany downloader OTClient (moduł `client_assets`, źródło `dudantas/tibia-client`, release `15.11.c9d1cf`) proponuje pobranie, gdy brakuje plików. Decyzja o pobraniu należy do Ciebie;
-   - albo skopiuj assets własnego klienta Tibia 15.11 do `vendor\otclient\otclient-dd5641492a71e966b96b8a91398b44bb3df67d88\data\things\1511\` (`catalog-content.json`, `appearances-*.dat`, sprite'y, `staticdata`).
-2. `powershell -ExecutionPolicy Bypass -File scripts\client.ps1 -CopyPassword` uruchamia klienta, wypisuje wartości i kopiuje hasło do schowka.
-3. Na ekranie logowania:
-   - Server: `http://127.0.0.1:8088/login`, Port: `8088`, Client version: `1511`, zaznacz **HTTP login**;
-   - Email: `tibiaai@localhost` (wpisz email, nie nazwę konta: Canary 3.6.1 szuka konta po email), hasło z `.env` (`TIBIAAI_TEST_PASSWORD`).
-4. Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz). Start w świątyni Montag (5010,4998,7).
+Assets klienta 15.11 (grafiki, mapa przedmiotów) należą do CipSoft i nie trafiają do repo. OTClient 4.1 ma wbudowany downloader (moduł `client_assets`). Pobiera on pliki z `dudantas/tibia-client`, tag `15.11.c9d1cf` (manifest `assets.json` + ok. 1000 plików w `assets/`), do `vendor\otclient\otclient-dd5641492a71e966b96b8a91398b44bb3df67d88\data\things\1511\`. Pobieranie startuje **dopiero przy próbie logowania z wersją 1511**, nie przy uruchomieniu klienta.
+
+### 4.1 Pobranie assets przez klienta (krok po kroku)
+1. Serwer musi działać: `powershell -ExecutionPolicy Bypass -File scripts\status.ps1` pokazuje `canary RUNNING` i `login RUNNING`. Jeśli nie, uruchom `scripts\start.ps1`.
+2. Uruchom klienta: `powershell -ExecutionPolicy Bypass -File scripts\client.ps1 -CopyPassword` (hasło trafia do schowka).
+3. Przy starcie pojawi się okno **„Blad / Unable to load dat file … /data/things/0/Tibia.dat”**. To normalne przy pierwszym uruchomieniu: klient nie ma jeszcze wybranej wersji. Kliknij **Ok**.
+4. Otworzy się okno **Enter Game**. Jeśli go nie widać, kliknij ikonę logowania na górnym pasku albo naciśnij `Ctrl+G`. Pole **Client Version** to lista rozwijana na dole okna.
+5. Wypełnij w tej kolejności:
+   - **Client Version**: wybierz `1511` z listy (domyślnie bywa `860` albo inna wartość);
+   - **Server**: skasuj zawartość i wpisz `http://127.0.0.1:8088/login`;
+   - **Port**: `8088`;
+   - zaznacz **Enable HTTP login**;
+   - **Acc Name / Email**: `tibiaai@localhost` (email, nie nazwa konta);
+   - **Password**: wklej ze schowka (`Ctrl+V`).
+6. Kliknij **Login**. Pojawi się okno **„Missing Assets: Assets for client 15.11 are not installed. Download them now?”**. Kliknij **Download**.
+7. Pojawi się pasek postępu. Pobieranych jest ponad 1000 plików z GitHub; dokładnego rozmiaru nie zmierzyłem (same pliki z katalogu `assets/` widoczne przez API to ok. 29 MB), więc czas zależy od łącza. Nie zamykaj klienta.
+8. Po zakończeniu klient sam ponawia logowanie i pokazuje listę postaci. Wybierz **Knight Sample** (zwykły gracz) albo **GOD** (admin) i kliknij **Ok**.
+
+Sprawdzenie, czy pliki są na miejscu: w katalogu `...\data\things\1511\` powinny być `catalog-content.json`, `assets.json.sha256` i pliki `appearances-*.dat`, `sprites-*.bmp.lzma`, a po udanej instalacji także `.client-assets-complete`.
+
+### 4.2 Gdy pobieranie się nie udaje
+| Objaw | Co zrobić |
+| --- | --- |
+| Brak okna „Missing Assets” po kliknięciu Login | sprawdź, czy wybrana jest wersja `1511` (dla wersji < 1281 downloader się nie włącza) |
+| „Another asset download is already running.” | zamknij i uruchom klienta ponownie |
+| Błąd sieci / timeout / „No assets source found” | sprawdź dostęp do `api.github.com` i `raw.githubusercontent.com` (proxy, firewall, antywirus); limit API GitHub bez logowania to 60 zapytań/h, więc odczekaj i spróbuj ponownie |
+| „Assets were downloaded but the client files are still incomplete” | usuń katalog `data\things\1511` i powtórz pobieranie |
+| Szczegóły błędu | plik `vendor\otclient\otclient-dd5641492a71e966b96b8a91398b44bb3df67d88\otclient.log` (linie z `client_assets`) |
+
+Alternatywa bez downloadera: skopiuj zawartość katalogu `assets` z własnej instalacji klienta Tibia **15.11** do `...\data\things\1511\`.
+
+### 4.3 Po wejściu do gry
+Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz). Start w świątyni Montag (5010,4998,7). Kolejne logowania: te same wartości, a klient zapamiętuje serwer i wersję.
 
 Rozróżnienie: HTTP login (8088) zwraca tylko listę postaci i adres świata 127.0.0.1:7172. Wejście do gry to osobne połączenie TCP z 7172. Odpowiedź HTTP nie jest dowodem wejścia do gry.
 
