@@ -1,31 +1,32 @@
-# TibiaAI — pakiet startowy
-Przygotowano 29.10.2026. To specyfikacja i zlecenie wdrożenia, nie uruchomiony serwer.
+# TibiaAI
+Projekt Tibia z agentami AI: prywatne, lokalne laboratorium OpenTibia (Canary + OTClient), w którym NPC działają w prawdziwym świecie gry, a ich decyzje i pamięć dostarcza osobny proces Brain.
 
-> Po sesji 1 (29.10.2026) serwer działa lokalnie. Aktualny stan: DOCS/STATUS.md. Uruchamianie: DOCS/RUNBOOK.md
-> (`scripts\setup.ps1` raz, potem `scripts\start.ps1` / `scripts\stop.ps1`).
+Pierwsza scena: strażnik **Ardan** patroluje plac w Montag, reaguje na powitanie, przerywa patrol po alarmie treningowym, ostrzega i wraca na trasę, a po restarcie Brain pamięta spotkanie z graczem. Każde zdarzenie i wynik działania trafiają do dziennika.
 
-## Zacznij tutaj
-1. Rozpakuj zawartość do katalogu projektu TibiaAIServer. CLAUDE.md powinien znajdować się w jego głównym katalogu, obok DOCS.
-2. Jeżeli pliki o tych nazwach już istnieją, zachowaj ich kopię i scal treść. Nie nadpisuj swojej dokumentacji.
-3. Otwórz ten katalog w Claude Code. Wklej całą zawartość FIRST_PROMPT.md.
-4. Claude najpierw sprawdzi komputer i dostępne wersje, potem uruchomi świat i przygotuje Ardana. Brak grafik lub dostępu do pulpitu ma zostać wyraźnie zgłoszony.
-5. Następną sesję rozpocznij promptem z NEXT_PROMPT.md.
+Stan bieżący: [DOCS/STATUS.md](DOCS/STATUS.md). Uruchamianie: [DOCS/RUNBOOK.md](DOCS/RUNBOOK.md).
 
-Na screenie projekt jest w C:\xampp\htdocs\projects\tibia\TibiaAIServer. To nie jest aplikacja PHP. Sprawdź, czy Apache nie udostępnia tego folderu: sekrety, kod i bazy nie powinny być obsługiwane przez katalog publiczny. Preferowany nowy katalog to C:\dev\TibiaAIServer, ale nie przenoś automatycznie istniejącego projektu ani nie zmieniaj XAMPP.
+## Szybki start (Windows, PowerShell 5.1, Node 22.18)
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup.ps1    # raz: pobiera przypięte wersje (SHA-256), baza, konto
+powershell -ExecutionPolicy Bypass -File scripts\start.ps1    # MariaDB, login-server, Canary, Brain (tylko 127.0.0.1)
+powershell -ExecutionPolicy Bypass -File scripts\client.ps1 -CopyPassword
+powershell -ExecutionPolicy Bypass -File scripts\stop.ps1     # łagodny stop, bez kasowania danych
+```
+Klient potrzebuje assets Tibii 15.11, które nie są częścią repo (RUNBOOK §4).
 
-## Materiały
-- CLAUDE.md — stałe reguły pracy i dokumentowania.
-- FIRST_PROMPT.md — kompletne pierwsze zlecenie.
-- DOCS/VISION.md — doświadczenie gracza i rozwój.
-- DOCS/ARCHITECTURE.md — komponenty, granice i struktura.
-- DOCS/CONTRACTS.md — projekt komunikacji i walidacji.
-- DOCS/PLAN.md — etapy oraz warunki odbioru.
-- DOCS/SOURCES.md — sprawdzone źródła i rozbieżności wersji.
-- DOCS/COMPATIBILITY.md — tabela do wypełnienia rzeczywistymi wynikami.
-- DOCS/RUNBOOK.md — szablon instrukcji lokalnej.
-- DOCS/STATUS.md — bieżący stan i następne zadanie.
-- DOCS/TESTING.md — scenariusze weryfikacji.
-- DOCS/adr/0001-foundation.md — decyzja architektoniczna.
-- DOCS/iterations/TEMPLATE.md — zapis każdej iteracji.
+## Architektura w skrócie
+| Komponent | Gdzie | Rola |
+| --- | --- | --- |
+| Canary v3.6.1 + `data-canary` | `vendor/` (ignorowany) → `runtime/server` | autorytatywny świat |
+| Overlay Lua | `game/overlays/tibia-ai` | NPC, kontroler ruchu, walidacja komend, mailbox |
+| Brain (Node/TypeScript, SQLite) | `apps/brain` | reguły, pamięć, komendy z kontraktu |
+| Kontrakt i allowlista | `packages/contracts`, `DOCS/CONTRACTS.md` | jedyne dozwolone akcje |
+| Skrypty i przypięcia | `scripts/`, `infra/versions.lock.json` | powtarzalne uruchomienie |
 
-Nie zawiera binariów, grafik Tibii, map ani kluczy API. Nie zakłada, że subskrypcja narzędzia programistycznego opłaca model działający w grze.
+Decyzje: [DOCS/adr](DOCS/adr). Plan etapów: [DOCS/PLAN.md](DOCS/PLAN.md). Zasady pracy: [CLAUDE.md](CLAUDE.md).
+
+## Czego tu nie ma
+Binariów, grafik Tibii, map spoza źródeł Canary, kluczy API ani sekretów (`.env` jest generowany lokalnie i ignorowany). Zasoby gry mają osobne pochodzenie i warunki użycia.
+
+## Pakiet startowy
+Pliki `FIRST_PROMPT.md` i `NEXT_PROMPT.md` to oryginalne zlecenia dla sesji Claude Code; `NEXT_PROMPT.md` służy do kontynuacji pracy.
