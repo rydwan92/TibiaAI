@@ -344,8 +344,7 @@ function T.agentStatus(agent)
 	}
 end
 
-local tick = GlobalEvent("TibiaAIAgentTick")
-function tick.onThink(interval)
+local function tickAllAgents()
 	for _, key in ipairs(T.sortedKeys(T.agents)) do
 		local agent = T.agents[key]
 		local npc = T.agentNpc(agent)
@@ -356,6 +355,11 @@ function tick.onThink(interval)
 			end
 		end
 	end
+end
+
+local tick = GlobalEvent("TibiaAIAgentTick")
+function tick.onThink(interval)
+	T.measure("agent_tick", tickAllAgents)
 	return true
 end
 tick:interval(1000)

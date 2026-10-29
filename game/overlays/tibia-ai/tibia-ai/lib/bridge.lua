@@ -276,7 +276,7 @@ end
 
 local poll = GlobalEvent("TibiaAIBridgePoll")
 function poll.onThink(interval)
-	T.bridgePoll()
+	T.measure("bridge_poll", T.bridgePoll)
 	return true
 end
 poll:interval(500)

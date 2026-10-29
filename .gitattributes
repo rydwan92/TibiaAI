@@ -1,0 +1,7 @@
+# Normalised line endings in the repository; Windows tools get what they expect on checkout.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.otbm binary
+*.png binary
+*.zip binary

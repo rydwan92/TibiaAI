@@ -243,6 +243,29 @@ function json.decode(s)
 	return res
 end
 
+-- Rotation: renames `path` to <name>.<UTC stamp><ext> when it exceeds maxBytes. Old files are kept.
+-- Returns the new name when rotated, nil otherwise.
+function T.rotateIfLarger(path, maxBytes)
+	local f = io.open(path, "rb")
+	if not f then
+		return nil
+	end
+	local size = f:seek("end")
+	f:close()
+	if not size or size <= maxBytes then
+		return nil
+	end
+	local stem, ext = path:match("^(.-)(%.[%w]+)$")
+	local target = string.format("%s.%s%s", stem or path, os.date("!%Y%m%d-%H%M%S"), ext or "")
+	if os.rename(path, target) then
+		return target
+	end
+	return nil
+end
+
+T.JOURNAL_MAX_BYTES = 10 * 1024 * 1024
+local journalWrites = 0
+
 -- Journal: one JSON object per line in runtime/logs/world-journal.jsonl ---------------------------
 function T.journal(kind, fields)
 	local entry = { ts = T.isoNow(), worldSessionId = T.worldSessionId, kind = kind }
@@ -254,12 +277,57 @@ function T.journal(kind, fields)
 		logger.warn("[TibiaAI] journal encode failed: {}", tostring(line))
 		return
 	end
+	journalWrites = journalWrites + 1
+	if journalWrites % 200 == 0 then
+		T.rotateIfLarger(T.paths.journal, T.JOURNAL_MAX_BYTES)
+	end
 	local f = io.open(T.paths.journal, "a")
 	if f then
 		f:write(line, "\n")
 		f:close()
 	end
 	logger.info("[TibiaAI] {}", line)
+end
+
+-- Cost of our own work on the game dispatcher. os.clock() is the CRT clock() (wall time in ms
+-- resolution on Windows UCRT). Aggregated per name and written as perf_stats once per minute.
+T.perf = T.perf or { stats = {}, windowStart = os.time() }
+
+function T.measure(name, fn, ...)
+	local t0 = os.clock()
+	local ok, err = pcall(fn, ...)
+	local ms = (os.clock() - t0) * 1000
+	local s = T.perf.stats[name]
+	if not s then
+		s = { count = 0, totalMs = 0, maxMs = 0 }
+		T.perf.stats[name] = s
+	end
+	s.count = s.count + 1
+	s.totalMs = s.totalMs + ms
+	if ms > s.maxMs then
+		s.maxMs = ms
+	end
+	if not ok then
+		error(err, 0)
+	end
+end
+
+function T.flushPerf(windowSeconds)
+	local elapsed = os.time() - T.perf.windowStart
+	if elapsed < windowSeconds then
+		return
+	end
+	local out = {}
+	for name, s in pairs(T.perf.stats) do
+		out[name] = {
+			count = s.count,
+			avgMs = math.floor(s.totalMs / math.max(s.count, 1) * 1000 + 0.5) / 1000,
+			maxMs = math.floor(s.maxMs * 1000 + 0.5) / 1000,
+			totalMs = math.floor(s.totalMs * 1000 + 0.5) / 1000,
+		}
+	end
+	T.journal("perf_stats", { windowSeconds = elapsed, stats = out })
+	T.perf = { stats = {}, windowStart = os.time() }
 end
 
 -- Atomic-ish file write: tmp file + rename in the same directory (NTFS). Windows rename refuses an

@@ -51,12 +51,12 @@ local handlers = {
 	end,
 }
 
-local control = GlobalEvent("TibiaAIControl")
-function control.onThink(interval)
+local function controlTick()
 	if takeRequest("shutdown.request") then
+		T.flushPerf(0)
 		T.journal("shutdown_requested", { source = "control_file" })
 		Game.setGameState(GAME_STATE_SHUTDOWN)
-		return true
+		return
 	end
 	for _, name in ipairs({ "alarm-start.request", "alarm-clear.request", "selftest.request", "scan.request" }) do
 		local arg = takeRequest(name)
@@ -67,6 +67,12 @@ function control.onThink(interval)
 			end
 		end
 	end
+end
+
+local control = GlobalEvent("TibiaAIControl")
+function control.onThink(interval)
+	T.measure("control", controlTick)
+	T.flushPerf(60)
 	return true
 end
 control:interval(1000)

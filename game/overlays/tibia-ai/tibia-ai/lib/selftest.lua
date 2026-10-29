@@ -26,6 +26,29 @@ function T.runSelftest()
 	check("format", T.format("{name} ma {n}", { name = "Ann", n = 2 }) == "Ann ma 2")
 	check("format keeps unknown", T.format("{x}", {}) == "{x}")
 
+	-- Rotation (own scratch file in runtime/logs, removed afterwards)
+	local scratch = "../logs/selftest-rotate.jsonl"
+	local f = io.open(scratch, "wb")
+	if f then
+		f:write(string.rep("x", 100))
+		f:close()
+		check("no rotation under limit", T.rotateIfLarger(scratch, 1000) == nil)
+		local rotated = T.rotateIfLarger(scratch, 50)
+		local rf = rotated and io.open(rotated, "rb")
+		check("rotation renames file", rf ~= nil and io.open(scratch, "rb") == nil)
+		if rf then
+			rf:close()
+			os.remove(rotated)
+		end
+		os.remove(scratch)
+	else
+		failures[#failures + 1] = "cannot create rotation scratch file"
+	end
+
+	-- Measurement
+	T.measure("selftest_probe", function() end)
+	check("measure records calls", T.perf.stats.selftest_probe and T.perf.stats.selftest_probe.count >= 1)
+
 	-- Definitions
 	local keys = T.sortedKeys(T.agentDefs)
 	check("definitions loaded", #keys >= 1)

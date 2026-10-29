@@ -31,7 +31,15 @@ Ciągła numeracja na sesję zastępuje listowanie katalogu po stronie Lua. Sesj
 - Na Windows `os.rename` nie nadpisuje istniejącego pliku, więc `world.json` jest zastępowany przez remove + rename. Brain toleruje chwilowy brak pliku.
 - Brak gwarancji exactly-once po awarii procesu. Deduplikacja `commandId` działa w pamięci sesji świata (200 ostatnich), `eventId` w SQLite.
 - Luka w numeracji komend (np. awaria Brain między zapisem pliku a SQLite) zatrzymałaby odbiór. Brain wybiera `max(world.nextCommandSeq, max seq w SQLite + 1)` i pomija zajęte numery. Ryzyko jest udokumentowane, nie wyeliminowane.
-- Stałe I/O: 2 próby `io.open` na sekundę oraz zapis `world.json` co 2 s. Wpływu na tick nie mierzono profilerem (TODO).
+- Stałe I/O: 2 próby `io.open` na sekundę oraz zapis `world.json` co 2 s. Koszt zmierzono w iteracji 0006 (`perf_stats`, `os.clock()` = CRT `clock()`, rozdzielczość 1 ms, 2 agentów, ta maszyna; to pomiar, nie benchmark):
+
+  | GlobalEvent | Spoczynek: śr. / maks. | Obciążenie (14 komend + alarm): śr. / maks. |
+  | --- | --- | --- |
+  | `bridge_poll` (co 500 ms) | 0,84 / 6 ms | 1,26 / 12 ms |
+  | `agent_tick` (co 1 s) | 0,23 / 1 ms | 0,63 / 6 ms |
+  | `control` (co 1 s) | 0,43 / 7 ms | 0,32 / 3 ms |
+
+  Łącznie ~140–210 ms czasu dispatchera na minutę (~0,3%). Pojedyncze maksima do 12 ms pokrywają się z zapisem plików. Przy większej liczbie agentów warto zmierzyć ponownie; decyzja o adapterze C++ nie jest dziś uzasadniona.
 - To prosty most lokalny, nie transport skalowalny.
 
 ## Alternatywy

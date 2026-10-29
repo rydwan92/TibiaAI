@@ -109,7 +109,12 @@ node --disable-warning=ExperimentalWarning apps\brain\src\cli\timeline.ts --last
 Łączy `runtime\logs\world-journal.jsonl` (Lua) i `runtime\logs\brain.log` po `eventId`/`correlationId`/`commandId` dla bieżącej sesji świata (`--session <id>` dla starszej). Narzędzie tylko czyta.
 
 ## 7b. Retencja
-Brain co 10 min (i przy starcie) przycina `runtime\mailbox\processed`, `brain-processed` (po 2000 najnowszych plików) i `quarantine` (200). Pliki bieżącej sesji świata nie są usuwane. Logi i dziennik świata nie są rotowane automatycznie (TODO).
+Brain co 10 min (i przy starcie) przycina `runtime\mailbox\processed`, `brain-processed` (po 2000 najnowszych plików) i `quarantine` (200). Pliki bieżącej sesji świata nie są usuwane.
+Rotacja logów: `world-journal.jsonl` (Lua) i `brain.log` (Brain) po przekroczeniu 10 MB dostają nazwę z datą UTC (`world-journal.20261029-230000.jsonl`). Stare pliki zostają. `canary.out.log`, `login.out.log` i `mariadb.err.log` rotuje `start.ps1` przy starcie. `timeline` i `journal.py` czytają tylko bieżące pliki.
+
+## 7c. Koszt po stronie silnika
+Co minutę dziennik dostaje wpis `perf_stats` z czasem naszych GlobalEventów (`bridge_poll`, `agent_tick`, `control`: liczba wywołań, średnia, maksimum w ms):
+`python -I tools\journal.py --kinds perf_stats`. Punkt odniesienia z 2026-10-29: ADR 0002.
 
 ## 8. Typowe problemy
 | Objaw | Przyczyna / rozwiązanie |

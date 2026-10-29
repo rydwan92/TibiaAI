@@ -28,6 +28,8 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Oś decyzji | Łańcuch event → Brain → command → wykonanie → wynik z obu logów | Integracja | PASS | `timeline.test.ts`; na żywo `cli/timeline.ts` (iteracja 0005) |
 | Retencja mailboxa | Ograniczona liczba plików, bieżąca sesja chroniona | Jednostkowy | PASS | `retention.test.ts` |
 | Backup + restore | Sumy, liczba wierszy 48 tabel świata i 7 tabel Brain, integrity_check | Operacyjny | PASS | `scripts\backup.ps1`, `scripts\restore-test.ps1` |
+| Koszt GlobalEventów | Pomiar w spoczynku i pod obciążeniem | Pomiar | PASS (zmierzone) | `perf_stats`, ADR 0002 |
+| Rotacja logów | Rotacja powyżej limitu, bez nadpisywania i kasowania | Jednostkowy + silnik | PASS | `logrotate.test.ts`, self-test Lua |
 
 ## Polecenia
 ```powershell

@@ -8,6 +8,7 @@ import { agentRegistry } from './contracts.ts';
 import { Mailbox } from './mailbox.ts';
 import { Memory } from './memory.ts';
 import { createProvider } from './providers/rules.ts';
+import { rotateIfLarger } from './logrotate.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const runtime = join(root, 'runtime');
@@ -25,8 +26,10 @@ try {
   process.exit(2);
 }
 
+let logLines = 0;
 function log(kind: string, fields: Record<string, unknown> = {}): void {
   const line = JSON.stringify({ ts: new Date().toISOString(), kind, ...fields });
+  if (++logLines % 500 === 0) rotateIfLarger(logFile);
   appendFileSync(logFile, `${line}\n`);
   console.log(line);
 }
