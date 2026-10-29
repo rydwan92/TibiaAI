@@ -44,7 +44,7 @@ M1-GUI (iteracja 0006): pobrać assets 15.11 przez wbudowany downloader OTClient
 | Docker/WSL2 | użytkownik (opcjonalnie) | włączenie VT-x w BIOS. Niepotrzebne dla obecnego runtime |
 
 ## Ważne ustalenia dla kolejnej sesji
-- Na start sesji: `scripts\status.ps1`, potem `scriptserify.ps1`. Wszystko powinno być PASS przed nowymi zmianami.
+- Na start sesji: `scripts\status.ps1`, potem `scripts\verify.ps1`. Wszystko powinno być PASS przed nowymi zmianami.
 - Gracz loguje się **emailem** i z zaznaczonym HTTP login (TCP 7171 odrzuca 15.11).
 - Nowy agent = wpis w `packages/contracts/agents.json` (DOCS/AGENTS.md). Zmiany Lua wprowadzaj w `game/overlays/tibia-ai`. Wdrożenie: `stop.ps1 -KeepDb`, `sync-server.ps1`, `start.ps1`. Nigdy nie edytuj `runtime/server` ani `vendor/`.
 - Test mostu wymaga zatrzymanego Brain (`stop.ps1 -BrainOnly`).

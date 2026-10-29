@@ -17,6 +17,7 @@ Kryterium: `scripts\verify.ps1` przechodzi na działającym świecie i zapisuje 
 | Test | Wynik | Dowód |
 | --- | --- | --- |
 | `scripts\verify.ps1` na żywym świecie | PASS 6/6 (~28 s) | `runtime/logs/verify-20261030-000441.json` |
+| GitHub Actions `brain` (commit b4b663c) | PASS (18 s) | run 40970632174 |
 
 ## Ograniczenia
 - CI nie uruchamia Canary (assets, binarka Windows), więc testy silnika zostają lokalne (`verify.ps1`).
