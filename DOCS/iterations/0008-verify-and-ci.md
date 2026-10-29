@@ -1,6 +1,6 @@
 # Iteracja 0008: jedno polecenie weryfikacji i CI dla Brain
 Data: 2026-10-30
-Stan: VERIFIED lokalnie; CI: workflow dodany, wynik pierwszego przebiegu w GitHub Actions (patrz STATUS)
+Stan: VERIFIED lokalnie i w CI
 
 ## Cel i warunek odbioru
 Cel zapisany przed pracą.

@@ -17,7 +17,7 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Mira (tylko dane): stoi przy stoisku, przy alarmie chowa się w świątyni, wraca | VERIFIED w dzienniku | iteracja 0004 |
 | Most mailbox Lua ↔ Brain, walidacja w silniku, wielu agentów | VERIFIED 14/14 na żywym świecie | iteracja 0004 |
 | Agenci słyszą się w zasięgu; Brain pamięta „X powiedział Y” z pochodzeniem; brak odpowiedzi agent↔agent (zalążek M5) | VERIFIED w silniku | ADR 0005, iteracja 0007 |
-| Jedno polecenie weryfikacji `scripts/verify.ps1` (6 kroków) + CI GitHub Actions dla Brain | VERIFIED lokalnie 6/6 | iteracja 0008 |
+| Jedno polecenie weryfikacji `scripts/verify.ps1` (6 kroków) + CI GitHub Actions dla Brain | VERIFIED lokalnie 6/6; CI success (run 40970632174) | iteracja 0008 |
 | Self-test Lua w Canary | VERIFIED 24/24 | `scripts/selftest.ps1` |
 | Koszt naszych GlobalEventów zmierzony (most śr. 0,8–1,3 ms, maks. 12 ms; ~0,3% dispatchera) | VERIFIED (pomiar) | ADR 0002, iteracja 0006 |
 | Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
