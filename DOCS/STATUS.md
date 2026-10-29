@@ -1,6 +1,6 @@
 # Stan projektu
 
-Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0007). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
+Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0008). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
 Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 
 ## Działa (z dowodem)
@@ -17,6 +17,7 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Mira (tylko dane): stoi przy stoisku, przy alarmie chowa się w świątyni, wraca | VERIFIED w dzienniku | iteracja 0004 |
 | Most mailbox Lua ↔ Brain, walidacja w silniku, wielu agentów | VERIFIED 14/14 na żywym świecie | iteracja 0004 |
 | Agenci słyszą się w zasięgu; Brain pamięta „X powiedział Y” z pochodzeniem; brak odpowiedzi agent↔agent (zalążek M5) | VERIFIED w silniku | ADR 0005, iteracja 0007 |
+| Jedno polecenie weryfikacji `scripts/verify.ps1` (6 kroków) + CI GitHub Actions dla Brain | VERIFIED lokalnie 6/6 | iteracja 0008 |
 | Self-test Lua w Canary | VERIFIED 24/24 | `scripts/selftest.ps1` |
 | Koszt naszych GlobalEventów zmierzony (most śr. 0,8–1,3 ms, maks. 12 ms; ~0,3% dispatchera) | VERIFIED (pomiar) | ADR 0002, iteracja 0006 |
 | Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
@@ -43,6 +44,7 @@ M1-GUI (iteracja 0006): pobrać assets 15.11 przez wbudowany downloader OTClient
 | Docker/WSL2 | użytkownik (opcjonalnie) | włączenie VT-x w BIOS. Niepotrzebne dla obecnego runtime |
 
 ## Ważne ustalenia dla kolejnej sesji
+- Na start sesji: `scripts\status.ps1`, potem `scriptserify.ps1`. Wszystko powinno być PASS przed nowymi zmianami.
 - Gracz loguje się **emailem** i z zaznaczonym HTTP login (TCP 7171 odrzuca 15.11).
 - Nowy agent = wpis w `packages/contracts/agents.json` (DOCS/AGENTS.md). Zmiany Lua wprowadzaj w `game/overlays/tibia-ai`. Wdrożenie: `stop.ps1 -KeepDb`, `sync-server.ps1`, `start.ps1`. Nigdy nie edytuj `runtime/server` ani `vendor/`.
 - Test mostu wymaga zatrzymanego Brain (`stop.ps1 -BrainOnly`).

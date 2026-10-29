@@ -35,6 +35,8 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Plotka przy powitaniu | „Slyszalam, jak Ardan mowil…” po odpowiedzi | Gra | PASS (unit), GUI NOT RUN | `hearing.test.ts` |
 
 ## Polecenia
+Całość jednym poleceniem: `powershell -ExecutionPolicy Bypass -File scripts\verify.ps1` (raport w `runtime\logs\verify-*.json`). CI (GitHub Actions, `.github/workflows/brain.yml`) uruchamia testy jednostkowe i typecheck Brain przy każdym pushu.
+Pojedynczo:
 ```powershell
 cd apps\brain; pnpm install; pnpm test; pnpm typecheck; cd ..\..
 powershell -ExecutionPolicy Bypass -File scripts\stop.ps1 -BrainOnly

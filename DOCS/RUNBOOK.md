@@ -30,6 +30,7 @@ Skrypt pobiera artefakty z `infra/versions.lock.json` i sprawdza SHA-256, rozpak
 | Stop tylko Brain (gra działa dalej) | `... scripts\stop.ps1 -BrainOnly` |
 | Wdrożenie zmian w Lua (`game\overlays\tibia-ai`) lub w `packages\contracts\agents.json` | `stop.ps1 -KeepDb`, potem `scripts\sync-server.ps1`, potem `start.ps1` (sync odmawia, gdy Canary działa) |
 | Self-test Lua w działającym Canary | `... scripts\selftest.ps1` |
+| **Wszystkie weryfikacje bez GUI** (unit, typecheck, self-test, most, backup, restore) | `... scripts\verify.ps1` (`-SkipLive` bez świata) |
 
 `stop.ps1` nie kasuje danych. Canary zamyka się przez `runtime\control\shutdown.request` (globalevent wykonuje `GAME_STATE_SHUTDOWN` z zapisem), MariaDB przez `mariadb-admin shutdown`, a Brain przez `brain-stop.request`. Wymuszone zatrzymanie następuje dopiero po timeoucie.
 
