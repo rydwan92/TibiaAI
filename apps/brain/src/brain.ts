@@ -9,6 +9,7 @@ import type { Mailbox } from './mailbox.ts';
 import type { Memory } from './memory.ts';
 import type { Intent, Provider } from './providers/provider.ts';
 import { RulesProvider } from './providers/rules.ts';
+import { pruneMailbox } from './retention.ts';
 
 export type Logger = (kind: string, fields?: Record<string, unknown>) => void;
 
@@ -17,6 +18,7 @@ const MAX_RESULTS_PER_TICK = 50;
 const COMMAND_TTL_MS = 5000;
 const WORLD_STALE_MS = 10_000;
 const EVENT_MAX_AGE_MS = 15_000; // older observations (e.g. queued while Brain was down) are stored, not acted on
+const RETENTION_INTERVAL_MS = 10 * 60_000;
 
 interface Scheduled {
   dueAtMs: number;
@@ -28,6 +30,7 @@ export class Brain {
   private worldSessionId: string | null = null;
   private scheduled: Scheduled[] = [];
   private lastHeartbeatMs = 0;
+  private lastRetentionMs = 0;
   private readonly mailbox: Mailbox;
   private readonly memory: Memory;
   private readonly log: Logger;
@@ -71,6 +74,16 @@ export class Brain {
     this.processEvents(nowMs);
     this.processResults(nowMs);
     this.flushScheduled(nowMs, world);
+
+    if (nowMs - this.lastRetentionMs >= RETENTION_INTERVAL_MS) {
+      this.lastRetentionMs = nowMs;
+      try {
+        const removed = pruneMailbox(this.mailbox.root, this.worldSessionId);
+        if (Object.values(removed).some((n) => n > 0)) this.log('mailbox_pruned', removed);
+      } catch (err) {
+        this.log('mailbox_prune_error', { error: (err as Error).message });
+      }
+    }
   }
 
   private processEvents(nowMs: number): void {

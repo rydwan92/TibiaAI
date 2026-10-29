@@ -79,6 +79,19 @@ function Start-Detached([string]$exe, [string]$workDir, [string]$outLog, [string
     throw "$leaf did not start (see $errLog)"
 }
 
+function Get-TableRowCounts([string]$database) {
+    # Exact COUNT(*) for every base table of $database; returns an ordered hashtable name -> rows.
+    $tables = @(Invoke-MariaDb "SELECT table_name FROM information_schema.tables WHERE table_schema='$database' AND table_type='BASE TABLE' ORDER BY table_name;")
+    $counts = [ordered]@{}
+    if ($tables.Count -eq 0) { return $counts }
+    $sql = ($tables | ForEach-Object { "SELECT '$_', COUNT(*) FROM ``$_``" }) -join ' UNION ALL '
+    foreach ($line in Invoke-MariaDb "$sql;" $database) {
+        $name, $n = "$line" -split "`t"
+        $counts[$name] = [long]$n
+    }
+    return $counts
+}
+
 function Write-ControlRequest([string]$name, [string]$content) {
     # Picked up by the TibiaAIControl globalevent within ~1 s (see game\overlays\tibia-ai\tibia-ai\lib\control.lua).
     $control = Join-Path $Runtime 'control'

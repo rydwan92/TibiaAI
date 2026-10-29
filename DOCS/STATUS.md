@@ -1,6 +1,6 @@
 # Stan projektu
 
-Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0004). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
+Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0005). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
 Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 
 ## Działa (z dowodem)
@@ -17,12 +17,14 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Mira (tylko dane): stoi przy stoisku, przy alarmie chowa się w świątyni, wraca | VERIFIED w dzienniku | iteracja 0004 |
 | Most mailbox Lua ↔ Brain, walidacja w silniku, wielu agentów | VERIFIED 14/14 na żywym świecie | iteracja 0004 |
 | Self-test Lua w Canary | VERIFIED 20/20 | `scripts/selftest.ps1` |
-| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED headless; 17/17 testów jednostkowych | iteracje 0003, 0004 |
+| Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
+| Backup + sprawdzony restore do osobnej bazy; retencja mailboxa | VERIFIED | `scripts/backup.ps1`, `scripts/restore-test.ps1`, iteracja 0005 |
+| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED headless; 21/21 testów jednostkowych | iteracje 0003, 0004 |
 
 ## Nie zrobione / nie sprawdzone
 - **Test GUI**: lista postaci w OTClient, wejście, ruch, reconnect, widoczność Ardana i Miry, powitanie z klienta, pamięć spotkania gracza po restarcie Brain w grze. Blokuje go brak assets klienta 15.11. Instrukcja krok po kroku: RUNBOOK §4.1.
 - Wyświetlanie polskich znaków w kliencie: nie sprawdzone. Teksty są ASCII i Brain to wymusza.
-- Restore backupu do osobnej bazy, profil wpływu I/O mailboxa na tick.
+- Profil wpływu I/O mailboxa na tick; automatyczna rotacja logów.
 - `position_observed`, komunikacja agent ↔ agent (M5), provider LLM (M4): świadomie nie zaczęte.
 
 ## Bieżący stan maszyny (koniec sesji)
@@ -31,7 +33,7 @@ Konto testowe: email `tibiaai@localhost`, hasło w `.env` (`TIBIAAI_TEST_PASSWOR
 Niezależnie od projektu działa XAMPP użytkownika (Apache :80/:443, MySQL :3306 na wszystkich interfejsach). Nie był modyfikowany.
 
 ## Następne pojedyncze zadanie
-M1-GUI (iteracja 0005): pobrać assets 15.11 przez wbudowany downloader OTClient (RUNBOOK §4.1: wersja 1511, Login, Download), zalogować się, przejść test „Wejście” i scenariusze Ardana i Miry z TESTING.md.
+M1-GUI (iteracja 0006): pobrać assets 15.11 przez wbudowany downloader OTClient (RUNBOOK §4.1: wersja 1511, Login, Download), zalogować się, przejść test „Wejście” i scenariusze Ardana i Miry z TESTING.md.
 
 ## Blokery
 | Bloker | Kto | Co dokładnie |

@@ -25,6 +25,9 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Definicje agentów | `agents.json` poprawny; błędy raportowane z nazwą pola | Kontrakt | PASS | `agents.test.ts`; w Lua: `agent_definition_invalid` |
 | Wielu agentów | Drugi agent tylko z danych; allowlista per agent; nieznany agent odrzucony | Integracja | PASS | itest przypadki 12–14 |
 | Alarm wielu agentów | Każdy agent strefy reaguje wg definicji i wraca do rutyny | Silnik | PASS | iteracja 0004 |
+| Oś decyzji | Łańcuch event → Brain → command → wykonanie → wynik z obu logów | Integracja | PASS | `timeline.test.ts`; na żywo `cli/timeline.ts` (iteracja 0005) |
+| Retencja mailboxa | Ograniczona liczba plików, bieżąca sesja chroniona | Jednostkowy | PASS | `retention.test.ts` |
+| Backup + restore | Sumy, liczba wierszy 48 tabel świata i 7 tabel Brain, integrity_check | Operacyjny | PASS | `scripts\backup.ps1`, `scripts\restore-test.ps1` |
 
 ## Polecenia
 ```powershell

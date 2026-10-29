@@ -24,8 +24,11 @@ apps/brain/src/
   providers/         interfejs Provider + RulesProvider (teksty persony z definicji)
   memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
   mailbox.ts         pliki mailbox po stronie Node
-  brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji
-scripts/             setup, sync-server, start, stop, status, logs, client, alarm, selftest, scan
+  retention.ts       przycinanie katalogów archiwum mailboxa
+  timeline.ts        oś decyzji z dziennika świata i logu Brain (czyste funkcje)
+  brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji, retencja co 10 min
+  cli/               timeline.ts (odczyt), sqlite-tool.ts (backup/check SQLite)
+scripts/             setup, sync-server, start, stop, status, logs, client, alarm, selftest, scan, backup, restore-test
 tools/               journal.py (dziennik sesji), otbm_towns.py
 infra/versions.lock.json  przypięte artefakty z SHA-256
 runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream

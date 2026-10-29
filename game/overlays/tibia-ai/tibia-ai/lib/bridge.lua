@@ -68,25 +68,25 @@ function T.bridgeEmit(agentKey, eventType, fields)
 	for k, v in pairs(fields or {}) do
 		payload[k] = v
 	end
-	T.journal("event", { agentKey = agentKey, eventType = eventType, payload = payload })
-	if not B.enabled then
-		return nil
-	end
-	if B.eventSeq - B.brainAckSeq >= MAX_EVENT_BACKLOG then
+	local entry = { agentKey = agentKey, eventType = eventType, payload = payload, delivered = false }
+	if B.enabled and B.eventSeq - B.brainAckSeq >= MAX_EVENT_BACKLOG then
 		B.droppedEvents = B.droppedEvents + 1
 		T.journal("event_dropped_backpressure", { agentKey = agentKey, eventType = eventType, backlog = B.eventSeq - B.brainAckSeq })
-		return nil
+	elseif B.enabled then
+		B.eventSeq = B.eventSeq + 1
+		local msg = envelope("event", agentKey, payload)
+		msg.sequence = B.eventSeq
+		local name = string.format("evt-%s-%08d.json", T.worldSessionId, B.eventSeq)
+		local ok, err = T.writeFileAtomic(mailboxPath("events/", name), T.json.encode(msg), false)
+		if ok then
+			entry.eventId, entry.sequence, entry.delivered = msg.messageId, msg.sequence, true
+		else
+			T.journal("bridge_write_failed", { file = name, error = tostring(err) })
+		end
 	end
-	B.eventSeq = B.eventSeq + 1
-	local msg = envelope("event", agentKey, payload)
-	msg.sequence = B.eventSeq
-	local name = string.format("evt-%s-%08d.json", T.worldSessionId, B.eventSeq)
-	local ok, err = T.writeFileAtomic(mailboxPath("events/", name), T.json.encode(msg), false)
-	if not ok then
-		T.journal("bridge_write_failed", { file = name, error = tostring(err) })
-		return nil
-	end
-	return msg.messageId
+	-- eventId links this entry to Brain's log and to replies (correlationId) in tools/timeline.
+	T.journal("event", entry)
+	return entry.eventId
 end
 
 local function writeResult(cmdEnvelope, agentKey, payload)
@@ -208,7 +208,7 @@ local function handleCommand(raw, fileName)
 		agent.planRevision = p.planRevision -- newer movement plan cancels older ones
 	end
 	T.journal("command_accepted", { agentKey = agentKey, commandId = p.commandId, action = p.action, planRevision = p.planRevision, correlationId = msg.correlationId })
-	T.agentExecute(agent, { action = p.action, args = p.args or {}, correlationId = msg.correlationId }, function(st, rc, position)
+	T.agentExecute(agent, { action = p.action, args = p.args or {}, correlationId = msg.correlationId, commandId = p.commandId }, function(st, rc, position)
 		local payload = { commandId = p.commandId, status = st, reasonCode = rc, actualPosition = position }
 		if st ~= "accepted" then
 			payload.completedAtMs = T.nowMs()

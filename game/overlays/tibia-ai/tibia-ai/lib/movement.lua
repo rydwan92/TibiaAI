@@ -3,20 +3,20 @@
 -- No path or no progress for timing.moveTimeoutTicks => failure. Never teleports.
 local T = TibiaAI
 
-function T.startMove(agent, waypointId, onDone)
+-- meta (optional) is copied into the move_completed / move_failed journal entry (e.g. commandId).
+function T.startMove(agent, waypointId, onDone, meta)
 	local def = T.agentDef(agent)
-	agent.mover = { target = def.waypoints[waypointId], label = waypointId, lastProgressTick = agent.tick, onDone = onDone }
+	agent.mover = { target = def.waypoints[waypointId], label = waypointId, lastProgressTick = agent.tick, onDone = onDone, meta = meta }
 end
 
 local function finishMove(agent, npc, ok, reason)
 	local m = agent.mover
 	agent.mover = nil
-	T.journal(ok and "move_completed" or "move_failed", {
-		agentKey = agent.key,
-		target = m.label,
-		reason = reason,
-		position = T.posTable(npc:getPosition()),
-	})
+	local entry = { agentKey = agent.key, target = m.label, reason = reason, position = T.posTable(npc:getPosition()) }
+	for k, v in pairs(m.meta or {}) do
+		entry[k] = v
+	end
+	T.journal(ok and "move_completed" or "move_failed", entry)
 	if m.onDone then
 		m.onDone(npc, ok, reason)
 	end

@@ -93,15 +93,23 @@ Definicje i procedura dodawania: DOCS/AGENTS.md.
 - Testy: `cd apps\brain; pnpm install; pnpm test; pnpm typecheck`.
 - Test mostu na żywym świecie (Brain musi być zatrzymany): `stop.ps1 -BrainOnly`, potem `node --disable-warning=ExperimentalWarning apps\brain\test-integration\bridge.itest.ts`, a na koniec `start.ps1 -BrainOnly`.
 
-## 7. Backup (bez kasowania czegokolwiek)
+## 7. Backup i sprawdzenie odtworzenia
 ```powershell
-# Świat (MariaDB działa):
-# (--result-file zamiast ">", bo PowerShell 5.1 zapisuje przekierowanie w UTF-16)
-vendor\mariadb\mariadb-11.4.13-winx64\bin\mariadb-dump.exe --defaults-extra-file=runtime\mariadb\root-client.cnf --result-file=runtime\backup-world.sql tibiaai_canary
-# Brain (najlepiej po stop.ps1 -BrainOnly):
-Copy-Item runtime\brain\brain.sqlite runtime\backup-brain.sqlite
+powershell -ExecutionPolicy Bypass -File scripts\backup.ps1        # runtime\backups\<data>\ (world.sql, brain.sqlite, manifest.json)
+powershell -ExecutionPolicy Bypass -File scripts\restore-test.ps1  # najnowszy backup -> osobna baza tibiaai_restore_test
 ```
-`root-client.cnf` tworzą skrypty (zawiera hasło root, leży w ignorowanym `runtime\`). Restore do osobnej testowej bazy: NOT RUN (TODO).
+- Backup działa przy uruchomionym świecie i Brain (`mariadb-dump --single-transaction`, SQLite `VACUUM INTO`) i niczego nie kasuje. `manifest.json` zawiera SHA-256 plików i liczbę wierszy każdej tabeli.
+- `restore-test.ps1` sprawdza sumy, odtwarza `world.sql` do bazy **tibiaai_restore_test** (tylko tę bazę tworzy i usuwa; `-Keep` ją zostawia), porównuje liczbę wierszy z manifestem i robi `integrity_check` kopii SQLite. Bazy `tibiaai_canary` nie dotyka.
+- Odtworzenie produkcyjne (świadoma decyzja, nie skrypt): zatrzymaj świat (`stop.ps1 -KeepDb`), zaimportuj `world.sql` do `tibiaai_canary` klientem `mariadb` z `--defaults-extra-file=runtime\mariadb\root-client.cnf` i podmień `runtime\brain\brain.sqlite` kopią. Wcześniej zrób świeży backup.
+
+## 7a. Oś decyzji (obserwacja → decyzja → wykonanie → skutek)
+```powershell
+node --disable-warning=ExperimentalWarning apps\brain\src\cli\timeline.ts --last 10 [--agent ardan] [--id <eventId>] [--json]
+```
+Łączy `runtime\logs\world-journal.jsonl` (Lua) i `runtime\logs\brain.log` po `eventId`/`correlationId`/`commandId` dla bieżącej sesji świata (`--session <id>` dla starszej). Narzędzie tylko czyta.
+
+## 7b. Retencja
+Brain co 10 min (i przy starcie) przycina `runtime\mailbox\processed`, `brain-processed` (po 2000 najnowszych plików) i `quarantine` (200). Pliki bieżącej sesji świata nie są usuwane. Logi i dziennik świata nie są rotowane automatycznie (TODO).
 
 ## 8. Typowe problemy
 | Objaw | Przyczyna / rozwiązanie |

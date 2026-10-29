@@ -14,14 +14,19 @@ end
 T.setAgentState = setState
 
 -- Local speech only (TALKTYPE_SAY / YELL), heard by players in hearing range. Empty text is skipped.
-function T.agentSay(agent, npc, text, yell, source)
+-- meta (optional) is copied into the journal entry, e.g. { commandId, correlationId } for Brain speech.
+function T.agentSay(agent, npc, text, yell, source, meta)
 	if not text or text == "" then
 		return false
 	end
 	text = tostring(text):gsub("%c", " "):sub(1, 200)
 	npc:say(text, yell and TALKTYPE_YELL or TALKTYPE_SAY)
 	agent.lastSayTime = os.time()
-	T.journal("npc_said", { agentKey = agent.key, text = text, source = source or "rules" })
+	local entry = { agentKey = agent.key, text = text, source = source or "rules" }
+	for k, v in pairs(meta or {}) do
+		entry[k] = v
+	end
+	T.journal("npc_said", entry)
 	return true
 end
 
@@ -305,7 +310,7 @@ function T.agentExecute(agent, cmd, report)
 		elseif os.time() - agent.lastSayTime < T.timing.sayCooldownSeconds then
 			return report("rejected", "say_rate_limited")
 		end
-		T.agentSay(agent, npc, args.text, false, "brain")
+		T.agentSay(agent, npc, args.text, false, "brain", { commandId = cmd.commandId, correlationId = cmd.correlationId })
 		return report("completed", "said")
 	elseif action == "patrol" then
 		local ok, reason = T.agentStartPatrol(agent, args.routeId, "command")
@@ -316,7 +321,7 @@ function T.agentExecute(agent, cmd, report)
 		report("accepted", "moving")
 		T.startMove(agent, args.waypointId, function(n, ok, reason)
 			report(ok and "completed" or "failed", reason, T.posTable(n:getPosition()))
-		end)
+		end, { commandId = cmd.commandId })
 		return
 	elseif action == "stop" then
 		agent.mover = nil
