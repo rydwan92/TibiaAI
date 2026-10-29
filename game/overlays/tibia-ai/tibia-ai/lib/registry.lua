@@ -51,6 +51,12 @@ function T.validateDefinition(def)
 			return "alarm"
 		end
 	end
+	if def.hearing ~= nil then
+		local h = def.hearing
+		if type(h) ~= "table" or type(h.range) ~= "number" or (h.yellRange ~= nil and type(h.yellRange) ~= "number") then
+			return "hearing"
+		end
+	end
 	if type(def.greeting) ~= "table" or type(def.greeting.words) ~= "table" or type(def.greeting.range) ~= "number" then
 		return "greeting"
 	end

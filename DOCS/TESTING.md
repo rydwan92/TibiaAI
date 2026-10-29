@@ -30,6 +30,9 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Backup + restore | Sumy, liczba wierszy 48 tabel świata i 7 tabel Brain, integrity_check | Operacyjny | PASS | `scripts\backup.ps1`, `scripts\restore-test.ps1` |
 | Koszt GlobalEventów | Pomiar w spoczynku i pod obciążeniem | Pomiar | PASS (zmierzone) | `perf_stats`, ADR 0002 |
 | Rotacja logów | Rotacja powyżej limitu, bez nadpisywania i kasowania | Jednostkowy + silnik | PASS | `logrotate.test.ts`, self-test Lua |
+| Słyszenie agentów | `agent_heard` tylko w zasięgu; pamięć z pochodzeniem u słuchacza | Silnik + jednostkowy | PASS | iteracja 0007, `hearing.test.ts` |
+| Limit pętli agent ↔ agent | Żadna mowa w odpowiedzi na `agent_heard`, także od złośliwego providera | Jednostkowy + silnik | PASS | `hearing.test.ts`, `brain.log` |
+| Plotka przy powitaniu | „Slyszalam, jak Ardan mowil…” po odpowiedzi | Gra | PASS (unit), GUI NOT RUN | `hearing.test.ts` |
 
 ## Polecenia
 ```powershell

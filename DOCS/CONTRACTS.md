@@ -24,6 +24,7 @@ Zmiana względem v0: znaczniki czasu to liczby epoch ms (`createdAtMs`, `expires
 | `training_alarm_started` | zoneId, triggeredBy | `/alarm start [zone]` (GOD) lub `scripts/alarm.ps1 start`; jedno zdarzenie na każdego agenta reagującego na strefę |
 | `training_alarm_cleared` | zoneId, clearedBy | `/alarm clear [zone]` lub `scripts/alarm.ps1 clear` |
 | `position_observed` | x, y, z | w kontrakcie, jeszcze nie emitowany |
+| `agent_heard` | speakerKey (inny znany agent), text (≤200), yelled (bool), distance (int) | `T.propagateSpeech` przy każdej wypowiedzi agenta; słuchacz z `hearing` w zasięgu na tym samym piętrze (ADR 0005). Nigdy nie wywołuje mowy: ani w Lua, ani w Brain (strażnik pętli odrzuca intencje każdego providera) |
 
 GUID i pozycja zawsze pochodzą z silnika. Tekst czatu to niezaufane dane: nie zmienia allowlisty i nie staje się akcją. `threat_observed` dopiero po faktycznej percepcji silnika.
 

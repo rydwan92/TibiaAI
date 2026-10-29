@@ -57,6 +57,10 @@ function T.runSelftest()
 		npcName = "X", waypoints = { a = { x = 1, y = 1, z = 7 } }, spawn = "a", routes = { r = { "a", "zz" } },
 		behavior = { type = "patrol", defaultRoute = "r" }, greeting = { words = {}, range = 1 }, texts = { greetFallback = "" },
 	}) ~= nil)
+	check("rejects malformed hearing", T.validateDefinition({
+		npcName = "X", waypoints = { a = { x = 1, y = 1, z = 7 } }, spawn = "a", behavior = { type = "stationary", home = "a" },
+		hearing = { range = "far" }, greeting = { words = {}, range = 1 }, texts = { greetFallback = "" },
+	}) == "hearing")
 	check("rejects unknown behavior", T.validateDefinition({ npcName = "X", waypoints = { a = { x = 1, y = 1, z = 7 } }, spawn = "a", behavior = { type = "fight" } }) ~= nil)
 
 	-- Command validation (needs a spawned agent and a world session)

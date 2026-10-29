@@ -19,6 +19,7 @@ const COMMAND_TTL_MS = 5000;
 const WORLD_STALE_MS = 10_000;
 const EVENT_MAX_AGE_MS = 15_000; // older observations (e.g. queued while Brain was down) are stored, not acted on
 const RETENTION_INTERVAL_MS = 10 * 60_000;
+const RUMOR_MAX_AGE_MS = 10 * 60_000; // ADR 0005: only fresh statements are passed on
 
 interface Scheduled {
   dueAtMs: number;
@@ -107,6 +108,10 @@ export class Brain {
         if (ok && ev.payload.type === 'player_greeted') {
           this.memory.recordEncounter(ev.agentKey, ev.payload.playerGuid, ev.payload.playerName, ev.messageId, ev.worldSessionId, ev.createdAtMs);
         }
+        if (ok && ev.payload.type === 'agent_heard') {
+          const h = ev.payload;
+          this.memory.recordHeard(ev.messageId, ev.agentKey, h.speakerKey, h.text, h.yelled, h.distance, ev.worldSessionId, ev.createdAtMs);
+        }
         return ok;
       });
       this.mailbox.archive('events', name);
@@ -117,12 +122,19 @@ export class Brain {
       this.log('event_received', { eventId: ev.messageId, type: ev.payload.type, sequence: ev.sequence, stale });
       if (stale) continue; // remembered, but no action for old sessions/observations
 
+      const heard = ev.payload.type === 'player_greeted' ? this.memory.latestHeard(ev.agentKey, nowMs - RUMOR_MAX_AGE_MS) : undefined;
       const intents = this.provider.decide(ev, {
         agent: agentRegistry().get(ev.agentKey)!,
         encounterBefore,
         alarmsThisSession: this.memory.countObservations(ev.worldSessionId, 'training_alarm_started', ev.agentKey),
+        latestHeard: heard && { ...heard, speakerName: agentRegistry().get(heard.speakerKey)?.npcName ?? heard.speakerKey },
         nowMs,
       });
+      if (ev.payload.type === 'agent_heard' && intents.length > 0) {
+        // Loop guard for any provider (ADR 0005): agent speech never triggers agent speech.
+        this.log('intents_blocked_loop_guard', { eventId: ev.messageId, count: intents.length });
+        continue;
+      }
       for (const intent of intents) this.scheduled.push({ dueAtMs: nowMs + intent.delayMs, intent, event: ev });
     }
   }

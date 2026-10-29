@@ -63,7 +63,30 @@ const MIGRATIONS: { version: number; sql: string }[] = [
         received_at_ms INTEGER NOT NULL
       );`,
   },
+  {
+    // ADR 0005: what an agent heard another agent say. A relation with provenance, not a world fact.
+    version: 2,
+    sql: `
+      CREATE TABLE heard_statements (
+        event_id TEXT PRIMARY KEY,
+        listener_key TEXT NOT NULL,
+        speaker_key TEXT NOT NULL,
+        text TEXT NOT NULL,
+        yelled INTEGER NOT NULL,
+        distance INTEGER NOT NULL,
+        world_session_id TEXT NOT NULL,
+        observed_at_ms INTEGER NOT NULL
+      );
+      CREATE INDEX heard_listener_time ON heard_statements(listener_key, observed_at_ms);`,
+  },
 ];
+
+export interface HeardStatement {
+  speakerKey: string;
+  text: string;
+  yelled: boolean;
+  atMs: number;
+}
 
 export interface EncounterStats {
   count: number;
@@ -151,6 +174,21 @@ export class Memory {
   recordEncounter(agentKey: string, playerGuid: number, playerName: string, eventId: string, worldSessionId: string, observedAtMs: number): void {
     this.db.prepare(`INSERT OR IGNORE INTO encounters (agent_key, player_guid, player_name, event_id, world_session_id, observed_at_ms)
       VALUES (?, ?, ?, ?, ?, ?)`).run(agentKey, playerGuid, playerName, eventId, worldSessionId, observedAtMs);
+  }
+
+  recordHeard(eventId: string, listenerKey: string, speakerKey: string, text: string, yelled: boolean, distance: number,
+    worldSessionId: string, observedAtMs: number): void {
+    this.db.prepare(`INSERT OR IGNORE INTO heard_statements
+      (event_id, listener_key, speaker_key, text, yelled, distance, world_session_id, observed_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      eventId, listenerKey, speakerKey, text, yelled ? 1 : 0, distance, worldSessionId, observedAtMs);
+  }
+
+  /** Most recent statement the listener heard at or after sinceMs (any speaker). */
+  latestHeard(listenerKey: string, sinceMs: number): HeardStatement | undefined {
+    const row = this.db.prepare(`SELECT speaker_key, text, yelled, observed_at_ms FROM heard_statements
+      WHERE listener_key = ? AND observed_at_ms >= ? ORDER BY observed_at_ms DESC, rowid DESC LIMIT 1`).get(listenerKey, sinceMs) as
+      { speaker_key: string; text: string; yelled: number; observed_at_ms: number } | undefined;
+    return row && { speakerKey: row.speaker_key, text: row.text, yelled: row.yelled === 1, atMs: row.observed_at_ms };
   }
 
   countObservations(worldSessionId: string, type: string, agentKey?: string): number {

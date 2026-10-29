@@ -27,7 +27,26 @@ function T.agentSay(agent, npc, text, yell, source, meta)
 		entry[k] = v
 	end
 	T.journal("npc_said", entry)
+	T.propagateSpeech(agent, npc, text, yell)
 	return true
+end
+
+-- Local hearing between agents (ADR 0005): other agents with `hearing` in range on the same floor
+-- receive an agent_heard event. Nothing here ever makes the listener speak (no agent<->agent loops).
+function T.propagateSpeech(speaker, npc, text, yell)
+	local from = npc:getPosition()
+	for _, key in ipairs(T.sortedKeys(T.agents)) do
+		local listener = T.agents[key]
+		local hearing = key ~= speaker.key and T.agentDef(listener).hearing or nil
+		local listenerNpc = hearing and T.agentNpc(listener) or nil
+		if listenerNpc then
+			local d = T.distance(from, listenerNpc:getPosition())
+			local limit = yell and (hearing.yellRange or hearing.range) or hearing.range
+			if d <= limit then
+				T.bridgeEmit(key, "agent_heard", { speakerKey = speaker.key, text = text, yelled = yell and true or false, distance = d })
+			end
+		end
+	end
 end
 
 -- Routine behaviors ------------------------------------------------------------------------------

@@ -4,7 +4,7 @@
 // layer before being plugged in here.
 import type { AgentDefinition } from '../agents.ts';
 import type { Envelope, EventPayload } from '../contracts.ts';
-import type { EncounterStats } from '../memory.ts';
+import type { EncounterStats, HeardStatement } from '../memory.ts';
 
 export interface Intent {
   action: 'say';
@@ -19,6 +19,8 @@ export interface ProviderContext {
   encounterBefore?: EncounterStats;
   /** Training alarms observed for this agent in the current world session (incl. this one). */
   alarmsThisSession?: number;
+  /** Freshest statement this agent heard from another agent (ADR 0005), if recent enough. */
+  latestHeard?: HeardStatement & { speakerName: string };
 }
 
 export interface Provider {

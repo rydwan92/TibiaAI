@@ -20,9 +20,10 @@ Agenci są opisani danymi w `packages/contracts/agents.json` (ADR 0004). Ten sam
 | `behavior` | `{type:"patrol", defaultRoute}` albo `{type:"stationary", home}` |
 | `greeting` | słowa powitania, zasięg w kratkach, cooldown na gracza |
 | `alarm` (opcjonalne) | `zones` (z globalnego `alarmZones`), `moveTo`, `yell`, `rewarnSeconds` (0 = bez ponawiania) |
+| `hearing` (opcjonalne) | `range` i `yellRange` w kratkach: agent słyszy innych agentów w tym zasięgu (ADR 0005). Brain zapamiętuje to jako „X powiedział Y”, nigdy nie odpowiada |
 | `texts` | teksty persony; placeholdery `{name}`, `{nth}`, `{since}`, `{n}`; pusty tekst = brak wypowiedzi |
 
-Teksty: `greetFallback` (lokalna odpowiedź Lua bez Brain), `greetFirst`/`greetRepeat` (Brain, z pamięci), `greetDuringAlarm`, `alarmStart`, `alarmArrive`, `alarmBlocked`, `alarmRewarn`, `alarmClear`, `alarmComment` (Brain, po 4 s). Używaj drukowalnego ASCII, bo kodowania polskich znaków w kliencie nie sprawdzono. Walidacja Brain to wymusza.
+Teksty: `greetFallback` (lokalna odpowiedź Lua bez Brain), `greetFirst`/`greetRepeat` (Brain, z pamięci), `greetRumor` (Brain, 3,5 s po powitaniu: najświeższa usłyszana wypowiedź innego agenta z ostatnich 10 min; placeholdery `{speaker}`, `{quote}`, `{since}`), `greetDuringAlarm`, `alarmStart`, `alarmArrive`, `alarmBlocked`, `alarmRewarn`, `alarmClear`, `alarmComment` (Brain, po 4 s). Używaj drukowalnego ASCII, bo kodowania polskich znaków w kliencie nie sprawdzono. Walidacja Brain to wymusza.
 
 Globalne: `timing` (w tickach po 1 s: pauza po powitaniu, czas czekania na Brain, timeout ruchu, ponowienia, zasięg pathfindera, cooldown mowy), `alarmZones`, `actions`, `limits`.
 

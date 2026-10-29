@@ -21,6 +21,10 @@ const safeName = (name: string) => name.replace(/[^A-Za-z0-9 '\-]/g, '').slice(0
 
 /** Delay before commenting an alarm: the engine already spoke and enforces a 3 s say cooldown. */
 export const ALARM_COMMENT_DELAY_MS = 4000;
+/** Delay of a rumor after the greeting reply (same 3 s engine cooldown for non-reply speech). */
+export const RUMOR_DELAY_MS = 3500;
+
+const quote = (text: string) => (text.length > 60 ? `${text.slice(0, 57)}...` : text).replace(/"/g, "'");
 
 export class RulesProvider implements Provider {
   readonly name = 'rules';
@@ -35,9 +39,18 @@ export class RulesProvider implements Provider {
       case 'player_greeted': {
         const name = safeName(p.playerName);
         const before = ctx.encounterBefore ?? { count: 0, lastAtMs: null };
-        if (before.count === 0 || before.lastAtMs === null) return say(texts.greetFirst, { name });
-        return say(texts.greetRepeat, { name, nth: before.count + 1, since: sinceText(before.lastAtMs, ctx.nowMs) });
+        const greeting = before.count === 0 || before.lastAtMs === null
+          ? say(texts.greetFirst, { name })
+          : say(texts.greetRepeat, { name, nth: before.count + 1, since: sinceText(before.lastAtMs, ctx.nowMs) });
+        const h = ctx.latestHeard;
+        const rumor = h && greeting.length > 0
+          ? say(texts.greetRumor, { speaker: h.speakerName, quote: quote(h.text), since: sinceText(h.atMs, ctx.nowMs) }, RUMOR_DELAY_MS)
+          : [];
+        return [...greeting, ...rumor];
       }
+      case 'agent_heard':
+        // Never answer another agent's speech (ADR 0005: no agent<->agent loops); it is memory only.
+        return [];
       case 'training_alarm_started':
         return say(texts.alarmComment, { n: ctx.alarmsThisSession ?? 1 }, ALARM_COMMENT_DELAY_MS);
       default:

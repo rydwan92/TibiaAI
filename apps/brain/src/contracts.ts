@@ -35,7 +35,8 @@ export type EventPayload =
   | { type: 'player_greeted'; playerGuid: number; playerName: string; text: string }
   | { type: 'training_alarm_started'; zoneId: string; triggeredBy?: string }
   | { type: 'training_alarm_cleared'; zoneId: string; clearedBy?: string }
-  | { type: 'position_observed'; x: number; y: number; z: number };
+  | { type: 'position_observed'; x: number; y: number; z: number }
+  | { type: 'agent_heard'; speakerKey: string; text: string; yelled: boolean; distance: number };
 
 export type Action = 'say' | 'patrol' | 'move_to' | 'stop';
 
@@ -99,6 +100,11 @@ export function parseEvent(raw: unknown): Validation<Envelope<EventPayload>> {
       break;
     case 'position_observed':
       if (!isInt(p.x) || !isInt(p.y) || !isInt(p.z)) return fail('position');
+      break;
+    case 'agent_heard':
+      if (!isStr(p.speakerKey, 32) || !agentRegistry().has(p.speakerKey) || p.speakerKey === e.agentKey) return fail('speaker_key');
+      if (typeof p.text !== 'string' || p.text.length > agentRegistry().limits.maxSayLength) return fail('text');
+      if (typeof p.yelled !== 'boolean' || !isInt(p.distance) || p.distance < 0) return fail('heard_fields');
       break;
     default:
       return fail('unknown_event_type');

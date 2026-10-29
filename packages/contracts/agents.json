@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n}.",
+  "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n} {speaker} {quote}.",
   "timing": {
     "talkPauseTicks": 4,
     "brainReplyTicks": 2,
@@ -10,28 +10,92 @@
     "pathSearchDistance": 30,
     "sayCooldownSeconds": 3
   },
-  "alarmZones": ["montag_gate"],
+  "alarmZones": [
+    "montag_gate"
+  ],
   "agents": {
     "ardan": {
       "npcName": "Ardan",
       "description": "Ardan, the guard of Montag",
-      "outfit": { "lookType": 131, "lookHead": 57, "lookBody": 59, "lookLegs": 40, "lookFeet": 76, "lookAddons": 0 },
+      "outfit": {
+        "lookType": 131,
+        "lookHead": 57,
+        "lookBody": 59,
+        "lookLegs": 40,
+        "lookFeet": 76,
+        "lookAddons": 0
+      },
       "speed": 120,
       "spawn": "temple_south",
-      "behavior": { "type": "patrol", "defaultRoute": "montag_square" },
+      "behavior": {
+        "type": "patrol",
+        "defaultRoute": "montag_square"
+      },
       "waypoints": {
-        "temple_south": { "x": 5010, "y": 5003, "z": 7 },
-        "square_west": { "x": 5006, "y": 5005, "z": 7 },
-        "square_east": { "x": 5016, "y": 5005, "z": 7 },
-        "road_south": { "x": 5010, "y": 5009, "z": 7 },
-        "gate_watch": { "x": 5019, "y": 5012, "z": 7 },
-        "test_unreachable": { "x": 5005, "y": 4994, "z": 7 }
+        "temple_south": {
+          "x": 5010,
+          "y": 5003,
+          "z": 7
+        },
+        "square_west": {
+          "x": 5006,
+          "y": 5005,
+          "z": 7
+        },
+        "square_east": {
+          "x": 5016,
+          "y": 5005,
+          "z": 7
+        },
+        "road_south": {
+          "x": 5010,
+          "y": 5009,
+          "z": 7
+        },
+        "gate_watch": {
+          "x": 5019,
+          "y": 5012,
+          "z": 7
+        },
+        "test_unreachable": {
+          "x": 5005,
+          "y": 4994,
+          "z": 7
+        }
       },
       "routes": {
-        "montag_square": ["temple_south", "square_west", "road_south", "square_east"]
+        "montag_square": [
+          "temple_south",
+          "square_west",
+          "road_south",
+          "square_east"
+        ]
       },
-      "greeting": { "words": ["hi", "hello", "hey", "witaj", "czesc", "siema", "dzien dobry"], "range": 4, "cooldownSeconds": 8 },
-      "alarm": { "zones": ["montag_gate"], "moveTo": "gate_watch", "yell": true, "rewarnSeconds": 20 },
+      "greeting": {
+        "words": [
+          "hi",
+          "hello",
+          "hey",
+          "witaj",
+          "czesc",
+          "siema",
+          "dzien dobry"
+        ],
+        "range": 4,
+        "cooldownSeconds": 8
+      },
+      "hearing": {
+        "range": 7,
+        "yellRange": 30
+      },
+      "alarm": {
+        "zones": [
+          "montag_gate"
+        ],
+        "moveTo": "gate_watch",
+        "yell": true,
+        "rewarnSeconds": 20
+      },
       "texts": {
         "greetFallback": "Witaj, {name}. Jestem Ardan, straznik Montag. Trzymaj sie blisko swiatyni.",
         "greetFirst": "Witaj, {name}. Jestem Ardan, straznik Montag. Nie widzialem cie tu wczesniej.",
@@ -42,23 +106,65 @@
         "alarmBlocked": "Nie moge dojsc do bramy. Pilnuje stad.",
         "alarmRewarn": "Alarm trwa. Nie zblizajcie sie do bramy.",
         "alarmClear": "Alarm odwolany. Wracam na patrol.",
-        "alarmComment": "To {n}. alarm cwiczebny w tej zmianie. Zachowajcie spokoj."
+        "alarmComment": "To {n}. alarm cwiczebny w tej zmianie. Zachowajcie spokoj.",
+        "greetRumor": ""
       }
     },
     "mira": {
       "npcName": "Mira",
       "description": "Mira, the herbalist of Montag",
-      "outfit": { "lookType": 136, "lookHead": 78, "lookBody": 101, "lookLegs": 119, "lookFeet": 115, "lookAddons": 0 },
+      "outfit": {
+        "lookType": 136,
+        "lookHead": 78,
+        "lookBody": 101,
+        "lookLegs": 119,
+        "lookFeet": 115,
+        "lookAddons": 0
+      },
       "speed": 100,
       "spawn": "herb_stall",
-      "behavior": { "type": "stationary", "home": "herb_stall" },
+      "behavior": {
+        "type": "stationary",
+        "home": "herb_stall"
+      },
       "waypoints": {
-        "herb_stall": { "x": 5020, "y": 5003, "z": 7 },
-        "temple_shelter": { "x": 5007, "y": 4998, "z": 7 }
+        "herb_stall": {
+          "x": 5020,
+          "y": 5003,
+          "z": 7
+        },
+        "temple_shelter": {
+          "x": 5007,
+          "y": 4998,
+          "z": 7
+        }
       },
       "routes": {},
-      "greeting": { "words": ["hi", "hello", "hey", "witaj", "czesc", "siema", "dzien dobry"], "range": 3, "cooldownSeconds": 8 },
-      "alarm": { "zones": ["montag_gate"], "moveTo": "temple_shelter", "yell": false, "rewarnSeconds": 0 },
+      "greeting": {
+        "words": [
+          "hi",
+          "hello",
+          "hey",
+          "witaj",
+          "czesc",
+          "siema",
+          "dzien dobry"
+        ],
+        "range": 3,
+        "cooldownSeconds": 8
+      },
+      "hearing": {
+        "range": 7,
+        "yellRange": 30
+      },
+      "alarm": {
+        "zones": [
+          "montag_gate"
+        ],
+        "moveTo": "temple_shelter",
+        "yell": false,
+        "rewarnSeconds": 0
+      },
       "texts": {
         "greetFallback": "Dzien dobry, {name}. Mira, zielarka. Ziola dla zdrowia, nie dla handlu.",
         "greetFirst": "Dzien dobry, {name}. Jestem Mira. Pierwszy raz w Montag?",
@@ -69,11 +175,17 @@
         "alarmBlocked": "Nie moge dojsc do swiatyni, zostaje tutaj.",
         "alarmRewarn": "",
         "alarmClear": "Uff, po alarmie. Wracam do stoiska.",
-        "alarmComment": ""
+        "alarmComment": "",
+        "greetRumor": "Slyszalam, jak {speaker} mowil {since}: \"{quote}\""
       }
     }
   },
-  "actions": ["say", "patrol", "move_to", "stop"],
+  "actions": [
+    "say",
+    "patrol",
+    "move_to",
+    "stop"
+  ],
   "limits": {
     "maxTtlMs": 10000,
     "maxSayLength": 200,

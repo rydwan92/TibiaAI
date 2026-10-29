@@ -15,6 +15,7 @@ export interface AgentDefinition {
   waypoints: Record<string, Position>;
   routes: Record<string, string[]>;
   greeting: { words: string[]; range: number; cooldownSeconds?: number };
+  hearing?: { range: number; yellRange?: number };
   alarm?: { zones: string[]; moveTo: string; yell?: boolean; rewarnSeconds?: number };
   texts: Record<string, string>;
 }
@@ -64,6 +65,8 @@ export function validateAgentsDocument(doc: unknown): string[] {
       else for (const z of def.alarm.zones) if (!zones.includes(z)) err(`alarm zone ${z} not in alarmZones`);
     }
     if (!isObj(def.greeting) || !Array.isArray(def.greeting.words) || typeof def.greeting.range !== 'number') err('greeting');
+    if (def.hearing !== undefined && (!isObj(def.hearing) || typeof def.hearing.range !== 'number' ||
+      (def.hearing.yellRange !== undefined && typeof def.hearing.yellRange !== 'number'))) err('hearing');
     if (!isObj(def.texts) || typeof def.texts.greetFallback !== 'string') err('texts.greetFallback');
     for (const [name, text] of Object.entries<any>(isObj(def.texts) ? def.texts : {})) {
       if (typeof text !== 'string') err(`texts.${name} must be a string`);

@@ -1,6 +1,6 @@
 # Stan projektu
 
-Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0006). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
+Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0007). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
 Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 
 ## Działa (z dowodem)
@@ -16,16 +16,17 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Ardan: patrol, alarm, ostrzeżenie, powrót, failure zamiast teleportu | VERIFIED w dzienniku | iteracje 0002, 0004 |
 | Mira (tylko dane): stoi przy stoisku, przy alarmie chowa się w świątyni, wraca | VERIFIED w dzienniku | iteracja 0004 |
 | Most mailbox Lua ↔ Brain, walidacja w silniku, wielu agentów | VERIFIED 14/14 na żywym świecie | iteracja 0004 |
-| Self-test Lua w Canary | VERIFIED 23/23 | `scripts/selftest.ps1` |
+| Agenci słyszą się w zasięgu; Brain pamięta „X powiedział Y” z pochodzeniem; brak odpowiedzi agent↔agent (zalążek M5) | VERIFIED w silniku | ADR 0005, iteracja 0007 |
+| Self-test Lua w Canary | VERIFIED 24/24 | `scripts/selftest.ps1` |
 | Koszt naszych GlobalEventów zmierzony (most śr. 0,8–1,3 ms, maks. 12 ms; ~0,3% dispatchera) | VERIFIED (pomiar) | ADR 0002, iteracja 0006 |
 | Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
 | Backup + sprawdzony restore do osobnej bazy; retencja mailboxa; rotacja logów | VERIFIED | `scripts/backup.ps1`, `scripts/restore-test.ps1`, iteracja 0005 |
-| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED headless; 22/22 testów jednostkowych | iteracje 0003, 0004 |
+| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED headless; 27/27 testów jednostkowych | iteracje 0003, 0004 |
 
 ## Nie zrobione / nie sprawdzone
 - **Test GUI**: lista postaci w OTClient, wejście, ruch, reconnect, widoczność Ardana i Miry, powitanie z klienta, pamięć spotkania gracza po restarcie Brain w grze. Blokuje go brak assets klienta 15.11. Instrukcja krok po kroku: RUNBOOK §4.1.
 - Wyświetlanie polskich znaków w kliencie: nie sprawdzone. Teksty są ASCII i Brain to wymusza.
-- `position_observed`, komunikacja agent ↔ agent (M5), provider LLM (M4): świadomie nie zaczęte.
+- `position_observed`, dialog agent ↔ agent, provider LLM (M4): świadomie nie zaczęte. Plotka przekazywana graczowi czeka na test GUI.
 
 ## Bieżący stan maszyny (koniec sesji)
 Uruchomione: MariaDB, login-server, Canary (sesja świata z Ardanem i Mirą), Brain (`scripts/status.ps1`). Zatrzymanie: `powershell -ExecutionPolicy Bypass -File scripts\stop.ps1`.
