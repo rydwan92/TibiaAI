@@ -19,6 +19,7 @@ if ($brain) {
     Write-Host "Brain stopped"
 }
 if ($BrainOnly) { return }
+& "$PSScriptRoot\ollama.ps1" -Stop
 
 $canary = Get-TrackedProcess 'canary'
 if ($canary) {

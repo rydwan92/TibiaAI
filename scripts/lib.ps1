@@ -37,6 +37,7 @@ function Get-TrackedProcess([string]$name) {
     if (-not $proc) { return $null }
     # Guard against PID reuse: the executable or its command line must point into this project.
     if ($proc.Path -and ($proc.Path -like "$Root*")) { return $proc }
+    if ($name -eq 'ollama' -and $proc.ProcessName -eq 'ollama') { return $proc }  # installed outside the project
     $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction SilentlyContinue).CommandLine
     if ($cmd -and $cmd.Contains($Root)) { return $proc }
     return $null
@@ -112,6 +113,13 @@ function Wait-JournalEntry([string]$kind, [string]$sinceIso, [int]$timeoutSec) {
         Start-Sleep -Milliseconds 500
     }
     return $null
+}
+
+function Install-ClientFrameCap {
+    # Our own mod next to the client's: without a framerate limit it starves the model on the shared GPU.
+    $dir = Join-Path $OtclientDir 'mods\tibiaai_framecap'
+    New-Item -ItemType Directory -Force $dir | Out-Null
+    Copy-Item (Join-Path $Root 'tools\otclient-framecap\*') $dir -Force
 }
 
 function Test-LocalPort([int]$port) {

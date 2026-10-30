@@ -1,0 +1,9 @@
+Module
+  name: tibiaai_framecap
+  description: Caps rendering so the client does not starve the local model on the shared GPU (DOCS/NPC_RUNTIME.md)
+  author: TibiaAI
+  website: https://github.com/rydwan92/TibiaAI
+  autoload: true
+  autoload-priority: 6000
+  scripts: [ framecap ]
+  @onLoad: TibiaAIFrameCap.init()

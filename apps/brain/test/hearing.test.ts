@@ -75,16 +75,20 @@ test('loop guard blocks speech intents for agent_heard from any provider', () =>
   assert.ok(logged.includes('intents_blocked_loop_guard'));
 });
 
-test('migration v1 -> v2 keeps data and copies the database first', () => {
+test('migrations from v1 keep data and copy the database first', () => {
   const dir = tempDir();
   const file = join(dir, 'brain.sqlite');
   const m = new Memory(file);
   m.recordEncounter('ardan', 1, 'A', 'e1', 's', 1);
-  m.db.exec("DROP TABLE heard_statements; DELETE FROM schema_migrations WHERE version = 2;"); // simulate a v1 database
+  // Simulate a v1 database: undo everything the later migrations added.
+  const npcTables = m.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'npc\\_%' ESCAPE '\\'").all() as { name: string }[];
+  for (const t of npcTables) m.db.exec(`DROP TABLE ${t.name}`);
+  m.db.exec("DROP TABLE heard_statements; ALTER TABLE commands DROP COLUMN plan_json; ALTER TABLE commands DROP COLUMN plan_applied; DELETE FROM schema_migrations WHERE version >= 2;");
   m.close();
   const upgraded = new Memory(file);
   assert.equal(upgraded.encounterStats('ardan', 1).count, 1);
   upgraded.recordHeard('e2', 'mira', 'ardan', 'x', false, 3, 's', 2);
   assert.equal(upgraded.latestHeard('mira', 0)?.text, 'x');
   assert.ok(readdirSync(dir).some((f) => f.startsWith('brain.sqlite.bak-v1-')), 'backup before migration');
+  assert.equal(upgraded.takePlan('none', 'completed'), null, 'v3 columns exist');
 });

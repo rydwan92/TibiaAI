@@ -1,10 +1,11 @@
 # Runs every headless verification in one go and prints a PASS/FAIL table.
-#   powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-SkipLive] [-Client]
+#   powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-SkipLive] [-Client] [-Model]
 # -Client also runs the real-client smoke and combat tests (opens a minimized client window).
+# -Model also runs the scenario on real inference (scripts\ollama.ps1 -Start first, about a minute).
 # Unit tests + typecheck always; with a running world (default) also the in-engine Lua selftest,
 # the live bridge test (Brain is stopped for it and started again) and a backup + restore test.
 # Nothing is deleted except the scratch database used by restore-test.ps1.
-param([switch]$SkipLive, [switch]$Client)
+param([switch]$SkipLive, [switch]$Client, [switch]$Model)
 . "$PSScriptRoot\lib.ps1"
 $ErrorActionPreference = 'Continue'
 $results = New-Object System.Collections.Generic.List[object]
@@ -38,9 +39,13 @@ if (-not $SkipLive) {
         Step 'restore test' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'restore-test.ps1') }
         if ($Client) {
             Step 'client smoke' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'client-autotest.ps1') }
-            Step 'client combat' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'client-autotest.ps1') -Scenario combat -TimeoutSec 200 }
+            Step 'client combat' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'client-autotest.ps1') -Scenario combat -TimeoutSec 260 }
         }
     }
+}
+
+if ($Model) {
+    Step 'real model scenario' { & $node --disable-warning=ExperimentalWarning (Join-Path $brainDir 'test-integration\ollama.itest.ts') }
 }
 
 $results | Format-Table -AutoSize | Out-String | Write-Host

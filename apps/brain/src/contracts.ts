@@ -33,7 +33,9 @@ export interface Envelope<P> {
 }
 
 export type EventPayload =
-  | { type: 'player_greeted'; playerGuid: number; playerName: string; text: string }
+  | { type: 'player_greeted'; playerGuid: number; playerName: string; text: string; worldMinutes?: number }
+  | { type: 'player_said'; playerGuid: number; playerName: string; text: string; addressed: boolean; distance: number; worldMinutes?: number }
+  | { type: 'incident_observed'; incidentId: string; description: string; distance: number; worldMinutes?: number }
   | { type: 'training_alarm_started'; zoneId: string; triggeredBy?: string }
   | { type: 'training_alarm_cleared'; zoneId: string; clearedBy?: string }
   | { type: 'position_observed'; x: number; y: number; z: number }
@@ -90,10 +92,16 @@ export function parseEvent(raw: unknown): Validation<Envelope<EventPayload>> {
   if (!isInt(e.sequence) || e.sequence < 1) return fail('sequence');
   const p = e.payload as Record<string, unknown>;
   switch (p.type) {
+    case 'player_said':
+      if (typeof p.addressed !== 'boolean' || !isInt(p.distance)) return fail('speech_fields');
+    // falls through
     case 'player_greeted':
       if (!isInt(p.playerGuid) || p.playerGuid <= 0) return fail('player_guid');
       if (!isStr(p.playerName, 64)) return fail('player_name');
       if (typeof p.text !== 'string' || p.text.length > agentRegistry().limits.maxEventTextLength) return fail('text');
+      break;
+    case 'incident_observed':
+      if (!isStr(p.incidentId, 64) || !isStr(p.description, 300) || !isInt(p.distance)) return fail('incident_fields');
       break;
     case 'training_alarm_started':
     case 'training_alarm_cleared':

@@ -37,9 +37,11 @@ Kod Lua/datapack pochodzi ze źródeł `fe0f932`, a binarka z release `v3.6.1` z
 
 - `Game::playerUseWithCreature` kolejkuje kolejne użycie mikstury do końca cooldownu (1000 ms), a nie odrzuca go.
 - Forge zamienia potwory w Fiendish co 10 s (HP ×3,6). W konfiguracji laboratorium wyłączone (`forgeInfluencedLimit`, `forgeFiendishLimit` = 0).
-- Postać po zerwaniu połączenia zostaje w świecie; `players_online` odświeża się co minutę.
+- Postać po zerwaniu połączenia zostaje w świecie. `players_online` odświeża się co 10 minut (`UPDATE_PLAYERS_ONLINE_DB`, `game.hpp:74`), a wpis może zostać po śmierci postaci, więc skrypty pytają o obecność silnik, nie tę tabelę.
 - Postacie Sample z `schema.sql` startują w Strongarm (miasto 8), a agenci są w Montag (miasto 1).
 - `Creature:remove()` na graczu wylogowuje go z zapisem.
+- OTClient z opcją „max” klatek renderuje bez limitu nawet przy włączonym vsync. Na wspólnej karcie spowalnia to model z 46 do 9 tok/s; limit do 60 FPS usuwa problem. `client_options` nadpisuje `g_app.setMaxFps` przy starcie, więc limit trzeba ustawić po załadowaniu opcji.
+- Zatrzymanie `ollama.exe` nie kończy potomnego `llama-server.exe`: zostaje on sierotą z załadowanym modelem. Ollama 0.32.3 w tej konfiguracji.
 
 ## Do weryfikacji
 Polskie znaki w kliencie, runy i czary, współbieżność kilku klientów-agentów.

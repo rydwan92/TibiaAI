@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "key": "guard.veteran",
+  "role": "guard",
+  "temperament": "pogodny, gawedziarski, ufny",
+  "speechStyle": "swobodny ton, zarty, zwraca sie 'przyjacielu' lub 'mlody', wspomina dawne czasy",
+  "values": ["kolezenstwo"],
+  "motivations": ["opowiadac historie z dawnych lat"]
+}

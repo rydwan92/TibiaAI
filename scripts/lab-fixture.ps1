@@ -5,7 +5,8 @@
 #   powershell -ExecutionPolicy Bypass -File scripts\lab-fixture.ps1 -Combatant
 #     creates the separate account and character Kael for combat experiments (deaths never touch
 #     your characters) and stores its generated password in .env.
-param([string[]]$Characters = @('Knight Sample', 'GOD'), [int]$X = 5008, [int]$Y = 5006, [int]$Z = 7, [int]$TownId = 1, [switch]$Combatant)
+#   -KnownOffline: the caller checked with the world; players_online refreshes only every 10 minutes.
+param([string[]]$Characters = @('Knight Sample', 'GOD'), [int]$X = 5008, [int]$Y = 5006, [int]$Z = 7, [int]$TownId = 1, [switch]$Combatant, [switch]$KnownOffline)
 . "$PSScriptRoot\lib.ps1"
 $cfg = Read-DotEnv
 $db = $cfg.TIBIAAI_DB_NAME
@@ -34,7 +35,7 @@ foreach ($name in $Characters) {
     if ($name -notmatch "^[A-Za-z ']+$") { throw "Invalid character name: $name" }
     $sqlName = $name.Replace("'", "''")
     $online = Invoke-MariaDb "SELECT COUNT(*) FROM players_online po JOIN players p ON p.id = po.player_id WHERE p.name = '$sqlName';" $db
-    if ("$online".Trim() -ne '0') { throw "$name is online; log out first (the server would overwrite the change on logout)" }
+    if (-not $KnownOffline -and "$online".Trim() -ne '0') { throw "$name is online; log out first (the server would overwrite the change on logout)" }
     Invoke-MariaDb "UPDATE players SET town_id=$TownId, posx=$X, posy=$Y, posz=$Z WHERE name = '$sqlName';" $db | Out-Null
     Write-Host "$name -> town $TownId, position $X,$Y,$Z"
 }

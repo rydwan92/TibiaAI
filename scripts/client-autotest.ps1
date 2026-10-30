@@ -1,43 +1,45 @@
-# Real-client smoke test: installs tools\otclient-autotest as an OTClient mod for one run, drives
+﻿# Real-client smoke test: installs tools\otclient-autotest as an OTClient mod for one run, drives
 # login -> character list -> enter world -> walk -> greet NPC -> logout -> relogin, prints PASS/FAIL
 # and removes the mod. Opens a client window for up to -TimeoutSec seconds.
 #   powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1 [-Character "Knight Sample"] [-Npc Ardan]
 #   powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1 -Scenario combat   (Kael, see scripts\lab-fixture.ps1 -Combatant)
+#   powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1 -Scenario conversation -Npc Ardan -Lines "hi|Jak mam na imie?" -Expect "mar" -Forbid "kael"
+#     -Lines are said one by one; -Expect and -Forbid (comma-separated, lower case) check the last reply; -Incident fires one next to the NPC first.
 param([string]$Character = '', [string]$Npc = 'Ardan', [string]$Greeting = 'hi', [int]$GreetRange = 3, [int]$ObserveMs = 6000, [int]$TimeoutSec = 180,
-      [string]$Route = '', [ValidateSet('smoke', 'combat')][string]$Scenario = 'smoke')
+      [string]$Route = '', [ValidateSet('smoke', 'combat', 'conversation')][string]$Scenario = 'smoke',
+      [string]$Lines = 'hi', [string]$Expect = '', [string]$Forbid = '', [string]$Incident = '')
 . "$PSScriptRoot\lib.ps1"
 $cfg = Read-DotEnv
 if (-not ((Test-LocalPort $Lock.ports.loginHttp) -and (Test-LocalPort $Lock.ports.game))) { throw "Server is not running (scripts\start.ps1)" }
 if (Get-Process otclient -ErrorAction SilentlyContinue) { throw "Close the running OTClient first (one test account, one session)" }
 
 $email, $password = $cfg.TIBIAAI_TEST_EMAIL, $cfg.TIBIAAI_TEST_PASSWORD
-if ($Scenario -eq 'combat') {
+if (-not $Character) { $Character = if ($Scenario -eq 'combat') { 'Kael' } else { 'Knight Sample' } }
+if ($Character -eq 'Kael') {
     if (-not $cfg.TIBIAAI_AGENT_PASSWORD) { throw "No combat account: run scripts\lab-fixture.ps1 -Combatant" }
     $email, $password = $cfg.TIBIAAI_AGENT_EMAIL, $cfg.TIBIAAI_AGENT_PASSWORD
-    if (-not $Character) { $Character = 'Kael' }
-    # A character stays in the world after its client disconnects, so log it out first. The
-    # players_online table refreshes once a minute; wait for it because the fixture checks it.
-    Write-ControlRequest 'dev-kick.request' $Character
-    Start-Sleep 2
-    $safeName = $Character.Replace("'", "''")
-    for ($i = 0; $i -lt 40; $i++) {
-        $online = Invoke-MariaDb "SELECT COUNT(*) FROM players_online po JOIN players p ON p.id = po.player_id WHERE p.name = '$safeName';" $cfg.TIBIAAI_DB_NAME
-        if ("$online".Trim() -eq '0') { break }
-        Start-Sleep 2
-    }
-    # Death sends the character to the temple; every run starts at the same spot next to a wall.
-    & "$PSScriptRoot\lab-fixture.ps1" -Characters $Character -X 5010 -Y 5007 | Out-Null
 }
-if (-not $Character) { $Character = 'Knight Sample' }
+if ($Scenario -ne 'smoke') {
+    # A character stays in the world after its client disconnects, so log it out first. The engine
+    # answers in the journal; players_online would lag by up to 10 minutes.
+    $since = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    Write-ControlRequest 'dev-kick.request' $Character
+    if (-not (Wait-JournalEntry 'dev_exception_used' $since 10)) { throw "The world did not answer the logout request" }
+    Start-Sleep 2
+    # Death sends the character to the temple; every run starts at the same spot next to a wall.
+    & "$PSScriptRoot\lab-fixture.ps1" -Characters $Character -X 5010 -Y 5007 -KnownOffline | Out-Null
+}
 
 $exe = Join-Path $OtclientDir 'otclient.exe'
 $modDir = Join-Path $OtclientDir 'mods\tibiaai_autotest'
 $logFile = Join-Path $OtclientDir 'otclient.log'
 New-Item -ItemType Directory -Force $modDir | Out-Null
 Copy-Item (Join-Path $Root 'tools\otclient-autotest\*') $modDir -Force
+Install-ClientFrameCap
 
 function LuaStr([string]$s) { '"' + $s.Replace('\', '\\').Replace('"', '\"') + '"' }
 $legs = (@($Route -split ';' | Where-Object { $_ }) | ForEach-Object { $x, $y = $_ -split ','; "{ x = $x, y = $y, z = 7 }" }) -join ', '
+function LuaList([string]$s, [string]$sep) { (@($s -split $sep | Where-Object { $_ }) | ForEach-Object { LuaStr $_.Trim() }) -join ', ' }
 $config = @"
 return {
   host = $(LuaStr "http://127.0.0.1:$($Lock.ports.loginHttp)/login"), port = $($Lock.ports.loginHttp), version = $($Lock.canary.clientVersion),
@@ -46,7 +48,8 @@ return {
   wallDirection = East, openDirection = West,
   character = $(LuaStr $Character), npc = $(LuaStr $Npc), greeting = $(LuaStr $Greeting), greetRange = $GreetRange,
   observeMs = $ObserveMs, timeoutSec = $TimeoutSec,
-  route = { $legs },
+  route = { $legs }, lines = { $(LuaList $Lines '\|') }, expect = { $(LuaList $Expect ',') }, forbid = { $(LuaList $Forbid ',') },
+  incident = $(LuaStr $Incident),
 }
 "@
 [System.IO.File]::WriteAllText((Join-Path $modDir 'config.lua'), $config, (New-Object System.Text.UTF8Encoding $false))

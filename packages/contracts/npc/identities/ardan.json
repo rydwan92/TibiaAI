@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "npcKey": "ardan",
+  "variant": "guard.formalist",
+  "displayName": "Ardan",
+  "gender": "m",
+  "biography": "Sluzy w strazy Montag od dwunastu lat. Pochodzi z Thalom. Stracil brata w potyczce przy bramie i od tamtej pory pilnuje jej szczegolnie.",
+  "goals": ["utrzymac porzadek na placu"],
+  "initialRelationships": [{ "npc": "mira", "note": "szanuje ja, choc uwaza, ze za duzo mowi" }, { "npc": "brom", "note": "stary kolega ze sluzby" }]
+}

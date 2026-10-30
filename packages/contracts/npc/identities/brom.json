@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "npcKey": "brom",
+  "variant": "guard.veteran",
+  "displayName": "Brom",
+  "gender": "m",
+  "biography": "Stary straznik na emeryturze, ktory nadal pelni warte przy placu, bo nie umie siedziec w domu. Lubi opowiadac o wyprawach z mlodosci.",
+  "goals": ["dozyc spokojnej starosci przy placu"],
+  "initialRelationships": [{ "npc": "ardan", "note": "traktuje go jak zbyt powaznego mlodszego kolege" }]
+}

@@ -37,4 +37,5 @@ if ($CopyPassword) {
 }
 Write-Host "  Characters      : 'GOD' (admin: /alarm, /ardan) or 'Knight Sample' (normal player)"
 Write-Host ""
+Install-ClientFrameCap
 Start-Process -FilePath $exe -WorkingDirectory $OtclientDir

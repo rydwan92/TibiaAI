@@ -147,7 +147,7 @@ local function agentAlarmStart(agent, npc, zoneId, byName)
 	agent.alarmZone = zoneId
 	agent.resumeIndex = agent.routeIndex
 	agent.mover = nil
-	agent.pendingGreeting = nil
+	agent.pendingReplies = {}
 	setState(agent, "ALERT", "training_alarm_started")
 	T.bridgeEmit(agent.key, "training_alarm_started", { zoneId = zoneId, triggeredBy = byName })
 	T.agentSay(agent, npc, T.agentText(agent, "alarmStart"), def.alarm.yell, "rules")
@@ -208,43 +208,118 @@ local function localGreeting(agent, npc, player)
 	T.agentSay(agent, npc, T.agentText(agent, "greetFallback", { name = player:getName() }), false, "rules_fallback")
 end
 
+-- Speech reaches an NPC through Canary only when the player is in hearing range. A message goes to
+-- one NPC: the one it names, else the one the player is talking to, else (for a greeting) the
+-- closest. Everything else within hearing is overheard and never answered.
+function T.namesNpc(def, message)
+	-- Polish vocative: Ardan -> Ardanie, Mira -> Miro.
+	local stem = def.npcName:lower():gsub("[aeiouy]$", "")
+	return (" " .. message:lower() .. " "):find("%A" .. stem .. "%a?%a?%a?%A") ~= nil
+end
+
+local function namesOtherNpc(agent, message)
+	for _, other in pairs(T.agents) do
+		if other ~= agent and T.namesNpc(T.agentDef(other), message) then
+			return true
+		end
+	end
+	return false
+end
+
+local function isClosestAgent(agent, npc, player)
+	local here = player:getPosition()
+	local mine = T.distance(here, npc:getPosition())
+	for _, key in ipairs(T.sortedKeys(T.agents)) do
+		local other = T.agents[key]
+		local otherNpc = other ~= agent and T.agentNpc(other) or nil
+		if otherNpc then
+			local d = T.distance(here, otherNpc:getPosition())
+			if d < mine or (d == mine and key < agent.key) then
+				return false
+			end
+		end
+	end
+	return true
+end
+
+local function inConversation(agent, guid)
+	local last = agent.talkers[guid]
+	return last ~= nil and os.time() - last <= T.timing.conversationTimeoutSeconds
+end
+
 function T.onNpcSay(npc, creature, msgType, message)
 	local agent = T.agentByNpcId(npc:getId())
 	if not agent or not creature or not creature:isPlayer() then
 		return
 	end
 	local def = T.agentDef(agent)
-	if not isGreeting(def, message) then
+	local player = Player(creature:getId())
+	if not player then
 		return
 	end
-	local player = Player(creature:getId())
-	if not player or T.distance(player:getPosition(), npc:getPosition()) > def.greeting.range then
+	local distance = T.distance(player:getPosition(), npc:getPosition())
+	local hearing = def.hearing and def.hearing.range or def.greeting.range
+	if distance > hearing then
 		return
 	end
 	local guid = player:getGuid()
 	local now = os.time()
-	local last = agent.greetCooldown[guid]
-	if last and now - last < (def.greeting.cooldownSeconds or 8) then
+	if agent.lastSpeech[guid] and now - agent.lastSpeech[guid] < T.timing.speechCooldownSeconds then
 		return
 	end
-	agent.greetCooldown[guid] = now
+	agent.lastSpeech[guid] = now
+
+	local greeting = isGreeting(def, message)
+	local addressed = distance <= def.greeting.range and not namesOtherNpc(agent, message)
+		and (T.namesNpc(def, message) or inConversation(agent, guid) or (greeting and isClosestAgent(agent, npc, player)))
+	local fields = { playerGuid = guid, playerName = player:getName(), text = message:sub(1, 300), worldMinutes = T.worldMinutes() }
+	if not addressed then
+		fields.addressed, fields.distance = false, distance
+		T.bridgeEmit(agent.key, "player_said", fields)
+		return
+	end
+
+	agent.talkers[guid] = now
 	npc:turnToCreature(player)
 	if not agent.alarmZone then
 		agent.talkUntilTick = agent.tick + T.timing.talkPauseTicks
 	end
-
-	local eventId = T.bridgeEmit(agent.key, "player_greeted", {
-		playerGuid = guid,
-		playerName = player:getName(),
-		text = message:sub(1, 300),
-	})
+	local eventId
+	if greeting then
+		eventId = T.bridgeEmit(agent.key, "player_greeted", fields)
+	else
+		fields.addressed, fields.distance = true, distance
+		eventId = T.bridgeEmit(agent.key, "player_said", fields)
+	end
 	if agent.alarmZone then
 		T.agentSay(agent, npc, T.agentText(agent, "greetDuringAlarm", { name = player:getName() }), false, "rules")
 	elseif eventId and T.bridgeIsBrainOnline() then
-		agent.pendingGreeting = { correlationId = eventId, playerId = player:getId(), deadlineTick = agent.tick + T.timing.brainReplyTicks }
-	else
+		agent.pendingReplies[#agent.pendingReplies + 1] = { correlationId = eventId, playerId = player:getId(), greeting = greeting, deadlineTick = agent.tick + T.timing.brainReplyTicks }
+		if not agent.alarmZone then
+			agent.talkUntilTick = math.max(agent.talkUntilTick, agent.tick + T.timing.brainReplyTicks)
+		end
+	elseif greeting then
 		localGreeting(agent, npc, player)
 	end
+end
+
+local function takePendingReply(agent, correlationId)
+	for i, p in ipairs(agent.pendingReplies) do
+		if p.correlationId == correlationId then
+			table.remove(agent.pendingReplies, i)
+			return p
+		end
+	end
+	return nil
+end
+
+function T.playerByGuid(guid)
+	for _, player in ipairs(Game.getPlayers()) do
+		if player:getGuid() == guid then
+			return player
+		end
+	end
+	return nil
 end
 
 -- Main tick ----------------------------------------------------------------------------------------
@@ -252,18 +327,25 @@ function T.agentOnTick(agent, npc)
 	local def = T.agentDef(agent)
 	agent.tick = agent.tick + 1
 
-	local p = agent.pendingGreeting
-	if p and agent.tick >= p.deadlineTick then
-		agent.pendingGreeting = nil
-		agent.fallbackUsed[p.correlationId] = true
-		agent.fallbackCount = agent.fallbackCount + 1
-		if agent.fallbackCount > 100 then
-			agent.fallbackUsed, agent.fallbackCount = { [p.correlationId] = true }, 1
-		end
-		local player = Player(p.playerId)
-		if player then
-			T.journal("brain_reply_timeout", { agentKey = agent.key, correlationId = p.correlationId })
-			localGreeting(agent, npc, player)
+	-- A late Brain reply must not follow the local one (superseded_by_fallback).
+	for i = #agent.pendingReplies, 1, -1 do
+		local p = agent.pendingReplies[i]
+		if agent.tick >= p.deadlineTick then
+			table.remove(agent.pendingReplies, i)
+			agent.fallbackUsed[p.correlationId] = true
+			agent.fallbackCount = agent.fallbackCount + 1
+			if agent.fallbackCount > 100 then
+				agent.fallbackUsed, agent.fallbackCount = { [p.correlationId] = true }, 1
+			end
+			local player = Player(p.playerId)
+			if player then
+				T.journal("brain_reply_timeout", { agentKey = agent.key, correlationId = p.correlationId })
+				if p.greeting then
+					localGreeting(agent, npc, player)
+				else
+					T.agentSay(agent, npc, T.agentText(agent, "busyReply", { name = player:getName() }), false, "rules_fallback")
+				end
+			end
 		end
 	end
 
@@ -322,11 +404,17 @@ function T.agentExecute(agent, cmd, report)
 		if agent.fallbackUsed[cmd.correlationId] then
 			return report("rejected", "superseded_by_fallback")
 		end
-		local p = agent.pendingGreeting
-		local isReply = p and p.correlationId == cmd.correlationId
-		if isReply then
-			agent.pendingGreeting = nil
-		elseif os.time() - agent.lastSayTime < T.timing.sayCooldownSeconds then
+		-- The reply is for one player: never deliver it after they left hearing range.
+		if args.toPlayerGuid then
+			local target = T.playerByGuid(tonumber(args.toPlayerGuid))
+			local range = T.agentDef(agent).hearing and T.agentDef(agent).hearing.range or T.agentDef(agent).greeting.range
+			if not target or T.distance(target:getPosition(), npc:getPosition()) > range then
+				takePendingReply(agent, cmd.correlationId)
+				return report("rejected", "addressee_gone")
+			end
+		end
+		local isReply = takePendingReply(agent, cmd.correlationId) ~= nil
+		if not isReply and os.time() - agent.lastSayTime < T.timing.sayCooldownSeconds then
 			return report("rejected", "say_rate_limited")
 		end
 		T.agentSay(agent, npc, args.text, false, "brain", { commandId = cmd.commandId, correlationId = cmd.correlationId })

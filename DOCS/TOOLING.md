@@ -8,13 +8,17 @@ Stan na 2026-10-30. **SPRAWDZONE** oznacza użycie w tym projekcie z dowodem. **
 | Canary | v3.6.1 `fe0f932`, protokół 15.11 | serwer | `scripts\start.ps1` |
 | login-server | `2612930`, build lokalny | logowanie HTTP klienta; to nie jest panel kont | `scripts\start.ps1` |
 | OTClient | 4.1 `dd56414` + assets 15.11 (`appearances` zgodne z serwerem, SHA-256 `5997985a…`) | klient, także sterownik testów | `scripts\client.ps1 -CopyPassword` |
-| `scripts\client-autotest.ps1` | projekt | test prawdziwego klienta: `smoke`, `combat` | RUNBOOK §6a |
+| `scripts\client-autotest.ps1` | projekt | test prawdziwego klienta: `smoke`, `combat`, `conversation` | RUNBOOK §4.4 |
+| `scripts\npc-scenario.ps1` | projekt | pełny scenariusz NPC w kliencie | NPC_RUNTIME.md |
+| `scripts\incident.ps1` | projekt | incydent widziany tylko przez NPC w pobliżu | NPC_RUNTIME.md |
+| `tools\otclient-framecap` | projekt | limit 60 FPS w kliencie; bez niego model zwalnia pięciokrotnie | NPC_RUNTIME.md |
 | `scripts\scan.ps1`, `/ai scan` | projekt | widok przejść mapy z silnika | AGENTS.md |
 | `scripts\map-dev.ps1` | projekt | kopia mapy deweloperskiej; oryginał zostaje w `vendor\` | niżej |
 | `scripts\lab-fixture.ps1` | projekt | pozycje testowe, konto i postać `Kael` | RUNBOOK |
 | `apps\brain\src\cli\timeline.ts`, `tools\journal.py` | projekt | diagnostyka agentów | RUNBOOK §7a |
-| `apps\brain\src\cli\model-bench.ts` | projekt | pomiar lokalnego modelu | ADR 0007 |
-| Ollama | 0.32.3 | lokalny model | ADR 0007 |
+| `apps\brain\src\cli\npc-memory.ts` | projekt | podgląd pamięci NPC, tylko odczyt | NPC_RUNTIME.md |
+| `apps\brain\test-integration\ollama.itest.ts` | projekt | scenariusz i pomiary na prawdziwej inferencji | TESTING.md |
+| Ollama | 0.32.3, model `ornith-1.5:9b` | lokalny model, proces gry przez `scripts\ollama.ps1` | ADR 0007, 0008 |
 
 Konta i postacie: dziś przez SQL w skryptach (`setup.ps1`, `lab-fixture.ps1`).
 

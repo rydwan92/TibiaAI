@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "key": "herbalist.gossip",
+  "role": "herbalist",
+  "temperament": "zyczliwa, ciekawska, rozmowna",
+  "speechStyle": "cieplo, zwraca sie 'kochanienki', chetnie powtarza zaslyszane rzeczy, zaznaczajac, ze to tylko slyszala",
+  "values": ["dobre imie sasiadow"]
+}

@@ -79,6 +79,115 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       );
       CREATE INDEX heard_listener_time ON heard_statements(listener_key, observed_at_ms);`,
   },
+  {
+    // ADR 0008: per-NPC memory. Recent detail, older memories, relationships, commitments.
+    version: 3,
+    sql: `
+      ALTER TABLE commands ADD COLUMN plan_json TEXT;
+      ALTER TABLE commands ADD COLUMN plan_applied INTEGER NOT NULL DEFAULT 0;
+      CREATE TABLE npc_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_key TEXT NOT NULL UNIQUE,
+        npc_key TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        subject_guid INTEGER,
+        actor_name TEXT NOT NULL,
+        text TEXT NOT NULL,
+        source TEXT NOT NULL,
+        certainty TEXT NOT NULL,
+        visibility TEXT NOT NULL,
+        importance INTEGER NOT NULL,
+        world_session_id TEXT NOT NULL,
+        real_at_ms INTEGER NOT NULL,
+        world_minutes INTEGER,
+        batch_id INTEGER
+      );
+      CREATE INDEX npc_events_time ON npc_events(npc_key, real_at_ms);
+      CREATE INDEX npc_events_subject ON npc_events(npc_key, subject_guid, real_at_ms);
+      CREATE TABLE npc_memory_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        npc_key TEXT NOT NULL,
+        subject_guid INTEGER NOT NULL,
+        from_ms INTEGER NOT NULL,
+        to_ms INTEGER NOT NULL,
+        process_version INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
+        updated_at_ms INTEGER NOT NULL,
+        UNIQUE (npc_key, subject_guid, from_ms, to_ms, process_version)
+      );
+      CREATE TABLE npc_memories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        npc_key TEXT NOT NULL,
+        subject_guid INTEGER,
+        kind TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        participants_json TEXT NOT NULL,
+        sources_json TEXT NOT NULL,
+        certainty TEXT NOT NULL,
+        visibility TEXT NOT NULL,
+        importance INTEGER NOT NULL,
+        from_ms INTEGER NOT NULL,
+        to_ms INTEGER NOT NULL,
+        batch_id INTEGER UNIQUE,
+        process_version INTEGER NOT NULL,
+        created_at_ms INTEGER NOT NULL
+      );
+      CREATE INDEX npc_memories_npc ON npc_memories(npc_key, subject_guid);
+      CREATE TABLE npc_relationships (
+        npc_key TEXT NOT NULL,
+        player_guid INTEGER NOT NULL,
+        last_name TEXT NOT NULL,
+        familiarity INTEGER NOT NULL DEFAULT 0,
+        trust INTEGER NOT NULL DEFAULT 0,
+        interactions INTEGER NOT NULL DEFAULT 0,
+        first_seen_ms INTEGER NOT NULL,
+        last_seen_ms INTEGER NOT NULL,
+        last_significant TEXT,
+        PRIMARY KEY (npc_key, player_guid)
+      );
+      CREATE TABLE npc_relationship_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        npc_key TEXT NOT NULL,
+        player_guid INTEGER NOT NULL,
+        field TEXT NOT NULL,
+        delta INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        event_key TEXT NOT NULL,
+        at_ms INTEGER NOT NULL,
+        UNIQUE (event_key, field)
+      );
+      CREATE TABLE npc_player_facts (
+        npc_key TEXT NOT NULL,
+        player_guid INTEGER NOT NULL,
+        fact_key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        certainty TEXT NOT NULL,
+        event_key TEXT NOT NULL,
+        at_ms INTEGER NOT NULL,
+        PRIMARY KEY (npc_key, player_guid, fact_key)
+      );
+      CREATE TABLE npc_commitments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        npc_key TEXT NOT NULL,
+        player_guid INTEGER NOT NULL,
+        who TEXT NOT NULL,
+        text TEXT NOT NULL,
+        status TEXT NOT NULL,
+        event_key TEXT NOT NULL UNIQUE,
+        created_at_ms INTEGER NOT NULL,
+        updated_at_ms INTEGER NOT NULL
+      );
+      CREATE INDEX npc_commitments_open ON npc_commitments(npc_key, player_guid, status);
+      CREATE TABLE npc_memory_stats (
+        npc_key TEXT NOT NULL,
+        day TEXT NOT NULL,
+        stored INTEGER NOT NULL DEFAULT 0,
+        dropped INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (npc_key, day)
+      );`,
+  },
 ];
 
 export interface HeardStatement {
@@ -203,12 +312,22 @@ export class Memory {
     return row.s;
   }
 
-  insertCommand(env: Envelope<CommandPayload>, seq: number): void {
+  insertCommand(env: Envelope<CommandPayload>, seq: number, plan?: unknown): void {
     const p = env.payload;
     this.db.prepare(`INSERT INTO commands (command_id, world_session_id, seq, agent_key, action, args_json, correlation_id,
-      plan_revision, created_at_ms, expires_at_ms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sent')`).run(
+      plan_revision, created_at_ms, expires_at_ms, status, plan_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?)`).run(
       p.commandId, env.worldSessionId, seq, env.agentKey, p.action, JSON.stringify(p.args), env.correlationId,
-      p.planRevision, env.createdAtMs, p.expiresAtMs);
+      p.planRevision, env.createdAtMs, p.expiresAtMs, plan === undefined ? null : JSON.stringify(plan));
+  }
+
+  /** Returns a command's stored plan once, on its first terminal result; duplicates get nothing. */
+  takePlan(commandId: string, status: string): { text: string; plan: unknown } | null {
+    if (status === 'accepted') return null;
+    const row = this.db.prepare('SELECT args_json, plan_json, plan_applied FROM commands WHERE command_id = ?').get(commandId) as
+      { args_json: string; plan_json: string | null; plan_applied: number } | undefined;
+    if (!row?.plan_json || row.plan_applied) return null;
+    this.db.prepare('UPDATE commands SET plan_applied = 1 WHERE command_id = ?').run(commandId);
+    return { text: (JSON.parse(row.args_json) as { text: string }).text, plan: JSON.parse(row.plan_json) };
   }
 
   /** Stores an engine result. Success is recorded only from engine results, never assumed. */

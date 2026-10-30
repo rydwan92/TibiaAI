@@ -1,14 +1,16 @@
 {
-  "_comment": "Local-only model policy (ADR 0007). Endpoint must be loopback; models must be listed here and be local according to Ollama itself (no remote_host). No keys, no paid SDKs, no cloud fallback: when the model is unavailable Brain uses the rules provider.",
-  "endpoint": "http://127.0.0.1:11434",
-  "allowedModels": ["qwen2.5-coder:14b"],
-  "model": "qwen2.5-coder:14b",
-  "timeoutMs": 8000,
+  "_comment": "Local-only model policy (ADR 0007, 0008). Endpoint is the game's own Ollama process (scripts/ollama.ps1) with OLLAMA_NO_CLOUD=1. Models must be listed here and be local according to Ollama itself (no remote_host). No keys, no paid SDKs, no cloud fallback.",
+  "endpoint": "http://127.0.0.1:11435",
+  "allowedModels": ["ornith-1.5:9b", "bonsai-2:9b"],
+  "model": "ornith-1.5:9b",
+  "contextTokens": 4096,
+  "think": false,
+  "timeoutMs": 12000,
   "maxConcurrent": 1,
   "maxQueue": 3,
-  "maxCallsPerMinute": 12,
-  "maxPromptChars": 1500,
-  "maxOutputTokens": 60,
-  "maxReplyChars": 120,
-  "keepAlive": "10m"
+  "maxCallsPerMinute": 20,
+  "maxPromptChars": 6000,
+  "maxOutputTokens": 140,
+  "maxReplyChars": 180,
+  "keepAlive": "30m"
 }

@@ -90,7 +90,11 @@ function T.runSelftest()
 		check("expired", reason(cmd({ createdAtMs = now - 20000 }, { expiresAtMs = now - 15000 })) == "ttl_expired")
 		check("raw coordinates rejected", reason(cmd(nil, { action = "move_to", args = { waypointId = "5000,5000,7" } })) == "invalid_args")
 		check("extra arg rejected", reason(cmd(nil, { args = { text = "a", x = "1" } })) == "invalid_args")
+		check("reply addressee accepted", reason(cmd(nil, { args = { text = "ok", toPlayerGuid = "5" } })) == "ok")
+		check("bad addressee rejected", reason(cmd(nil, { args = { text = "ok", toPlayerGuid = "5; drop" } })) == "invalid_args")
 		check("control char rejected", reason(cmd(nil, { args = { text = "a\nb" } })) == "invalid_args")
+		check("npc named in the vocative", T.namesNpc({ npcName = "Ardan" }, "Ardanie, jak sie masz?") and T.namesNpc({ npcName = "Mira" }, "Witaj Miro"))
+		check("other words do not name the npc", not T.namesNpc({ npcName = "Ardan" }, "Witaj straznika"))
 	else
 		failures[#failures + 1] = "no spawned agent for command validation"
 	end

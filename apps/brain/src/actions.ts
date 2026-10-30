@@ -29,8 +29,10 @@ registerAction({
   name: 'say',
   capability: 'speak',
   movement: false,
-  validate: (args, _agent, limits) => onlyKeys(args, ['text']) && typeof args.text === 'string' && args.text.length >= 1 &&
-    args.text.length <= limits.maxSayLength && !/[\u0000-\u001f\u007f]/.test(args.text),
+  // toPlayerGuid (optional): the reply is for this player; the engine drops it if they left.
+  validate: (args, _agent, limits) => onlyKeys(args, ['text', 'toPlayerGuid']) && typeof args.text === 'string' && args.text.length >= 1 &&
+    args.text.length <= limits.maxSayLength && !/[\u0000-\u001f\u007f]/.test(args.text) &&
+    (args.toPlayerGuid === undefined || /^\d+$/.test(args.toPlayerGuid)),
 });
 
 registerAction({

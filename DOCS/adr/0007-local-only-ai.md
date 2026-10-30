@@ -1,5 +1,5 @@
 # ADR 0007: tryb local-only dla modelu językowego
-Status: ACCEPTED (2026-10-30). Dotyczy etapu M4.
+Status: ACCEPTED (2026-10-30). Dotyczy etapu M4. Uzupełnione przez ADR 0008: osobny proces gry na 127.0.0.1:11435 z `OLLAMA_NO_CLOUD=1`, model `ornith-1.5:9b`, dialog zamiast powitań. Limity i nazwy plików poniżej opisują stan z iteracji 0011; aktualne wartości są w `local-ai.json`.
 
 ## Kontekst
 Właściciel projektu nie zgadza się na płatne API ani automatyczne użycie chmury. Na komputerze jest Ollama 0.32.3, ale jej lista modeli miesza modele lokalne i chmurowe (`glm-5.2:cloud`, `kimi-k2.7-code:cloud`, działające przez `https://ollama.com`).

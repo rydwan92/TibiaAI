@@ -48,6 +48,9 @@ export class RulesProvider implements Provider {
           : [];
         return [...greeting, ...rumor];
       }
+      case 'player_said':
+        // Without a model only direct address gets a short acknowledgement.
+        return p.addressed ? say(texts.busyReply, { name: safeName(p.playerName) }) : [];
       case 'agent_heard':
         // Never answer another agent's speech (ADR 0005: no agent<->agent loops); it is memory only.
         return [];

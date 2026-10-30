@@ -39,6 +39,8 @@ $agentsJson = Join-Path $Root 'packages\contracts\agents.json'
 $null = Get-Content -Raw -Encoding UTF8 $agentsJson | ConvertFrom-Json  # fail early on invalid JSON
 New-Item -ItemType Directory -Force (Join-Path $ServerDir 'data-canary\tibia-ai') | Out-Null
 Copy-Item $agentsJson (Join-Path $ServerDir 'data-canary\tibia-ai\agents.json') -Force
+# The engine reads incident descriptions from the shared world rules.
+Copy-Item (Join-Path $Root 'packages\contracts\npc\world.json') (Join-Path $ServerDir 'data-canary\tibia-ai\world.json') -Force
 
 # config.lua from config.lua.dist with explicit overrides; fail if a key is missing upstream.
 $overrides = [ordered]@{

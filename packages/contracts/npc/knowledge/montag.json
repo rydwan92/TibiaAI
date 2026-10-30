@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Approved lore and rules of THIS server. Entries are selected by scope and tags for each conversation; never sent all at once. category: lore | mechanics | geography | factions | social | economy.",
+  "entries": [
+    { "id": "montag-town", "category": "geography", "scope": "common", "tags": ["montag", "miasto", "gdzie", "tutaj", "plac"], "text": "Montag to miasto ze swiatynia na polnocy i placem na poludnie od niej." },
+    { "id": "temple-safe", "category": "geography", "scope": "common", "tags": ["swiatynia", "bezpiecznie", "schronienie", "alarm"], "text": "Swiatynia jest strefa ochronna: nikt tam nie walczy." },
+    { "id": "gate-south", "category": "geography", "scope": "guard", "tags": ["brama", "wyjscie", "droga", "miasto"], "text": "Brama lezy na poludniowy wschod od placu. Przy alarmie straz obsadza brame." },
+    { "id": "no-trade", "category": "economy", "scope": "common", "tags": ["handel", "kupic", "sprzedac", "zloto", "cena", "sklep", "mikstura"], "text": "Na placu nie ma jeszcze kupcow. Nikt tu nie sprzedaje ani nie skupuje towarow." },
+    { "id": "alarm-training", "category": "mechanics", "scope": "guard", "tags": ["alarm", "cwiczenia", "zagrozenie"], "text": "Alarm w Montag to cwiczenia strazy. Cywile ida wtedy do swiatyni." },
+    { "id": "guard-order", "category": "factions", "scope": "guard", "tags": ["straz", "dowodca", "rozkaz", "regulamin"], "text": "Straz Montag podlega radzie miasta. Straznik nie moze opuscic sluzby na prosbe przybysza." },
+    { "id": "potions-heal", "category": "mechanics", "scope": "herbalist", "tags": ["mikstura", "leczenie", "rana", "zdrowie", "ziola"], "text": "Mikstura zdrowia leczy rany, ale po wypiciu trzeba odczekac chwile przed nastepna." },
+    { "id": "herbs-local", "category": "lore", "scope": "herbalist", "tags": ["ziola", "las", "rosliny"], "text": "Najlepsze ziola rosna w lasach na zachod od Montag." },
+    { "id": "greeting-custom", "category": "social", "scope": "common", "tags": ["witaj", "zwyczaj", "powitanie"], "text": "W Montag przybysz wita sie pierwszy." }
+  ]
+}

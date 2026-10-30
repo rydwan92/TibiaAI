@@ -1,7 +1,7 @@
 # Show process state and every listening socket owned by our processes (verifies loopback-only binding).
 . "$PSScriptRoot\lib.ps1"
 $ErrorActionPreference = 'Continue'
-foreach ($name in 'mariadb', 'login', 'canary', 'brain') {
+foreach ($name in 'mariadb', 'login', 'canary', 'ollama', 'brain') {
     $p = Get-TrackedProcess $name
     if ($p) {
         $mb = [math]::Round($p.WorkingSet64 / 1MB)

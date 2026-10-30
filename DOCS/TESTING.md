@@ -1,6 +1,6 @@
 # Weryfikacja
 
-Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dziennik lub wyniki mostu) bez klienta GUI.
+Stan na 2026-10-30. „Silnik” oznacza dowód z działającego Canary (dziennik lub wyniki mostu) bez klienta GUI. Test z atrapą modelu nie jest dowodem działania AI: rzeczywista inferencja i klient mają osobne wiersze.
 
 | Test | Oczekiwany wynik | Rodzaj | Stan | Jak uruchomić / dowód |
 | --- | --- | --- | --- | --- |
@@ -36,9 +36,12 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Słyszenie agentów | `agent_heard` tylko w zasięgu; pamięć z pochodzeniem u słuchacza | Silnik + jednostkowy | PASS | iteracja 0007, `hearing.test.ts` |
 | Limit pętli agent ↔ agent | Żadna mowa w odpowiedzi na `agent_heard`, także od złośliwego providera | Jednostkowy + silnik | PASS | `hearing.test.ts`, `brain.log` |
 | Plotka przy powitaniu | „Slyszalam, jak Ardan mowil…” po odpowiedzi | Gra | PASS (unit), GUI NOT RUN | `hearing.test.ts` |
+| Logika NPC z atrapą modelu | Warstwy, izolacja, budżet kontekstu, relacje, kompresja, retencja, spóźnione i zastąpione odpowiedzi | Jednostkowy (atrapa) | PASS 62/62 | `npc.test.ts` |
+| Prawdziwa inferencja | Pamięć, izolacja, wymuszenia, warianty, incydent, kompresja na `ornith-1.5:9b` | Integracja (bez klienta) | PASS 9/9, trzy przebiegi + regresja | `test-integration\ollama.itest.ts` |
+| Scenariusz NPC w kliencie | Przedstawienie, restart, inny gracz, próby wymuszenia, drugi NPC, incydent | Prawdziwy klient | PASS 11/11 + awaria modelu | `scripts\npc-scenario.ps1` |
 
 ## Polecenia
-Całość jednym poleceniem: `powershell -ExecutionPolicy Bypass -File scripts\verify.ps1` (raport w `runtime\logs\verify-*.json`). CI (GitHub Actions, `.github/workflows/brain.yml`) uruchamia testy jednostkowe i typecheck Brain przy każdym pushu.
+Całość jednym poleceniem: `powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-Client] [-Model]` (raport w `runtime\logs\verify-*.json`). CI (GitHub Actions, `.github/workflows/brain.yml`) uruchamia testy jednostkowe i typecheck Brain przy każdym pushu.
 Pojedynczo:
 ```powershell
 cd apps\brain; pnpm install; pnpm test; pnpm typecheck; cd ..\..

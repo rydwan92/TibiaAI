@@ -1,11 +1,13 @@
 # Architektura
 
-## Stan wdrożenia (2026-10-30, po iteracji 0011)
-Granice agenta i ciało bojowe: ADR 0006. Lokalny model: ADR 0007. Narzędzia: TOOLING.md.
+## Stan wdrożenia (2026-10-30, po iteracji 0012)
+Granice agenta i ciało bojowe: ADR 0006. Lokalny model: ADR 0007. Tożsamość, pamięć i relacje NPC: ADR 0008, NPC_RUNTIME.md. Narzędzia: TOOLING.md.
 Komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mailbox plików (ADR 0002). Agenci są opisani danymi (ADR 0004). MyAAC nie jest używany: konto tworzy `scripts/setup.ps1`, logowanie obsługuje login-server.
 
 ```
 packages/contracts/agents.json   jedno źródło definicji agentów, timing, limity, akcje
+packages/contracts/local-ai.json polityka lokalnego modelu
+packages/contracts/npc/          world, roles, variants, identities, knowledge (ADR 0008)
 game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts/sync-server.ps1)
   scripts/tibia-ai/init.lua      jedyny plik auto-ładowany; dofile modułów w stałej kolejności
   tibia-ai/lib/
@@ -18,21 +20,23 @@ game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts
     startup.lua      worldSessionId, spawn agentów, waypoint_check
     control.lua      pliki runtime/control/*.request (shutdown, alarm, selftest, scan)
     arena.lua        kontroler scenariusza areny, jawne wyjątki developerskie
+    perception.lua   czas świata, konfiguracja świata, incydenty widziane tylko w zasięgu wzroku
     talkactions.lua  /alarm, /ai (grupa god)
     selftest.lua     testy Lua wykonywane w Canary
 apps/brain/src/
   agents.ts          rejestr agentów (ten sam agents.json), walidacja
   contracts.ts       kontrakt v1: envelope, event, command, result, world.json
   actions.ts         rejestr akcji z capabilities
-  providers/         Provider, RulesProvider, LocalModelProvider, polityka local-only
+  providers/         Provider, RulesProvider, LocalModelClient, polityka local-only
+  npc/               config, store, relations, perception, retrieval, context, dialogue, confirmed, compression
   memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
   mailbox.ts         pliki mailbox po stronie Node
-  retention.ts       przycinanie katalogów archiwum mailboxa
+  retention.ts       przycinanie archiwum mailboxa i starych wierszy operacyjnych
   timeline.ts        oś decyzji z dziennika świata i logu Brain (czyste funkcje)
   brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji, retencja co 10 min
-  cli/               timeline.ts (odczyt), sqlite-tool.ts (backup/check SQLite)
-scripts/             setup, sync-server, start, stop, status, logs, client, alarm, selftest, scan, backup, restore-test
-tools/               journal.py, otbm_towns.py, otclient-autotest/ (test prawdziwego klienta)
+  cli/               timeline.ts (odczyt), npc-memory.ts (podgląd pamięci), sqlite-tool.ts (backup/check SQLite)
+scripts/             setup, sync-server, start, stop, status, logs, client, ollama, incident, npc-scenario, alarm, selftest, scan, backup, restore-test
+tools/               journal.py, otbm_towns.py, otclient-autotest/ (test prawdziwego klienta), otclient-framecap/ (limit klatek)
 infra/versions.lock.json  przypięte artefakty z SHA-256
 runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream
 ```
@@ -66,6 +70,7 @@ Fallback MVP: lokalny mailbox w dedykowanym współdzielonym katalogu, jeśli sa
 Jeśli I/O powoduje opóźnienia lub jest niedostępne, zapisz ADR dla asynchronicznego C++ bridge z ograniczoną kolejką. Nie używaj tabel gry jako magistrali. NPC Lua działa również przed implementacją mostu.
 
 ## Pamięć
+Pamięć NPC (epizody, relacje, zobowiązania, fakty, kompresja) opisuje ADR 0008. Poniżej warstwa podstawowa.
 SQLite: agents, encounters, observations, commands, action_results, schema_migrations. Stabilny agentKey (ardan); playerGuid ze świata. Creature runtime ID jest tylko chwilowym uchwytem. Zapisuj eventId, source, observedAt, expiresAt, worldSessionId. Unikalność eventId i commandId; transakcje, migracje, kopia przed migracją. Pamięć „gracz twierdzi X” nie staje się faktem X. Po restarcie trwałe wspomnienia zostają, stare polecenia ruchu wygasają. Na początek jawne fakty i zapytania SQL, bez embeddingów.
 
 ## Struktura docelowa

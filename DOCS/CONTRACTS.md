@@ -20,7 +20,9 @@ Zmiana względem v0: znaczniki czasu to liczby epoch ms (`createdAtMs`, `expires
 ## Event (Lua → Brain)
 | type | pola | źródło |
 | --- | --- | --- |
-| `player_greeted` | playerGuid (int, z silnika), playerName, text (≤300) | `npcType.onSay` + dystans ≤4 + cooldown 8 s na gracza |
+| `player_greeted` | playerGuid (int, z silnika), playerName, text (≤300), worldMinutes | powitanie skierowane do tego NPC (`T.onNpcSay`) |
+| `player_said` | playerGuid, playerName, text (≤300), addressed (bool), distance (int), worldMinutes | wypowiedź w zasięgu słuchu. `addressed=true`: do tego NPC, `false`: zasłyszana, nigdy bez odpowiedzi |
+| `incident_observed` | incidentId, description, distance, worldMinutes | `T.reportIncident`: tylko agenci w zasięgu wzroku na tym samym piętrze (ADR 0008) |
 | `training_alarm_started` | zoneId, triggeredBy | `/alarm start [zone]` (GOD) lub `scripts/alarm.ps1 start`; jedno zdarzenie na każdego agenta reagującego na strefę |
 | `training_alarm_cleared` | zoneId, clearedBy | `/alarm clear [zone]` lub `scripts/alarm.ps1 clear` |
 | `position_observed` | x, y, z | w kontrakcie, jeszcze nie emitowany |
@@ -35,18 +37,20 @@ payload: `commandId` (`[A-Za-z0-9_-]{1,64}`), `planRevision` (int ≥0), `expire
 
 | action | args | skutek |
 | --- | --- | --- |
-| `say` | text 1–200 znaków, bez znaków sterujących | lokalna mowa (TALKTYPE_SAY); limit 1 wypowiedź/3 s, z wyjątkiem odpowiedzi na oczekujące powitanie |
+| `say` | text 1–200 znaków, bez znaków sterujących; opcjonalnie toPlayerGuid (cyfry) | lokalna mowa (TALKTYPE_SAY); limit 1 wypowiedź/3 s, z wyjątkiem odpowiedzi na oczekującą rozmowę. Gdy adresata nie ma w zasięgu: `addressee_gone` |
 | `patrol` | routeId ∈ trasy agenta | stan PATROL (tylko agenci typu `patrol`, inaczej `not_a_patrol_agent`) |
 | `move_to` | waypointId ∈ allowlist (nigdy współrzędne) | `accepted`, potem `completed` lub `failed` |
 | `stop` | brak | stan STOPPED |
 
 W Brain akcje są zarejestrowane w `apps/brain/src/actions.ts`: każda deklaruje capability i walidację. Agent ma typ ciała `actor`, a `actorTypes` w `agents.json` określa jego capabilities; akcja bez zdolności kończy się `missing_capability` (przed zapisem komendy).
 
-Kolejność walidacji w Lua (pierwszy błąd wygrywa): rozmiar ≤16 KiB (`too_large`), JSON (`invalid_json`, plik trafia do `quarantine/`), envelope (`invalid_envelope`), commandId (`invalid_command`), duplikat commandId (zwraca wcześniejszy wynik z `duplicate: true`, bez ponownej akcji), sesja (`stale_session`), agent (`unknown_agent`), TTL > 10 s (`ttl_too_long`), wygaśnięcie (status `expired`, `ttl_expired`), planRevision (`invalid_plan_revision`), akcja (`unknown_action`), argumenty (`invalid_args`), a dla akcji ruchu `planRevision` < bieżącego (`stale_plan`). Wykonanie: brak jednostki (`agent_missing`), trwający alarm blokuje patrol i move_to (`alarm_active`), limit mowy (`say_rate_limited`), odpowiedź spóźniona po lokalnym powitaniu (`superseded_by_fallback`).
+Kolejność walidacji w Lua (pierwszy błąd wygrywa): rozmiar ≤16 KiB (`too_large`), JSON (`invalid_json`, plik trafia do `quarantine/`), envelope (`invalid_envelope`), commandId (`invalid_command`), duplikat commandId (zwraca wcześniejszy wynik z `duplicate: true`, bez ponownej akcji), sesja (`stale_session`), agent (`unknown_agent`), TTL > 10 s (`ttl_too_long`), wygaśnięcie (status `expired`, `ttl_expired`), planRevision (`invalid_plan_revision`), akcja (`unknown_action`), argumenty (`invalid_args`), a dla akcji ruchu `planRevision` < bieżącego (`stale_plan`). Wykonanie: brak jednostki (`agent_missing`), trwający alarm blokuje patrol i move_to (`alarm_active`), limit mowy (`say_rate_limited`), adresat poza zasięgiem (`addressee_gone`), odpowiedź spóźniona po lokalnej odpowiedzi (`superseded_by_fallback`).
 
 `planRevision` porządkuje **plany ruchu** (patrol/move_to/stop): nowsza rewizja anuluje bieżący ruch, a starsza jest odrzucana. `say` nie jest planem i nie podlega tej kontroli. Brain używa rewizji z `world.json` (`agent.planRevision`).
 
 Brain waliduje komendę przed zapisem tymi samymi regułami (`validateCommand`). Domyślny TTL komendy z Brain wynosi 5 s.
+
+Odpowiedź modelu ma schemat `{say, action, remember, promise, sentiment}`. Pola `remember`, `promise` i `sentiment` nie są komendami: zostają przy komendzie jako plan i działają dopiero po wyniku `completed` (ADR 0008).
 
 ## Result (Lua → Brain)
 payload: `commandId`, `status` (`accepted` | `completed` | `rejected` | `failed` | `expired`), `reasonCode`, opcjonalnie `actualPosition`, `completedAtMs` (dla statusów terminalnych), `duplicate`, `detail`.

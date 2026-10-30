@@ -10,6 +10,7 @@
     "start": "node --disable-warning=ExperimentalWarning src/main.ts",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
     "test:integration": "node --disable-warning=ExperimentalWarning test-integration/bridge.itest.ts",
+    "test:model": "node --disable-warning=ExperimentalWarning test-integration/ollama.itest.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

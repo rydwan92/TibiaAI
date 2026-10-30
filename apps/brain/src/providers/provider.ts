@@ -5,11 +5,16 @@
 import type { AgentDefinition } from '../agents.ts';
 import type { Envelope, EventPayload } from '../contracts.ts';
 import type { EncounterStats, HeardStatement } from '../memory.ts';
+import type { DialoguePlan } from '../npc/dialogue.ts';
 
 export interface Intent {
   action: 'say';
   text: string;
   delayMs: number;
+  /** The reply is meant for this player; the engine drops it if they are gone. */
+  toPlayerGuid?: number;
+  /** Memory effects applied only after the engine confirms the speech. */
+  plan?: DialoguePlan;
 }
 
 export interface ProviderContext {
@@ -19,6 +24,7 @@ export interface ProviderContext {
   encounterBefore?: EncounterStats;
   /** Training alarms observed for this agent in the current world session (incl. this one). */
   alarmsThisSession?: number;
+  alarmActive?: boolean;
   /** Freshest statement this agent heard from another agent (ADR 0005), if recent enough. */
   latestHeard?: HeardStatement & { speakerName: string };
 }

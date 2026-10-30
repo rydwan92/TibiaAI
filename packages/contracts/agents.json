@@ -2,13 +2,15 @@
   "schemaVersion": 1,
   "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n} {speaker} {quote}.",
   "timing": {
-    "talkPauseTicks": 4,
-    "brainReplyTicks": 4,
+    "talkPauseTicks": 10,
+    "brainReplyTicks": 14,
     "moveTimeoutTicks": 8,
     "retryAfterTicks": 5,
     "waypointPauseTicks": 2,
     "pathSearchDistance": 30,
-    "sayCooldownSeconds": 3
+    "sayCooldownSeconds": 3,
+    "conversationTimeoutSeconds": 45,
+    "speechCooldownSeconds": 2
   },
   "alarmZones": [
     "montag_gate"
@@ -24,6 +26,7 @@
     "monsters": [
       "Troll",
       "Cave Rat",
+      "Sandcrawler",
       "Valkyrie"
     ],
     "devCharacters": [
@@ -50,7 +53,6 @@
     "ardan": {
       "npcName": "Ardan",
       "description": "Ardan, the guard of Montag",
-      "persona": "Jestes doswiadczonym, spokojnym straznikiem Montag. Mowisz krotko i rzeczowo.",
       "actor": "npc",
       "outfit": {
         "lookType": 131,
@@ -142,13 +144,13 @@
         "alarmRewarn": "Alarm trwa. Nie zblizajcie sie do bramy.",
         "alarmClear": "Alarm odwolany. Wracam na patrol.",
         "alarmComment": "To {n}. alarm cwiczebny w tej zmianie. Zachowajcie spokoj.",
-        "greetRumor": ""
+        "greetRumor": "",
+        "busyReply": "Hmm?"
       }
     },
     "mira": {
       "npcName": "Mira",
       "description": "Mira, the herbalist of Montag",
-      "persona": "Jestes zyczliwa zielarka z Montag. Lubisz plotki i troszczysz sie o przybyszy.",
       "actor": "npc",
       "outfit": {
         "lookType": 136,
@@ -213,7 +215,61 @@
         "alarmRewarn": "",
         "alarmClear": "Uff, po alarmie. Wracam do stoiska.",
         "alarmComment": "",
-        "greetRumor": "Slyszalam, jak {speaker} mowil {since}: \"{quote}\""
+        "greetRumor": "Slyszalam, jak {speaker} mowil {since}: \"{quote}\"",
+        "busyReply": "Slucham cie, kochanienki."
+      }
+    },
+    "brom": {
+      "npcName": "Brom",
+      "description": "Brom, an old guard of Montag",
+      "actor": "npc",
+      "outfit": {
+        "lookType": 128,
+        "lookHead": 0,
+        "lookBody": 77,
+        "lookLegs": 78,
+        "lookFeet": 95,
+        "lookAddons": 0
+      },
+      "speed": 90,
+      "spawn": "old_post",
+      "behavior": {
+        "type": "stationary",
+        "home": "old_post"
+      },
+      "waypoints": {
+        "old_post": {
+          "x": 5014,
+          "y": 5003,
+          "z": 7
+        }
+      },
+      "routes": {},
+      "greeting": {
+        "words": [
+          "hi",
+          "hello",
+          "hey",
+          "witaj",
+          "czesc",
+          "siema",
+          "dzien dobry"
+        ],
+        "range": 4,
+        "cooldownSeconds": 8
+      },
+      "hearing": {
+        "range": 7,
+        "yellRange": 30
+      },
+      "texts": {
+        "greetFallback": "Witaj, przyjacielu {name}. Brom jestem, stary straznik.",
+        "greetFirst": "Witaj, przyjacielu {name}. Brom jestem, stary straznik.",
+        "greetRepeat": "A, to znowu ty, {name}! Juz {nth}. raz, ostatnio {since}.",
+        "greetDuringAlarm": "Teraz alarm, przyjacielu, potem pogadamy.",
+        "busyReply": "Co mowisz, przyjacielu?",
+        "alarmComment": "",
+        "greetRumor": ""
       }
     }
   },

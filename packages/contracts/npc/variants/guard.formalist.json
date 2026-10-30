@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "key": "guard.formalist",
+  "role": "guard",
+  "temperament": "powsciagliwy, rzeczowy, nieufny wobec obcych",
+  "speechStyle": "oficjalny ton, zwraca sie 'przybyszu', cytuje przepisy, bez zartow",
+  "values": ["regulamin"],
+  "constraints": ["nie plotkuje"]
+}

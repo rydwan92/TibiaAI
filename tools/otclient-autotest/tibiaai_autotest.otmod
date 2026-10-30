@@ -5,6 +5,6 @@ Module
   website: https://github.com/rydwan92/TibiaAI
   autoload: true
   autoload-priority: 5000
-  scripts: [ autotest, combat ]
+  scripts: [ autotest, combat, conversation ]
   @onLoad: TibiaAIAutotest.init()
   @onUnload: TibiaAIAutotest.terminate()

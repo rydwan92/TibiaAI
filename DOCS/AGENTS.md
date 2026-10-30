@@ -7,13 +7,15 @@ Agenci są opisani danymi w `packages/contracts/agents.json` (ADR 0004). Ten sam
 | --- | --- | --- | --- |
 | `ardan` | Ardan, strażnik | `patrol`, trasa `montag_square` (4 punkty) | idzie do `gate_watch`, krzyczy, ostrzega co 20 s |
 | `mira` | Mira, zielarka | `stationary`, dom `herb_stall` (5020,5003,7) | chowa się w `temple_shelter` (świątynia, PZ) |
+| `brom` | Brom, strażnik (wariant weterana) | `stationary`, dom `old_post` (5014,5003,7) | nie reaguje |
+
+Charakter, biografia i wiedza NPC są w `packages/contracts/npc/` (NPC_RUNTIME.md). `agents.json` opisuje ciało i zasady w świecie.
 
 ## Pola definicji
 | Pole | Znaczenie |
 | --- | --- |
 | klucz agenta | `[a-z][a-z0-9_]*`, stabilny identyfikator (pamięć Brain, pliki mailbox) |
 | `npcName`, `description` | nazwa i opis NPC w grze (rejestrowane przez `Game.createNpcType`) |
-| `persona` | opis postaci dla lokalnego modelu; trwała tożsamość razem z kluczem agenta |
 | `actor` | typ ciała z `actorTypes`: `npc` albo `client_player`; określa capabilities |
 | `outfit`, `speed` | wygląd (lookType itd.) i prędkość animacji |
 | `spawn` | id punktu startowego (musi istnieć w `waypoints`) |
@@ -42,7 +44,7 @@ Globalne: `timing` (w tickach po 1 s: pauza po powitaniu, czas czekania na Brain
 Błędna definicja nie zatrzymuje świata: agent jest pomijany, a w dzienniku pojawia się `agent_definition_invalid` z opisem problemu. Brain natomiast nie wystartuje z błędnym plikiem i wypisze listę błędów.
 
 ## Jak dodać rolę, zachowanie i akcję
-- **Rola** (kupiec, strażnik): wpis w `agents.json`: persona, teksty, trasa lub dom, reakcja na alarm. Bez kodu, jeśli wystarczają istniejące zachowania.
+- **Rola** (kupiec, strażnik): plik w `packages/contracts/npc/roles/` oraz wpis w `agents.json`: teksty, trasa lub dom, reakcja na alarm. Bez kodu, jeśli wystarczają istniejące zachowania.
 - **Zachowanie**: nowa pozycja w `routines` w `controller.lua` (`start`, `next`, `resumeTarget`, `onResumed`, `activeState`) i walidacja w `registry.lua` oraz `agents.ts`. Testy: self-test Lua i testy Brain.
 - **Akcja**: `registerAction` w `apps/brain/src/actions.ts` (capability, `movement`, walidacja), nazwa w `actions` w `agents.json`, obsługa w `T.agentExecute` i `validateArgs` w Lua, opis w CONTRACTS.md. Capability dopisz do właściwych `actorTypes`.
 

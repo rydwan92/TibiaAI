@@ -9,7 +9,7 @@ const clone = () => JSON.parse(JSON.stringify(doc));
 test('packages/contracts/agents.json is valid', () => {
   assert.deepEqual(validateAgentsDocument(doc), []);
   const reg = AgentRegistry.load();
-  assert.deepEqual(reg.keys(), ['ardan', 'mira']);
+  assert.deepEqual(reg.keys(), ['ardan', 'brom', 'mira']);
   assert.equal(reg.get('ardan')!.key, 'ardan');
 });
 
@@ -37,5 +37,5 @@ test('every agent can be added by data only: a minimal stationary agent validate
     greeting: { words: ['hi'], range: 3 }, texts: { greetFallback: 'Czesc, {name}.' },
   };
   assert.deepEqual(validateAgentsDocument(d), []);
-  assert.deepEqual(new AgentRegistry(d).keys(), ['ardan', 'kael', 'mira']);
+  assert.deepEqual(new AgentRegistry(d).keys(), ['ardan', 'brom', 'kael', 'mira']);
 });

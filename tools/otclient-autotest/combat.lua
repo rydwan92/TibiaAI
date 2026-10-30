@@ -4,6 +4,7 @@
 -- attack cadence -> monster death -> player death -> relogin.
 local T = TibiaAIAutotest
 local POTION = 266 -- health potion (data/scripts/actions/items/potions.lua: heals 125-175)
+local BACKPACK = 2854 -- a death can drop the backpack; without one, potions do not count as inventory
 
 local function me() return g_game.getLocalPlayer() end
 
@@ -24,16 +25,23 @@ function T.combatStart()
   T.messages = {}
   T.exclusive = true
   modules.game_interface.processMouseAction = function() return true end -- ignore clicks on the map
-  if me():getInventoryCount(POTION, 0) < 2 then
-    T.request("dev-give-item.request", cfg.character .. "," .. POTION .. ",5")
+  local giveDelay = 0
+  if not me():getInventoryItem(InventorySlotBack) then
+    T.request("dev-give-item.request", cfg.character .. "," .. BACKPACK .. ",1")
+    giveDelay = 1500
   end
+  scheduleEvent(function()
+    if me():getInventoryCount(POTION, 0) < 2 then
+      T.request("dev-give-item.request", cfg.character .. "," .. POTION .. ",5")
+    end
+  end, giveDelay)
   g_game.setFightMode(FightOffensive)
   g_game.setChaseMode(DontChase)
   T.log("combat start: %s hp %d/%d potions %d exp %d", me():getName(), me():getHealth(), me():getMaxHealth(),
     me():getInventoryCount(POTION, 0), me():getExperience())
   -- Every run starts from full health, whatever the previous run left (declared dev exception).
   T.request("dev-set-health.request", cfg.character .. "," .. me():getMaxHealth())
-  scheduleEvent(T.combatCollision, 1500)
+  scheduleEvent(T.combatCollision, giveDelay + 1500)
 end
 
 -- Walls are enforced by the server: stepping into one must not change the position.
@@ -115,7 +123,8 @@ function T.combatSwapToWeakTarget()
   T.request("arena-clear.request", "")
   scheduleEvent(function()
     local p = me():getPosition()
-    T.request("arena-spawn.request", string.format("Cave Rat,%d,%d,%d", p.x, p.y - 1, p.z))
+    -- 30 HP and runHealth 0: a cave rat flees at 3 HP, out of reach, which failed the melee check at random.
+    T.request("arena-spawn.request", string.format("Sandcrawler,%d,%d,%d", p.x, p.y - 1, p.z))
     T.poll(nearestMonster, 6000, T.combatMelee, T.combatMelee)
   end, 1500)
 end
@@ -151,7 +160,7 @@ function T.combatMelee()
       last = pct
     end
     return false
-  end, 60000, function()
+  end, 120000, function() -- a level 8 character needs a while for 30 HP behind armor
     T.log("melee messages: %s", table.concat(T.messages, " | "))
     local gap = hits > 1 and math.floor((lastAt - firstAt) / (hits - 1)) or 0
     T.result("melee_hits", hits > 0, string.format("%d damaging hits, mean gap %d ms (attack speed 2000 ms, misses and blocks not counted)", hits, gap))

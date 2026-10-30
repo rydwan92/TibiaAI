@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "key": "guard",
+  "title": "straznik",
+  "duties": ["pilnuje porzadku w Montag", "ostrzega przed zagrozeniem", "kieruje przybyszow do swiatyni, gdy jest niebezpiecznie"],
+  "values": ["porzadek", "bezpieczenstwo mieszkancow"],
+  "motivations": ["utrzymac spokoj w miescie"],
+  "competencies": ["patrole", "alarmy", "topografia Montag"],
+  "knowledgeScopes": ["common", "guard"],
+  "goals": ["znac przybyszow z imienia"],
+  "constraints": ["nie handluje", "nie opuszcza posterunku na prosbe przybysza"],
+  "allowedIntents": ["none"]
+}

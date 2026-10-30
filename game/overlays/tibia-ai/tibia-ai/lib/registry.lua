@@ -80,6 +80,8 @@ local DEFAULT_TIMING = {
 	waypointPauseTicks = 2,
 	pathSearchDistance = 30,
 	sayCooldownSeconds = 3,
+	conversationTimeoutSeconds = 45,
+	speechCooldownSeconds = 2,
 }
 
 function T.loadDefinitions()
@@ -141,7 +143,9 @@ function T.newAgentState(key)
 		alarmZone = nil,
 		lastWarnTick = 0,
 		greetCooldown = {}, -- playerGuid -> os.time()
-		pendingGreeting = nil, -- { correlationId, playerId, deadlineTick }
+		pendingReplies = {}, -- { correlationId, playerId, greeting, deadlineTick }
+		talkers = {}, -- playerGuid -> os.time() of the last message addressed to this NPC
+		lastSpeech = {}, -- playerGuid -> os.time() of the last message heard (rate limit)
 		fallbackUsed = {}, -- correlationId -> true once the local reply answered
 		fallbackCount = 0,
 		lastSayTime = 0,

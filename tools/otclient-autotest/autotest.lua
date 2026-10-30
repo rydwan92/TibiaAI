@@ -127,7 +127,8 @@ function T.stepInWorld()
     return scheduleEvent(function() g_game.safeLogout(); finish() end, 1000)
   end
   result("enter_world", true, string.format("%s pos %s hp %d/%d", p:getName(), posText(p:getPosition()), p:getHealth(), p:getMaxHealth()))
-  scheduleEvent(cfg.scenario == "combat" and T.combatStart or T.stepWalkOnce, 1500)
+  local first = { combat = T.combatStart, conversation = T.stepRoute }
+  scheduleEvent(first[cfg.scenario] or T.stepWalkOnce, 1500)
 end
 
 -- Step 2: a plain keyboard-style step, trying each direction until the server accepts one.
@@ -159,12 +160,13 @@ end
 -- Step 3: walk the configured waypoints with the client's own autowalk.
 function T.stepRoute()
   local idx = 0
+  local afterRoute = cfg.scenario == "conversation" and T.conversationTalk or T.stepGreet
   local function nextLeg()
     idx = idx + 1
     local target = cfg.route[idx]
     if not target then
       result("route", true, "reached " .. posText(g_game.getLocalPlayer():getPosition()))
-      return T.stepGreet()
+      return afterRoute()
     end
     local deadline = g_clock.millis() + 30000
     local function walkLeg()
@@ -172,7 +174,7 @@ function T.stepRoute()
       if distance(p:getPosition(), target) <= 1 then return nextLeg() end
       if g_clock.millis() > deadline then
         result("route", false, "stuck at " .. posText(p:getPosition()) .. " towards " .. posText(target))
-        return T.stepGreet()
+        return afterRoute()
       end
       if not p:isAutoWalking() then p:autoWalk(target) end
       scheduleEvent(walkLeg, 400)
@@ -230,7 +232,7 @@ end
 -- not come from this test (mouse or keyboard in the open window), so results stay reproducible.
 local function traceActions()
   local seen = {}
-  for _, name in ipairs({ "walk", "useInventoryItemWith", "useInventoryItem", "useWith", "use", "setFightMode", "setChaseMode", "attack", "follow", "cancelAttack" }) do
+  for _, name in ipairs({ "walk", "talk", "useInventoryItemWith", "useInventoryItem", "useWith", "use", "setFightMode", "setChaseMode", "attack", "follow", "cancelAttack" }) do
     local original = g_game[name]
     if original then
       g_game[name] = function(...)

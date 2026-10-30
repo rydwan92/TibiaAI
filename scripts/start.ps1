@@ -17,6 +17,7 @@ function Rotate-Log([string]$name) {
 }
 
 function Start-Brain {
+    if ($cfg.TIBIAAI_BRAIN_PROVIDER -eq 'local-model') { & "$PSScriptRoot\ollama.ps1" -Start }
     if (Get-TrackedProcess 'brain') { Write-Host "Brain already running"; return }
     $node = (Get-Command node -ErrorAction Stop).Source
     $ver = (& $node --version).Trim()

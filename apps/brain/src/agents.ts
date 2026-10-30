@@ -10,7 +10,6 @@ export interface AgentDefinition {
   key: string;
   npcName: string;
   description?: string;
-  persona?: string;
   actor: string;
   spawn: string;
   behavior: Behavior;

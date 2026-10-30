@@ -108,7 +108,7 @@ local function rememberResult(commandId, payload)
 end
 
 -- Validation ------------------------------------------------------------------------------------
-local ALLOWED_ARG_KEYS = { say = { text = true }, patrol = { routeId = true }, move_to = { waypointId = true }, stop = {} }
+local ALLOWED_ARG_KEYS = { say = { text = true, toPlayerGuid = true }, patrol = { routeId = true }, move_to = { waypointId = true }, stop = {} }
 
 local function validateArgs(def, action, args)
 	if type(args) ~= "table" then
@@ -120,6 +120,9 @@ local function validateArgs(def, action, args)
 		end
 	end
 	if action == "say" then
+		if args.toPlayerGuid ~= nil and not (type(args.toPlayerGuid) == "string" and args.toPlayerGuid:match("^%d+$")) then
+			return false
+		end
 		return type(args.text) == "string" and #args.text >= 1 and #args.text <= 200 and not args.text:find("%c")
 	elseif action == "patrol" then
 		return type(args.routeId) == "string" and def.routes ~= nil and def.routes[args.routeId] ~= nil
