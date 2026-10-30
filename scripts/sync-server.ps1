@@ -26,6 +26,14 @@ if (Test-Path $Overlay) {
     & robocopy.exe $Overlay (Join-Path $ServerDir 'data-canary') /E /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy overlay failed ($LASTEXITCODE)" }
 }
+# Developer map: runtime\maps\canary.otbm (scripts\map-dev.ps1) replaces the pinned map in the
+# server copy only. Removing that file and syncing returns to the original from vendor\.
+$devMap = Join-Path $Runtime 'maps\canary.otbm'
+if (Test-Path $devMap) {
+    Copy-Item $devMap (Join-Path $ServerDir 'data-canary\world\canary.otbm') -Force
+    Write-Host "Using developer map $devMap"
+}
+
 # Agent definitions: single source in packages\contracts (ADR 0004), read by Lua at script load.
 $agentsJson = Join-Path $Root 'packages\contracts\agents.json'
 $null = Get-Content -Raw -Encoding UTF8 $agentsJson | ConvertFrom-Json  # fail early on invalid JSON
@@ -48,6 +56,10 @@ $overrides = [ordered]@{
     'mysqlPort'               = $cfg.TIBIAAI_DB_PORT
     'metricsPrometheusAddress' = '"127.0.0.1:9464"'
     'worldType'               = '"no-pvp"'
+    # Forge would turn arena monsters into Fiendish ones (health x3.6, stronger hits) every 10 s,
+    # which breaks predictable training and floods the log on a map without monsters.
+    'forgeInfluencedLimit'    = '0'
+    'forgeFiendishLimit'      = '0'
 }
 $config = Get-Content -Raw -Encoding UTF8 (Join-Path $CanarySrc 'config.lua.dist')
 foreach ($key in $overrides.Keys) {

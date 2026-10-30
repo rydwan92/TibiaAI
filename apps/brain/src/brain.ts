@@ -20,6 +20,7 @@ const WORLD_STALE_MS = 10_000;
 const EVENT_MAX_AGE_MS = 15_000; // older observations (e.g. queued while Brain was down) are stored, not acted on
 const RETENTION_INTERVAL_MS = 10 * 60_000;
 const RUMOR_MAX_AGE_MS = 10 * 60_000; // ADR 0005: only fresh statements are passed on
+const DECISION_MAX_AGE_MS = 10_000; // a slow provider's answer older than this is dropped
 
 interface Scheduled {
   dueAtMs: number;
@@ -74,7 +75,7 @@ export class Brain {
 
     this.processEvents(nowMs);
     this.processResults(nowMs);
-    this.flushScheduled(nowMs, world);
+    this.flushScheduled(this.now(), world);
 
     if (nowMs - this.lastRetentionMs >= RETENTION_INTERVAL_MS) {
       this.lastRetentionMs = nowMs;
@@ -123,20 +124,35 @@ export class Brain {
       if (stale) continue; // remembered, but no action for old sessions/observations
 
       const heard = ev.payload.type === 'player_greeted' ? this.memory.latestHeard(ev.agentKey, nowMs - RUMOR_MAX_AGE_MS) : undefined;
-      const intents = this.provider.decide(ev, {
+      const decided = this.provider.decide(ev, {
         agent: agentRegistry().get(ev.agentKey)!,
         encounterBefore,
         alarmsThisSession: this.memory.countObservations(ev.worldSessionId, 'training_alarm_started', ev.agentKey),
         latestHeard: heard && { ...heard, speakerName: agentRegistry().get(heard.speakerKey)?.npcName ?? heard.speakerKey },
         nowMs,
       });
-      if (ev.payload.type === 'agent_heard' && intents.length > 0) {
-        // Loop guard for any provider (ADR 0005): agent speech never triggers agent speech.
-        this.log('intents_blocked_loop_guard', { eventId: ev.messageId, count: intents.length });
-        continue;
+      if (decided instanceof Promise) {
+        decided.then((intents) => this.acceptIntents(ev, intents)).catch((err: Error) => {
+          this.log('provider_failed', { eventId: ev.messageId, error: err.message });
+        });
+      } else {
+        this.acceptIntents(ev, decided);
       }
-      for (const intent of intents) this.scheduled.push({ dueAtMs: nowMs + intent.delayMs, intent, event: ev });
     }
+  }
+
+  private acceptIntents(ev: Envelope<EventPayload>, intents: Intent[]): void {
+    const nowMs = this.now();
+    if (ev.payload.type === 'agent_heard' && intents.length > 0) {
+      // Loop guard for any provider (ADR 0005): agent speech never triggers agent speech.
+      this.log('intents_blocked_loop_guard', { eventId: ev.messageId, count: intents.length });
+      return;
+    }
+    if (intents.length > 0 && (ev.worldSessionId !== this.worldSessionId || nowMs - ev.createdAtMs > DECISION_MAX_AGE_MS)) {
+      this.log('decision_stale', { eventId: ev.messageId, ageMs: nowMs - ev.createdAtMs });
+      return;
+    }
+    for (const intent of intents) this.scheduled.push({ dueAtMs: nowMs + intent.delayMs, intent, event: ev });
   }
 
   private processResults(nowMs: number): void {

@@ -1,6 +1,7 @@
 # Architektura
 
-## Stan wdrożenia (2026-10-29, po iteracji 0004)
+## Stan wdrożenia (2026-10-30, po iteracji 0011)
+Granice agenta i ciało bojowe: ADR 0006. Lokalny model: ADR 0007. Narzędzia: TOOLING.md.
 Komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mailbox plików (ADR 0002). Agenci są opisani danymi (ADR 0004). MyAAC nie jest używany: konto tworzy `scripts/setup.ps1`, logowanie obsługuje login-server.
 
 ```
@@ -16,12 +17,14 @@ game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts
     npc_types.lua    rejestracja NpcType z definicji (bez sklepu, walki i losowego chodzenia)
     startup.lua      worldSessionId, spawn agentów, waypoint_check
     control.lua      pliki runtime/control/*.request (shutdown, alarm, selftest, scan)
+    arena.lua        kontroler scenariusza areny, jawne wyjątki developerskie
     talkactions.lua  /alarm, /ai (grupa god)
     selftest.lua     testy Lua wykonywane w Canary
 apps/brain/src/
   agents.ts          rejestr agentów (ten sam agents.json), walidacja
   contracts.ts       kontrakt v1: envelope, event, command, result, world.json
-  providers/         interfejs Provider + RulesProvider (teksty persony z definicji)
+  actions.ts         rejestr akcji z capabilities
+  providers/         Provider, RulesProvider, LocalModelProvider, polityka local-only
   memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
   mailbox.ts         pliki mailbox po stronie Node
   retention.ts       przycinanie katalogów archiwum mailboxa
@@ -29,7 +32,7 @@ apps/brain/src/
   brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji, retencja co 10 min
   cli/               timeline.ts (odczyt), sqlite-tool.ts (backup/check SQLite)
 scripts/             setup, sync-server, start, stop, status, logs, client, alarm, selftest, scan, backup, restore-test
-tools/               journal.py (dziennik sesji), otbm_towns.py
+tools/               journal.py, otbm_towns.py, otclient-autotest/ (test prawdziwego klienta)
 infra/versions.lock.json  przypięte artefakty z SHA-256
 runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream
 ```

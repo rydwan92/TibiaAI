@@ -13,6 +13,8 @@ Agenci są opisani danymi w `packages/contracts/agents.json` (ADR 0004). Ten sam
 | --- | --- |
 | klucz agenta | `[a-z][a-z0-9_]*`, stabilny identyfikator (pamięć Brain, pliki mailbox) |
 | `npcName`, `description` | nazwa i opis NPC w grze (rejestrowane przez `Game.createNpcType`) |
+| `persona` | opis postaci dla lokalnego modelu; trwała tożsamość razem z kluczem agenta |
+| `actor` | typ ciała z `actorTypes`: `npc` albo `client_player`; określa capabilities |
 | `outfit`, `speed` | wygląd (lookType itd.) i prędkość animacji |
 | `spawn` | id punktu startowego (musi istnieć w `waypoints`) |
 | `waypoints` | allowlista punktów `{x,y,z}`. Tylko te id może wskazać Brain (`move_to`) |
@@ -38,6 +40,11 @@ Globalne: `timing` (w tickach po 1 s: pauza po powitaniu, czas czekania na Brain
 6. Dopisz agenta do tabeli powyżej i do STATUS.
 
 Błędna definicja nie zatrzymuje świata: agent jest pomijany, a w dzienniku pojawia się `agent_definition_invalid` z opisem problemu. Brain natomiast nie wystartuje z błędnym plikiem i wypisze listę błędów.
+
+## Jak dodać rolę, zachowanie i akcję
+- **Rola** (kupiec, strażnik): wpis w `agents.json`: persona, teksty, trasa lub dom, reakcja na alarm. Bez kodu, jeśli wystarczają istniejące zachowania.
+- **Zachowanie**: nowa pozycja w `routines` w `controller.lua` (`start`, `next`, `resumeTarget`, `onResumed`, `activeState`) i walidacja w `registry.lua` oraz `agents.ts`. Testy: self-test Lua i testy Brain.
+- **Akcja**: `registerAction` w `apps/brain/src/actions.ts` (capability, `movement`, walidacja), nazwa w `actions` w `agents.json`, obsługa w `T.agentExecute` i `validateArgs` w Lua, opis w CONTRACTS.md. Capability dopisz do właściwych `actorTypes`.
 
 ## Kiedy potrzebny jest kod
 Nowy typ zachowania (np. eskorta, podążanie, handel, walka) wymaga nowej pozycji w `routines` w `game/overlays/tibia-ai/tibia-ai/lib/controller.lua`, rozszerzenia walidacji w Lua (`registry.lua`) i TS (`apps/brain/src/agents.ts`) oraz ADR. Nowa akcja Brain wymaga zmiany kontraktu (CONTRACTS.md) po obu stronach.

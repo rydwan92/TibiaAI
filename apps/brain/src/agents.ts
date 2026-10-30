@@ -10,6 +10,8 @@ export interface AgentDefinition {
   key: string;
   npcName: string;
   description?: string;
+  persona?: string;
+  actor: string;
   spawn: string;
   behavior: Behavior;
   waypoints: Record<string, Position>;
@@ -24,6 +26,7 @@ export interface AgentsDocument {
   schemaVersion: 1;
   timing: Record<string, number>;
   alarmZones: string[];
+  actorTypes: Record<string, { capabilities: string[] }>;
   agents: Record<string, Omit<AgentDefinition, 'key'>>;
   actions: string[];
   limits: { maxTtlMs: number; maxSayLength: number; maxEventTextLength: number; maxFileBytes: number };
@@ -48,6 +51,7 @@ export function validateAgentsDocument(doc: unknown): string[] {
     if (!KEY_RE.test(key)) err('agent key format');
     if (!isObj(def)) { err('not an object'); continue; }
     if (typeof def.npcName !== 'string' || !def.npcName) err('npcName');
+    if (!isObj(doc.actorTypes) || !(def.actor in doc.actorTypes)) err('actor must be one of actorTypes');
     const wps = isObj(def.waypoints) ? def.waypoints : {};
     if (Object.keys(wps).length === 0) err('waypoints');
     for (const [id, p] of Object.entries(wps)) if (!isPos(p)) err(`waypoint ${id}`);
@@ -102,6 +106,12 @@ export class AgentRegistry {
 
   keys(): string[] {
     return [...this.defs.keys()].sort();
+  }
+
+  /** What this agent's body can do; depends on its actor type, not on its role. */
+  capabilities(key: string): string[] {
+    const def = this.get(key);
+    return def ? this.doc.actorTypes[def.actor].capabilities : [];
   }
 
   get limits(): AgentsDocument['limits'] {

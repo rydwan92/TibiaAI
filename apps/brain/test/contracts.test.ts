@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseEvent, parseResult, validateCommand, type CommandPayload, type Envelope } from '../src/contracts.ts';
+import { getAction, registerAction } from '../src/actions.ts';
+import { agentRegistry, parseEvent, parseResult, validateCommand, type CommandPayload, type Envelope } from '../src/contracts.ts';
 import { makeEvent } from './helpers.ts';
 
 const now = Date.now();
@@ -53,4 +54,18 @@ test('results parse and reject unknown statuses', () => {
   const base = { schemaVersion: 1, messageId: 'r1', kind: 'result', worldSessionId: 'abc123', agentKey: 'ardan', createdAtMs: now, correlationId: 'c1' };
   assert.ok(parseResult({ ...base, payload: { commandId: 'cmd-1', status: 'completed', reasonCode: 'said' } }).ok);
   assert.equal(parseResult({ ...base, payload: { commandId: 'cmd-1', status: 'done', reasonCode: 'said' } }).ok, false);
+});
+
+test('capabilities come from the actor type: an NPC cannot use an item', () => {
+  registerAction({ name: 'use_item', capability: 'use_item', movement: false, validate: () => true });
+  const reg = agentRegistry();
+  reg.actions.push('use_item');
+  try {
+    assert.ok(getAction('use_item'));
+    assert.deepEqual(validateCommand(cmd('use_item', { itemId: '266' }), now), { ok: false, error: 'missing_capability' });
+    assert.ok(!reg.capabilities('ardan').includes('use_item'));
+    assert.ok(reg.doc.actorTypes.client_player.capabilities.includes('use_item'));
+  } finally {
+    reg.actions.pop();
+  }
 });

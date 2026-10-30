@@ -5,7 +5,7 @@
 TibiaAI = TibiaAI or {}
 
 local base = DATA_DIRECTORY .. "/tibia-ai/lib/"
-for _, module in ipairs({ "core", "registry", "movement", "controller", "bridge", "npc_types", "startup", "control", "talkactions", "selftest" }) do
+for _, module in ipairs({ "core", "registry", "movement", "controller", "bridge", "npc_types", "startup", "control", "arena", "talkactions", "selftest" }) do
 	dofile(base .. module .. ".lua")
 end
 

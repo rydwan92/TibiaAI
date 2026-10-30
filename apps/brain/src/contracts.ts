@@ -1,5 +1,6 @@
 // Contract v1 (DOCS/CONTRACTS.md). The Lua bridge applies the same rules on the engine side.
 // Agent ids, waypoints, routes, actions and limits come from the agent registry (ADR 0004).
+import { getAction } from './actions.ts';
 import { AgentRegistry } from './agents.ts';
 
 let registry: AgentRegistry | null = null;
@@ -134,26 +135,11 @@ export function validateCommand(env: Envelope<CommandPayload>, nowMs: number): V
   const reg = agentRegistry();
   if (!isInt(p.expiresAtMs) || p.expiresAtMs - env.createdAtMs > reg.limits.maxTtlMs) return fail('ttl_too_long');
   if (p.expiresAtMs < nowMs) return fail('ttl_expired');
-  if (!reg.actions.includes(p.action)) return fail('unknown_action');
+  const spec = getAction(p.action);
+  if (!spec || !reg.actions.includes(p.action)) return fail('unknown_action');
   const agent = reg.get(env.agentKey)!;
-  const args = p.args ?? {};
-  const keys = Object.keys(args);
-  const only = (allowed: string[]) => keys.every((k) => allowed.includes(k));
-  switch (p.action) {
-    case 'say':
-      if (!only(['text']) || typeof args.text !== 'string' || args.text.length < 1 ||
-        args.text.length > reg.limits.maxSayLength || /[\u0000-\u001f\u007f]/.test(args.text)) return fail('invalid_args');
-      break;
-    case 'patrol':
-      if (!only(['routeId']) || !Object.hasOwn(agent.routes, args.routeId)) return fail('invalid_args');
-      break;
-    case 'move_to':
-      if (!only(['waypointId']) || !Object.hasOwn(agent.waypoints, args.waypointId)) return fail('invalid_args');
-      break;
-    case 'stop':
-      if (keys.length > 0) return fail('invalid_args');
-      break;
-  }
+  if (!reg.capabilities(env.agentKey).includes(spec.capability)) return fail('missing_capability');
+  if (!spec.validate(p.args ?? {}, agent, reg.limits)) return fail('invalid_args');
   return { ok: true, value: env };
 }
 

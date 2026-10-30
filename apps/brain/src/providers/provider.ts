@@ -1,7 +1,7 @@
 // Provider interface: turns one engine event into proposed intents. A provider only proposes
 // contract actions; Brain validates them and the engine decides whether they can run.
-// Providers must be fast and side-effect free; slow ones (LLM, M4) need their own timeout/budget
-// layer before being plugged in here.
+// A provider may answer later with a Promise (local model); it must then enforce its own timeout,
+// queue and budget, and Brain drops decisions that arrive after the world moved on.
 import type { AgentDefinition } from '../agents.ts';
 import type { Envelope, EventPayload } from '../contracts.ts';
 import type { EncounterStats, HeardStatement } from '../memory.ts';
@@ -25,5 +25,5 @@ export interface ProviderContext {
 
 export interface Provider {
   readonly name: string;
-  decide(event: Envelope<EventPayload>, ctx: ProviderContext): Intent[];
+  decide(event: Envelope<EventPayload>, ctx: ProviderContext): Intent[] | Promise<Intent[]>;
 }

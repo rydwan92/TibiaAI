@@ -7,6 +7,9 @@ import { Brain } from './brain.ts';
 import { agentRegistry } from './contracts.ts';
 import { Mailbox } from './mailbox.ts';
 import { Memory } from './memory.ts';
+import { loadLocalAiConfig, LocalModelClient } from './providers/local-model.ts';
+import { LocalModelProvider } from './providers/model-provider.ts';
+import type { Provider } from './providers/provider.ts';
 import { createProvider } from './providers/rules.ts';
 import { rotateIfLarger } from './logrotate.ts';
 
@@ -16,10 +19,8 @@ const logFile = join(runtime, 'logs', 'brain.log');
 const stopFile = join(runtime, 'control', 'brain-stop.request');
 mkdirSync(dirname(logFile), { recursive: true });
 
-let provider;
 let agents: string[];
 try {
-  provider = createProvider(process.env.TIBIAAI_BRAIN_PROVIDER ?? 'rules');
   agents = agentRegistry().keys(); // fails fast on invalid packages/contracts/agents.json
 } catch (err) {
   console.error((err as Error).message);
@@ -32,6 +33,31 @@ function log(kind: string, fields: Record<string, unknown> = {}): void {
   if (++logLines % 500 === 0) rotateIfLarger(logFile);
   appendFileSync(logFile, `${line}\n`);
   console.log(line);
+}
+
+// local-model is optional: any problem with Ollama or the policy leaves Brain on the rules provider.
+async function chooseProvider(name: string): Promise<Provider> {
+  if (name !== 'local-model') return createProvider(name);
+  try {
+    const client = new LocalModelClient(loadLocalAiConfig());
+    await client.verifyModel();
+    // Warm up in the background: the first load takes ~20 s and must not cost a player's greeting.
+    client.chat([{ role: 'user', content: 'ok' }], { timeoutMs: 90_000, maxTokens: 1 })
+      .then((r) => log('model_warm', { model: client.cfg.model, loadMs: r.loadMs }))
+      .catch((err: Error) => log('model_warmup_failed', { error: err.message }));
+    return new LocalModelProvider(client, log);
+  } catch (err) {
+    log('model_unavailable_using_rules', { error: (err as Error).message });
+    return createProvider('rules');
+  }
+}
+
+let provider: Provider;
+try {
+  provider = await chooseProvider(process.env.TIBIAAI_BRAIN_PROVIDER ?? 'rules');
+} catch (err) {
+  console.error((err as Error).message);
+  process.exit(2);
 }
 
 const memory = new Memory(join(runtime, 'brain', 'brain.sqlite'));

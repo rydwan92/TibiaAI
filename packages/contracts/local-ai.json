@@ -1,0 +1,14 @@
+{
+  "_comment": "Local-only model policy (ADR 0007). Endpoint must be loopback; models must be listed here and be local according to Ollama itself (no remote_host). No keys, no paid SDKs, no cloud fallback: when the model is unavailable Brain uses the rules provider.",
+  "endpoint": "http://127.0.0.1:11434",
+  "allowedModels": ["qwen2.5-coder:14b"],
+  "model": "qwen2.5-coder:14b",
+  "timeoutMs": 8000,
+  "maxConcurrent": 1,
+  "maxQueue": 3,
+  "maxCallsPerMinute": 12,
+  "maxPromptChars": 1500,
+  "maxOutputTokens": 60,
+  "maxReplyChars": 120,
+  "keepAlive": "10m"
+}

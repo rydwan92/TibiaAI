@@ -1,9 +1,10 @@
 # Runs every headless verification in one go and prints a PASS/FAIL table.
-#   powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-SkipLive]
+#   powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-SkipLive] [-Client]
+# -Client also runs the real-client smoke and combat tests (opens a minimized client window).
 # Unit tests + typecheck always; with a running world (default) also the in-engine Lua selftest,
 # the live bridge test (Brain is stopped for it and started again) and a backup + restore test.
 # Nothing is deleted except the scratch database used by restore-test.ps1.
-param([switch]$SkipLive)
+param([switch]$SkipLive, [switch]$Client)
 . "$PSScriptRoot\lib.ps1"
 $ErrorActionPreference = 'Continue'
 $results = New-Object System.Collections.Generic.List[object]
@@ -35,6 +36,10 @@ if (-not $SkipLive) {
         if ($brainWasRunning) { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'start.ps1') -BrainOnly | Out-Null }
         Step 'backup' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'backup.ps1') }
         Step 'restore test' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'restore-test.ps1') }
+        if ($Client) {
+            Step 'client smoke' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'client-autotest.ps1') }
+            Step 'client combat' { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'client-autotest.ps1') -Scenario combat -TimeoutSec 200 }
+        }
     }
 }
 

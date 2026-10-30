@@ -7,17 +7,20 @@ Stan na 2026-10-29. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Cold start | Baza, mapa, login gotowe; bez kasowania innych usług | Integracja | PASS | `scripts\start.ps1`, `scripts\status.ps1` |
 | Nasłuch tylko loopback | Wszystkie porty 127.0.0.1 | Integracja | PASS | `scripts\status.ps1` |
 | HTTP login | Lista postaci; złe hasło odrzucone | Integracja | PASS | iteracja 0001 (nie jest dowodem wejścia) |
-| Wejście | Gracz loguje się, chodzi i wraca po reconnect | Ręczny GUI | NOT RUN | RUNBOOK §4, wymaga assets |
-| Patrol | Ardan osiąga punkty, nie teleportuje | Gra | PASS (silnik), GUI NOT RUN | `tools\journal.py --kinds move_completed` |
+| Wejście | Gracz loguje się, chodzi i wraca po reconnect | Prawdziwy klient, skrypt | PASS 10/10 | `scripts\client-autotest.ps1` |
+| Patrol | Ardan osiąga punkty, nie teleportuje | Gra | PASS (silnik), widoczny w kliencie | `tools\journal.py --kinds move_completed` |
 | Blokada trasy | Timeout/failure; brak pętli bez końca | Gra | PASS (silnik) | itest: `move_to test_unreachable` → `failed/no_path` |
-| Alarm treningowy | Przerwanie patrolu, ostrzeżenie, powrót po clear | Gra | PASS (silnik), GUI NOT RUN | `scripts\alarm.ps1 start|clear` lub `/alarm` |
-| Powitanie | Ardan zatrzymuje się, odpowiada lokalnie lub przez Brain | Gra | NOT RUN | wymaga gracza w GUI |
+| Alarm treningowy | Przerwanie patrolu, ostrzeżenie, powrót po clear | Gra | PASS (silnik), w kliencie NOT RUN | `scripts\alarm.ps1 start|clear` lub `/alarm` |
+| Powitanie | Ardan zatrzymuje się, odpowiada przez Brain lub model | Prawdziwy klient | PASS | `client-autotest.ps1`, `brain.log` |
+| Walka przez klienta | Kolizja, obrażenia, mikstura ze zużyciem i cooldownem, zabicie, śmierć | Prawdziwy klient | PASS 13/13 | `client-autotest.ps1 -Scenario combat`, ADR 0006 |
+| Local-only | Chmura, zdalny endpoint i `remote_host` odrzucone; fallback, timeout, kolejka, budżet, spóźnione decyzje | Jednostkowy | PASS | `local-model.test.ts` |
+| Capabilities | Akcja bez zdolności zablokowana | Jednostkowy | PASS | `contracts.test.ts` |
 | Event roundtrip | Event → Brain → command → wynik świata pod jednym correlationId | Integracja | PASS | `brain.log` (alarm → say → completed) |
 | Zły JSON/akcja | Odrzucenie; gra działa dalej | Kontrakt | PASS | itest + `pnpm test` |
 | Duplikat komendy | Jeden skutek, wcześniejszy wynik | Integracja | PASS | itest; `npc_said` = 1 |
 | Stara sesja/TTL | Brak wykonania | Integracja | PASS | itest (`stale_session`, `ttl_expired`, `ttl_too_long`) |
 | Stop Brain | Gra i lokalny kontroler nadal działają | Awaria | PASS | iteracja 0003 (alarm przy `brainOnline=false`) |
-| Restart Brain | Wspomnienie rozpoznaje player GUID | Integracja SQLite | PASS (unit), GUI NOT RUN | `brain.test.ts`; w grze: RUNBOOK §6 |
+| Restart Brain | Wspomnienie rozpoznaje player GUID | Integracja SQLite | PASS (unit); pamięć gracza między sesjami widoczna w `encounters` | `brain.test.ts` |
 | Restart świata | Stare komendy nie zostają wykonane | Awaria | PASS (mechanizm) | nowa `worldSessionId` w nazwach plików; brak testu z zaległą komendą |
 | Prompt injection | Tekst nie wywołuje shell/spawn/SQL | Kontrakt/model, po M4 | PASS (kontrakt) | `contracts.test.ts`; z modelem po M4 |
 | Przeciążenie | Bounded queue, brak wzrostu bez granic | Integracja | IMPLEMENTED, NOT RUN | limit 100 zdarzeń, 10 komend/poll |

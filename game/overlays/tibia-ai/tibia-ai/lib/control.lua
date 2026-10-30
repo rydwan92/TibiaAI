@@ -26,6 +26,12 @@ local function defaultZone(arg)
 	return (T.defs.alarmZones or {})[1] or "default"
 end
 
+-- Other modules add their own requests with T.registerControl (e.g. arena.lua).
+T.controlHandlers = T.controlHandlers or {}
+function T.registerControl(name, fn)
+	T.controlHandlers[name] = fn
+end
+
 local handlers = {
 	["alarm-start.request"] = function(arg)
 		local zone = defaultZone(arg)
@@ -50,6 +56,9 @@ local handlers = {
 		T.journal("area_scan", { center = center, radius = radius, legend = ". walk # solid ^ floorchange @ centre", rows = T.scanArea(center, radius) })
 	end,
 }
+for name, fn in pairs(handlers) do
+	T.registerControl(name, fn)
+end
 
 local function controlTick()
 	if takeRequest("shutdown.request") then
@@ -58,10 +67,10 @@ local function controlTick()
 		Game.setGameState(GAME_STATE_SHUTDOWN)
 		return
 	end
-	for _, name in ipairs({ "alarm-start.request", "alarm-clear.request", "selftest.request", "scan.request" }) do
+	for _, name in ipairs(T.sortedKeys(T.controlHandlers)) do
 		local arg = takeRequest(name)
 		if arg then
-			local ok, err = pcall(handlers[name], arg)
+			local ok, err = pcall(T.controlHandlers[name], arg)
 			if not ok then
 				T.journal("control_error", { request = name, error = tostring(err) })
 			end

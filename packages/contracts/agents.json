@@ -3,7 +3,7 @@
   "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n} {speaker} {quote}.",
   "timing": {
     "talkPauseTicks": 4,
-    "brainReplyTicks": 2,
+    "brainReplyTicks": 4,
     "moveTimeoutTicks": 8,
     "retryAfterTicks": 5,
     "waypointPauseTicks": 2,
@@ -13,10 +13,45 @@
   "alarmZones": [
     "montag_gate"
   ],
+  "arena": {
+    "center": {
+      "x": 5012,
+      "y": 5004,
+      "z": 7
+    },
+    "radius": 10,
+    "maxMonsters": 3,
+    "monsters": [
+      "Troll",
+      "Cave Rat",
+      "Valkyrie"
+    ],
+    "devCharacters": [
+      "Kael"
+    ]
+  },
+  "actorTypes": {
+    "npc": {
+      "capabilities": [
+        "speak",
+        "walk"
+      ]
+    },
+    "client_player": {
+      "capabilities": [
+        "speak",
+        "walk",
+        "melee",
+        "use_item"
+      ]
+    }
+  },
   "agents": {
     "ardan": {
       "npcName": "Ardan",
       "description": "Ardan, the guard of Montag",
+      "persona": "Jestes doswiadczonym, spokojnym straznikiem Montag. Mowisz krotko i rzeczowo.",
+      "actor": "npc",
       "outfit": {
         "lookType": 131,
         "lookHead": 57,
@@ -113,6 +148,8 @@
     "mira": {
       "npcName": "Mira",
       "description": "Mira, the herbalist of Montag",
+      "persona": "Jestes zyczliwa zielarka z Montag. Lubisz plotki i troszczysz sie o przybyszy.",
+      "actor": "npc",
       "outfit": {
         "lookType": 136,
         "lookHead": 78,

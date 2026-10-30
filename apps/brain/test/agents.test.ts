@@ -32,7 +32,7 @@ test('invalid definitions are reported precisely', () => {
 test('every agent can be added by data only: a minimal stationary agent validates', () => {
   const d = clone();
   d.agents.kael = {
-    npcName: 'Kael', spawn: 'post', behavior: { type: 'stationary', home: 'post' },
+    npcName: 'Kael', actor: 'npc', spawn: 'post', behavior: { type: 'stationary', home: 'post' },
     waypoints: { post: { x: 5012, y: 5006, z: 7 } }, routes: {},
     greeting: { words: ['hi'], range: 3 }, texts: { greetFallback: 'Czesc, {name}.' },
   };

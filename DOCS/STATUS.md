@@ -1,11 +1,15 @@
 # Stan projektu
 
-Aktualizacja: 2026-10-29 (sesja 1, po iteracji 0008). Etap: M1 serwer VERIFIED; M2/M3 VERIFIED w silniku bez GUI; modułowy runtime agentów (dwóch agentów z danych) VERIFIED w silniku. Wejście klienta do gry: NOT RUN (brak assets 15.11).
+Aktualizacja: 2026-10-30 (po iteracji 0011). Etap: M1 **VERIFIED w prawdziwym kliencie**; M2/M3 VERIFIED; M4 (lokalny model, dialog) VERIFIED w grze; walka przez klienta VERIFIED jako eksperyment.
 Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 
 ## Działa (z dowodem)
 | Element | Stan | Dowód |
 | --- | --- | --- |
+| **Wejście do świata w prawdziwym kliencie**: logowanie, postacie, ruch, powitanie, ponowne wejście | VERIFIED 10/10 | iteracja 0009, `scripts/client-autotest.ps1` |
+| **Walka według mechaniki gry przez klienta** (kolizje, obrażenia, mikstura, cooldown, atak, śmierć) | VERIFIED 13/13 (eksperyment) | ADR 0006, iteracja 0010 |
+| **Lokalny model w dialogu** (tylko Ollama, bez chmury, fallback na reguły) | VERIFIED w grze | ADR 0007, iteracja 0011 |
+| Rejestr akcji z capabilities, arena jako kontroler scenariusza | IMPLEMENTED, testy | ADR 0006 |
 | Natywny runtime Windows (Docker niemożliwy: wirtualizacja wyłączona w BIOS) | VERIFIED | ADR 0003, `scripts/status.ps1` |
 | MariaDB 11.4.13 przenośna, 127.0.0.1:3317, poza XAMPP | VERIFIED | iteracja 0001 |
 | Canary v3.6.1 (`fe0f932`), protokół 15.11, `data-canary`, 127.0.0.1:7171/7172 | VERIFIED | `runtime/logs/canary.out.log` |
@@ -22,30 +26,39 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Koszt naszych GlobalEventów zmierzony (most śr. 0,8–1,3 ms, maks. 12 ms; ~0,3% dispatchera) | VERIFIED (pomiar) | ADR 0002, iteracja 0006 |
 | Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
 | Backup + sprawdzony restore do osobnej bazy; retencja mailboxa; rotacja logów | VERIFIED | `scripts/backup.ps1`, `scripts/restore-test.ps1`, iteracja 0005 |
-| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED headless; 27/27 testów jednostkowych | iteracje 0003, 0004 |
+| Brain (rules + SQLite + interfejs providera): event → command → wynik, pamięć po restarcie, gra działa bez Brain | VERIFIED; 39/39 testów jednostkowych | iteracje 0003, 0004 |
 
 ## Nie zrobione / nie sprawdzone
-- **Test GUI**: lista postaci w OTClient, wejście, ruch, reconnect, widoczność Ardana i Miry, powitanie z klienta, pamięć spotkania gracza po restarcie Brain w grze. Blokuje go brak assets klienta 15.11. Instrukcja krok po kroku: RUNBOOK §4.1.
-- Wyświetlanie polskich znaków w kliencie: nie sprawdzone. Teksty są ASCII i Brain to wymusza.
-- `position_observed`, dialog agent ↔ agent, provider LLM (M4): świadomie nie zaczęte. Plotka przekazywana graczowi czeka na test GUI.
+- Agent bojowy sterowany z Brain (adapter `client_player`): PLAN. Dziś walkę prowadzi skrypt w kliencie.
+- Scenariusz „spotkanie i trening na arenie”: PLAN.
+- Runy i czary przez klienta, rozłączenie w trakcie walki w adapterze: niesprawdzone.
+- Edytor mapy: kandydat, pełny przebieg NOT RUN. Panel MyAAC: kandydat, nie instalowany (TOOLING).
+- Plotka Miry przez model i alarm wywołany z gry: w kliencie NOT RUN. Polskie znaki w kliencie: niesprawdzone (teksty ASCII, Brain to wymusza).
+- `position_observed`, dialog agent ↔ agent, handel, questy: świadomie nie zaczęte.
 
-## Bieżący stan maszyny (koniec sesji)
-Uruchomione: MariaDB, login-server, Canary (sesja świata z Ardanem i Mirą), Brain (`scripts/status.ps1`). Zatrzymanie: `powershell -ExecutionPolicy Bypass -File scripts\stop.ps1`.
-Konto testowe: email `tibiaai@localhost`, hasło w `.env` (`TIBIAAI_TEST_PASSWORD`). Postacie: GOD (admin), Knight Sample i inne Sample.
-Niezależnie od projektu działa XAMPP użytkownika (Apache :80/:443, MySQL :3306 na wszystkich interfejsach). Nie był modyfikowany.
+## Bieżący stan maszyny
+Serwer **nie startuje sam po restarcie komputera**. Uruchomienie: `scripts\client.ps1 -CopyPassword` (RUNBOOK, początek). Zatrzymanie: `scripts\stop.ps1`.
+Konto gracza: email `tibiaai@localhost`, hasło w `.env` (`TIBIAAI_TEST_PASSWORD`). Postacie `Knight Sample`, `GOD` startują przy placu w Montag.
+Konto eksperymentu: `kael@localhost`, postać Kael (test bojowy; jej poziom i przedmioty zmieniają się w testach).
+`.env`: `TIBIAAI_BRAIN_PROVIDER=local-model`. Model zajmuje 9,5 GB VRAM przez 10 minut od ostatniego użycia.
+Mapa: aktywna kopia `runtime\maps\canary.otbm`, identyczna z oryginałem (`scripts\map-dev.ps1 -Status`).
+Kod iteracji 0009–0011 nie jest zacommitowany ani wypchnięty, chyba że historia git mówi inaczej. Niezwiązany pusty plik użytkownika: `commands/powershell.txt`.
 
 ## Następne pojedyncze zadanie
-M1-GUI (iteracja 0006): pobrać assets 15.11 przez wbudowany downloader OTClient (RUNBOOK §4.1: wersja 1511, Login, Download), zalogować się, przejść test „Wejście” i scenariusze Ardana i Miry z TESTING.md.
+Adapter `client_player`: jeden agent (Kael) sterowany z Brain na arenie, z zaproszeniem w rozmowie i komentarzem do rzeczywistego wyniku walki.
 
-## Blokery
-| Bloker | Kto | Co dokładnie |
-| --- | --- | --- |
-| Assets klienta Tibia 15.11 | użytkownik | w oknie logowania OTClient wybrać wersję 1511 i kliknąć Login, potem Download (RUNBOOK §4.1), albo skopiować assets własnego klienta 15.11 |
-| Docker/WSL2 | użytkownik (opcjonalnie) | włączenie VT-x w BIOS. Niepotrzebne dla obecnego runtime |
+## Decyzje użytkownika
+| Temat | Co jest potrzebne |
+| --- | --- |
+| Lepszy model do dialogu | Zgoda na pobranie i wybór, np. `qwen3.5:4b` lub `gemma4:12b` (ADR 0007). Obecny model do kodu jest lakoniczny |
+| Blokada chmury całej Ollamy | Opcjonalnie `OLLAMA_NO_CLOUD=1` (RUNBOOK §6) |
+| Edytor mapy i arena | Ręczny przebieg z TOOLING |
+| Sprzęt | Faktycznie 15,9 GB RAM, nie 32 GB |
 
 ## Ważne ustalenia dla kolejnej sesji
 - Na start sesji: `scripts\status.ps1`, potem `scripts\verify.ps1`. Wszystko powinno być PASS przed nowymi zmianami.
 - Gracz loguje się **emailem** i z zaznaczonym HTTP login (TCP 7171 odrzuca 15.11).
 - Nowy agent = wpis w `packages/contracts/agents.json` (DOCS/AGENTS.md). Zmiany Lua wprowadzaj w `game/overlays/tibia-ai`. Wdrożenie: `stop.ps1 -KeepDb`, `sync-server.ps1`, `start.ps1`. Nigdy nie edytuj `runtime/server` ani `vendor/`.
 - Test mostu wymaga zatrzymanego Brain (`stop.ps1 -BrainOnly`).
+- Podczas `client-autotest` nie klikaj w okno klienta; ręczne wejście fałszowało wyniki (ADR 0006).
 - Lista ustaleń o API silnika: COMPATIBILITY.md, sekcja „Ustalenia o API silnika”.

@@ -1,6 +1,12 @@
 # Runbook: lokalne laboratorium TibiaAI (Windows, natywnie)
 
-Stan: serwer, login-server, Ardan i Brain uruchomione i sprawdzone 2026-10-29. Test GUI klienta: NOT RUN.
+Stan: serwer, login-server, agenci, Brain i wejście prawdziwym klientem sprawdzone 2026-10-30.
+
+**Po restarcie komputera serwer nie działa.** Najprostszy start całości i klienta (z dowolnego katalogu):
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\xampp\htdocs\projects\tibia\TibiaAIServer\scripts\client.ps1 -CopyPassword
+```
+„Failed to connect to server (HTTP)” w kliencie oznacza zwykle zatrzymany serwer. Sprawdź `scripts\status.ps1`.
 
 ## 1. Wymagania
 - Windows 10/11 x64, **Windows PowerShell 5.1** (`powershell.exe`). Polecenia wykonujesz w katalogu projektu:
@@ -30,6 +36,7 @@ Skrypt pobiera artefakty z `infra/versions.lock.json` i sprawdza SHA-256, rozpak
 | Stop tylko Brain (gra działa dalej) | `... scripts\stop.ps1 -BrainOnly` |
 | Wdrożenie zmian w Lua (`game\overlays\tibia-ai`) lub w `packages\contracts\agents.json` | `stop.ps1 -KeepDb`, potem `scripts\sync-server.ps1`, potem `start.ps1` (sync odmawia, gdy Canary działa) |
 | Self-test Lua w działającym Canary | `... scripts\selftest.ps1` |
+| Kopia mapy deweloperskiej | `... scripts\map-dev.ps1 -Init` / `-Status` / `-Reset` (DOCS/TOOLING.md) |
 | **Wszystkie weryfikacje bez GUI** (unit, typecheck, self-test, most, backup, restore) | `... scripts\verify.ps1` (`-SkipLive` bez świata) |
 
 `stop.ps1` nie kasuje danych. Canary zamyka się przez `runtime\control\shutdown.request` (globalevent wykonuje `GAME_STATE_SHUTDOWN` z zapisem), MariaDB przez `mariadb-admin shutdown`, a Brain przez `brain-stop.request`. Wymuszone zatrzymanie następuje dopiero po timeoucie.
@@ -73,7 +80,16 @@ Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz
 
 Rozróżnienie: HTTP login (8088) zwraca tylko listę postaci i adres świata 127.0.0.1:7172. Wejście do gry to osobne połączenie TCP z 7172. Odpowiedź HTTP nie jest dowodem wejścia do gry.
 
+### 4.4 Test prawdziwego klienta bez ręcznego klikania
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1                   # logowanie, wejście, ruch, powitanie, ponowne wejście
+powershell -ExecutionPolicy Bypass -File scripts\lab-fixture.ps1 -Combatant            # raz: osobne konto i postać Kael
+powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1 -Scenario combat  # kolizja, obrażenia, mikstura, walka, śmierć
+```
+Skrypt otwiera okno klienta, zminimalizowane; nie klikaj w nim, scenariusz walki i tak blokuje wejście. Wynik PASS/FAIL trafia na konsolę, log do `runtime\logs\client-autotest-*.log`. Wyjątki developerskie (ustawienie HP, przedmioty, wylogowanie) są zapisywane w dzienniku jako `dev_exception_used`.
+
 ## 5. Agenci (Ardan, Mira): jak ich znaleźć i przetestować
+- `Knight Sample` i `GOD` startują obok placu po `scripts\lab-fixture.ps1` (poza grą). Kael to postać eksperymentu; nie zaleca się gry nią.
 Definicje i procedura dodawania: DOCS/AGENTS.md.
 - **Ardan** (strażnik): spawn 5010,5003,7, na południe od świątyni Montag. Patroluje trasę `montag_square`: temple_south (5010,5003), square_west (5006,5005), road_south (5010,5009), square_east (5016,5005). Przy alarmie idzie do gate_watch (5019,5012).
 - **Mira** (zielarka): stoi przy herb_stall (5020,5003,7). Przy alarmie chowa się w świątyni (temple_shelter 5007,4998,7).
@@ -89,6 +105,9 @@ Definicje i procedura dodawania: DOCS/AGENTS.md.
   - `python -I tools\journal.py`: dziennik bieżącej sesji.
 
 ## 6. Brain i pamięć
+- Dostawca: `.env` → `TIBIAAI_BRAIN_PROVIDER=local-model` (Ollama, tylko lokalnie) lub `rules` (bez modelu). Zmiana wymaga `stop.ps1 -BrainOnly` i `start.ps1 -BrainOnly`. Polityka: `packages\contracts\local-ai.json`, ADR 0007. Gdy Ollama nie działa, Brain sam używa reguł (`model_unavailable_using_rules` w logu).
+- Pomiar modelu: `node --disable-warning=ExperimentalWarning apps\brain\src\cli\model-bench.ts --model <nazwa>` (model musi być w `allowedModels`).
+- Twarda blokada chmury w Ollamie (opcjonalnie, dotyczy całej instalacji): ustaw zmienną użytkownika `OLLAMA_NO_CLOUD=1`, zamknij Ollamę z zasobnika i uruchom ponownie. Samo ustawienie zmiennej nie zmienia działającego procesu.
 - Dane: `runtime\brain\brain.sqlite` (kopia przed każdą migracją: `brain.sqlite.bak-v*`). Log: `runtime\logs\brain.log`.
 - Test pamięci: przywitaj Ardana, uruchom `stop.ps1 -BrainOnly`, potem `start.ps1 -BrainOnly` i przywitaj go ponownie. Oczekiwane: „Znowu ty, <imię>. To nasze 2. spotkanie…”.
 - Testy: `cd apps\brain; pnpm install; pnpm test; pnpm typecheck`.

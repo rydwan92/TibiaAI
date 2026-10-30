@@ -1,0 +1,10 @@
+Module
+  name: tibiaai_autotest
+  description: Automated real-client smoke test for the TibiaAI lab (installed only during scripts\client-autotest.ps1)
+  author: TibiaAI
+  website: https://github.com/rydwan92/TibiaAI
+  autoload: true
+  autoload-priority: 5000
+  scripts: [ autotest, combat ]
+  @onLoad: TibiaAIAutotest.init()
+  @onUnload: TibiaAIAutotest.terminate()
