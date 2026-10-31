@@ -19,6 +19,24 @@ $steps = @(
     @{ Id = 'second_npc'; Character = 'Knight Sample'; Npc = 'Mira'; Route = '5018,5005'; Lines = "Miro witaj|Miro, $question"; Forbid = 'marek,kowal' }
     @{ Id = 'incident_seen'; Character = 'Knight Sample'; Npc = 'Ardan'; Incident = 'cart_crash'; Lines = "hi|Ardanie, czy dzis wydarzylo sie cos niezwyklego?"; Expect = 'woz' }
     @{ Id = 'incident_unseen'; Character = 'Knight Sample'; Npc = 'Mira'; Route = '5018,5005'; Lines = "Miro witaj|Miro, czy dzis wydarzylo sie cos niezwyklego?"; Forbid = 'woz,beczk' }
+    @{ Id = 'open_real_world'; Character = 'Knight Sample'; Npc = 'Brom'; GreetRange = 3; Lines = "Bromie witaj|Bromie, co to jest judo i skad pochodzi?"; Expect = 'japon' }
+    @{ Id = 'ai_marker'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, co znaczy [AI] przy twoim imieniu?"; Expect = 'sztuczn' }
+    @{ Id = 'guard_keeps_post'; Character = 'Knight Sample'; Npc = 'Ardan'; Lines = "hi|Ardanie, zaprowadz mnie do swiatyni" }
+    @{ Id = 'guide_arrives'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, pokaz mi swiatynie"; Walk = 'follow'; WalkEnd = 'jestesmy,to tutaj'; ExpectOutcome = 'arrived' }
+    @{ Id = 'guide_cancelled'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, zaprowadz mnie do swiatyni"; Walk = 'cancel'; WalkEnd = 'jak chcesz,wracam'; ExpectOutcome = 'cancelled' }
+    @{ Id = 'guide_left_behind'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, zaprowadz mnie do swiatyni"; Walk = 'stay'; WalkEnd = 'nie widze cie'; ExpectOutcome = 'left_behind' }
+    @{ Id = 'guide_alarm'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, zaprowadz mnie do swiatyni"; Walk = 'alarm'; WalkEnd = 'alarm'; ExpectOutcome = 'alarm' }
+    @{ Id = 'guide_no_path'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, zaprowadz mnie do magazynu"; Expect = 'nie znam drogi' }
+    @{ Id = 'guide_logout'; Character = 'Knight Sample'; Npc = 'Tolek'; Lines = "Tolku, czesc|Tolku, zaprowadz mnie do swiatyni"; Walk = 'logout'; WalkEnd = 'nic'; ExpectOutcome = 'player_gone' }
+    @{ Id = 'guide_second_profile'; Character = 'Knight Sample'; Npc = 'Lena'; Lines = "Leno, hello|Leno, zaprowadz mnie do swiatyni"; Walk = 'follow'; WalkEnd = 'we are here'; ExpectOutcome = 'arrived' }
+    @{ Id = 'task_accept'; Character = 'Kael'; Npc = 'Mira'; Route = '5018,5005'; ResetTask = 'letter_for_brom'; Lines = "Miro witaj|Miro, masz dla mnie jakies zadanie?"; ExpectStep = 'accept' }
+    @{ Id = 'task_claim_too_early'; Character = 'Kael'; Npc = 'Mira'; Route = '5018,5005'; Lines = "Miro witaj|Miro, zanioslem list do Broma"; ExpectStep = 'none' }
+    @{ Id = 'task_deliver'; Character = 'Kael'; Npc = 'Brom'; GreetRange = 3; Lines = "Bromie witaj|Bromie, mam list od Miry"; ExpectStep = 'deliver' }
+    @{ Id = 'task_reward'; Character = 'Kael'; Npc = 'Mira'; Route = '5018,5005'; Lines = "Miro witaj|Miro, zanioslem list do Broma"; ExpectStep = 'reward' }
+    @{ Id = 'task_only_once'; Character = 'Kael'; Npc = 'Mira'; Route = '5018,5005'; Lines = "Miro witaj|Miro, zanioslem list do Broma"; ExpectStep = 'none' }
+    @{ Id = 'lesson_on'; Character = 'Knight Sample'; Npc = 'Lena'; Lines = "Leno, hello|Leno, chce sie uczyc angielskiego, poziom A2|I go to temple yesterday"; Expect = 'went' }
+    @{ Id = 'lesson_after_restart'; Character = 'Knight Sample'; Npc = 'Lena'; Lines = "Leno, hello|What we do today?"; Forbid = 'not leno' }
+    @{ Id = 'lesson_off'; Character = 'Knight Sample'; Npc = 'Lena'; Lines = "Leno, hello|koniec lekcji"; Forbid = 'not leno' }
 )
 
 function Wait-ModelWarm([string]$sinceIso) {
@@ -37,6 +55,12 @@ $summary = @()
 foreach ($step in $steps) {
     if ($Only.Count -gt 0 -and $Only -notcontains $step.Id) { continue }
     Write-Host "=== $($step.Id)"
+    if ($step.Id -eq 'lesson_after_restart') {
+        $since = (Get-Date).ToUniversalTime().ToString('o')
+        & "$PSScriptRoot\stop.ps1" -KeepDb *> $null
+        & "$PSScriptRoot\start.ps1" *> $null
+        if (-not (Wait-ModelWarm $since)) { Write-Host '  model did not warm up' }
+    }
     if ($step.Id -eq 'restart') {
         $since = (Get-Date).ToUniversalTime().ToString('o')
         & "$PSScriptRoot\stop.ps1" -KeepDb *> $null
@@ -50,9 +74,10 @@ foreach ($step in $steps) {
     # Each step prints [AUTOTEST] lines; keep what the player would see, plus the checks.
     $out = & "$PSScriptRoot\client-autotest.ps1" -Scenario conversation -TimeoutSec 100 @params *>&1 | ForEach-Object { "$_" }
     $ok = $LASTEXITCODE -eq 0
-    $lines = @($out -split '\[AUTOTEST\]' | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^(say\[|talk |PASS (reply|expect|forbid)|FAIL )' })
+    $lines = @($out -split '\[AUTOTEST\]' | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^(say\[|talk |PASS (reply|expect|forbid|engine|walk)|FAIL )' })
     $lines | ForEach-Object { Write-Host "  $_" }
     $summary += "$(if ($ok) { 'PASS' } else { 'FAIL' }) $($step.Id)"
+    if ($step.Walk -eq 'alarm') { & "$PSScriptRoot\alarm.ps1" clear *> $null; Start-Sleep 3 }
 }
 Write-Host "`nSCENARIO"
 $summary | ForEach-Object { Write-Host "  $_" }

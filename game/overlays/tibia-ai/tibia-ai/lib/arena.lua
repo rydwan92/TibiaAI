@@ -7,6 +7,7 @@
 -- reach states that are slow to reach in play (e.g. near-death) and are limited to arena.devCharacters:
 --   dev-set-health.request "Kael,10"
 --   dev-give-item.request  "Kael,266,5"
+--   dev-no-flasks.request  "Kael"   no empty flasks for this character, removes the ones it has
 local T = TibiaAI
 
 T.arena = T.arena or { monsters = {} }
@@ -134,6 +135,91 @@ T.registerControl("arena-probe.request", function(arg)
 		protectionZone = player:getTile():hasFlag(TILESTATE_PROTECTIONZONE),
 		axeSkill = player:getSkillLevel(SKILL_AXE),
 	})
+end)
+
+-- Empty flasks pile up over test runs and eat the character's capacity. Uses the engine's own
+-- per-player switch (the !flask talkaction), so the potion rules stay the same for everyone else.
+local EMPTY_FLASKS = { 283, 284, 285 }
+
+T.registerControl("dev-no-flasks.request", function(arg)
+	local player = devPlayer(arg)
+	if not player then
+		return T.journal("dev_exception_used", { action = "no_flasks", ok = false, arg = arg })
+	end
+	player:kv():set("talkaction.potions.flask", true)
+	local removed = 0
+	for _, id in ipairs(EMPTY_FLASKS) do
+		local count = player:getItemCount(id)
+		if count > 0 and player:removeItem(id, count) then
+			removed = removed + count
+		end
+	end
+	T.journal("dev_exception_used", { action = "no_flasks", ok = true, character = arg, removed = removed })
+end)
+
+-- Scenario tests repeat an errand, so a dev character can start it over. Only tasks listed in
+-- arena.devTasks; ordinary characters keep their progress.
+T.registerControl("dev-reset-task.request", function(arg)
+	local name, taskId = (arg or ""):match("^([%a ]+),([%w_]+)$")
+	local player = devPlayer(name)
+	local task = T.taskDefs[taskId or ""]
+	local listed = false
+	for _, id in ipairs(config().devTasks or {}) do
+		listed = listed or id == taskId
+	end
+	if not player or not task or not listed then
+		return T.journal("dev_exception_used", { action = "reset_task", ok = false, arg = arg })
+	end
+	player:setStorageValue(task.storage, 0)
+	for _, step in ipairs(task.steps) do
+		local item = step.giveItem
+		if item and player:getItemCount(item.id) > 0 then
+			player:removeItem(item.id, player:getItemCount(item.id))
+		end
+	end
+	T.journal("dev_exception_used", { action = "reset_task", ok = true, character = name, taskId = taskId })
+end)
+
+-- Start equipment of a player agent, once per character (arena.kits in agents.json).
+local KIT_SLOTS = {
+	backpack = CONST_SLOT_BACKPACK, armor = CONST_SLOT_ARMOR, head = CONST_SLOT_HEAD, legs = CONST_SLOT_LEGS,
+	feet = CONST_SLOT_FEET, left = CONST_SLOT_LEFT, right = CONST_SLOT_RIGHT,
+}
+
+T.registerControl("dev-kit.request", function(arg)
+	local name, kitName, refresh = (arg or ""):match("^([%a ]+),(%a+),?(%a*)$")
+	local player = devPlayer(name)
+	local kit = (config().kits or {})[kitName or ""]
+	if not player or not kit then
+		return T.journal("dev_exception_used", { action = "kit", ok = false, arg = arg })
+	end
+	-- Nobody teaches spells in this world yet, so a dev character knows those of its vocation.
+	for _, spell in ipairs((config().kitSpells or {})[kitName] or {}) do
+		player:learnSpell(spell)
+	end
+	local storage = config().kitStorage
+	if player:getStorageValue(storage) == 1 and refresh ~= "refresh" then
+		return T.journal("dev_exception_used", { action = "kit", ok = true, character = name, already = true })
+	end
+	if refresh == "refresh" then
+		for _, slot in pairs(KIT_SLOTS) do
+			local worn = player:getSlotItem(slot)
+			if worn then
+				worn:remove()
+			end
+		end
+	end
+	for _, item in ipairs(kit) do
+		-- With a subtype given, the engine reads count as that many separate items; one stack is wanted.
+		-- Bows here draw only from a quiver in the right hand (Player::getQuiverAmmoOfType).
+		local given = player:addItem(item.id, 1, true, item.count or 1, KIT_SLOTS[item.slot] or CONST_SLOT_WHEREEVER)
+		for _, inner in ipairs(item.contains or {}) do
+			given:addItem(inner.id, inner.count)
+		end
+	end
+	player:setStorageValue(storage, 1)
+	player:kv():set("talkaction.potions.flask", true) -- empty flasks would only eat capacity
+	T.journal("dev_exception_used", { action = "kit", ok = true, character = name, kit = kitName })
 end)
 
 T.registerControl("dev-give-item.request", function(arg)

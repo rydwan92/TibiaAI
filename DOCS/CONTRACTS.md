@@ -20,9 +20,11 @@ Zmiana względem v0: znaczniki czasu to liczby epoch ms (`createdAtMs`, `expires
 ## Event (Lua → Brain)
 | type | pola | źródło |
 | --- | --- | --- |
-| `player_greeted` | playerGuid (int, z silnika), playerName, text (≤300), worldMinutes | powitanie skierowane do tego NPC (`T.onNpcSay`) |
-| `player_said` | playerGuid, playerName, text (≤300), addressed (bool), distance (int), worldMinutes | wypowiedź w zasięgu słuchu. `addressed=true`: do tego NPC, `false`: zasłyszana, nigdy bez odpowiedzi |
+| `player_greeted` | playerGuid (int, z silnika), playerName, text (≤300), worldMinutes, tasks (taskId → stan z silnika) | powitanie skierowane do tego NPC (`T.onNpcSay`) |
+| `player_said` | playerGuid, playerName, text (≤300), addressed (bool), distance (int), worldMinutes, tasks | wypowiedź w zasięgu słuchu. `addressed=true`: do tego NPC, `false`: zasłyszana, nigdy bez odpowiedzi |
 | `incident_observed` | incidentId, description, distance, worldMinutes | `T.reportIncident`: tylko agenci w zasięgu wzroku na tym samym piętrze (ADR 0008) |
+| `task_step_done` | playerGuid, playerName, taskId, stepId, state | `T.taskStep`: krok zlecenia wykonany przez silnik. Jedyna podstawa zmiany zaufania |
+| `guide_ended` | playerGuid, playerName, placeId, outcome, x, y, z | `T.guideEnd`. Jedyny dowód wyniku prowadzenia. outcome: `arrived`, `left_behind`, `player_gone`, `cancelled`, `blocked`, `alarm`, `stopped`, `timeout` (ADR 0009) |
 | `training_alarm_started` | zoneId, triggeredBy | `/alarm start [zone]` (GOD) lub `scripts/alarm.ps1 start`; jedno zdarzenie na każdego agenta reagującego na strefę |
 | `training_alarm_cleared` | zoneId, clearedBy | `/alarm clear [zone]` lub `scripts/alarm.ps1 clear` |
 | `position_observed` | x, y, z | w kontrakcie, jeszcze nie emitowany |
@@ -40,7 +42,10 @@ payload: `commandId` (`[A-Za-z0-9_-]{1,64}`), `planRevision` (int ≥0), `expire
 | `say` | text 1–200 znaków, bez znaków sterujących; opcjonalnie toPlayerGuid (cyfry) | lokalna mowa (TALKTYPE_SAY); limit 1 wypowiedź/3 s, z wyjątkiem odpowiedzi na oczekującą rozmowę. Gdy adresata nie ma w zasięgu: `addressee_gone` |
 | `patrol` | routeId ∈ trasy agenta | stan PATROL (tylko agenci typu `patrol`, inaczej `not_a_patrol_agent`) |
 | `move_to` | waypointId ∈ allowlist (nigdy współrzędne) | `accepted`, potem `completed` lub `failed` |
-| `stop` | brak | stan STOPPED |
+| `stop` | brak | stan STOPPED; przerywa prowadzenie |
+| `guide_start` | placeId ∈ `guidePlaces` agenta, toPlayerGuid, text 1–200 znaków | silnik rozpoczyna prowadzenie i mówi text. Wynik `completed/guide_started` znaczy tylko start. Odmowy: `guide_busy`, `guide_already_active`, `no_path`, `alarm_active`, `addressee_gone`, `guide_not_allowed`, `agent_stopped`. Wymaga umiejętności `guide` |
+| `task_step` | taskId, stepId, toPlayerGuid, text | krok zlecenia u agenta, który jest jego właścicielem. Argumenty nie niosą przedmiotów ani złota. Odmowy: `already_done`, `in_progress`, `no_capacity`, `item_missing`, `addressee_gone`, `task_not_allowed` |
+| `guide_cancel` | toPlayerGuid | kończy prowadzenie tej osoby, inaczej `guide_not_active` |
 
 W Brain akcje są zarejestrowane w `apps/brain/src/actions.ts`: każda deklaruje capability i walidację. Agent ma typ ciała `actor`, a `actorTypes` w `agents.json` określa jego capabilities; akcja bez zdolności kończy się `missing_capability` (przed zapisem komendy).
 
@@ -50,7 +55,9 @@ Kolejność walidacji w Lua (pierwszy błąd wygrywa): rozmiar ≤16 KiB (`too_l
 
 Brain waliduje komendę przed zapisem tymi samymi regułami (`validateCommand`). Domyślny TTL komendy z Brain wynosi 5 s.
 
-Odpowiedź modelu ma schemat `{say, action, remember, promise, sentiment}`. Pola `remember`, `promise` i `sentiment` nie są komendami: zostają przy komendzie jako plan i działają dopiero po wyniku `completed` (ADR 0008).
+`world.json` podaje przy agencie `guide` (placeId, playerGuid, waiting, ticks), gdy prowadzi. W czasie prowadzenia `patrol` i `move_to` kończą się `guide_active`.
+
+Odpowiedź modelu ma schemat `{say, action, target, remember, promise, sentiment}`. Pole `target` istnieje tylko u agentów, którzy mogą prowadzić. `action = guide_to` działa wyłącznie razem z prośbą w słowach gracza. Pola `remember`, `promise` i `sentiment` nie są komendami: zostają przy komendzie jako plan i działają dopiero po wyniku `completed` (ADR 0008).
 
 ## Result (Lua → Brain)
 payload: `commandId`, `status` (`accepted` | `completed` | `rejected` | `failed` | `expired`), `reasonCode`, opcjonalnie `actualPosition`, `completedAtMs` (dla statusów terminalnych), `duplicate`, `detail`.
@@ -60,6 +67,15 @@ Kody wykonania ruchu: `arrived`, `no_path` (pathfinder nie znalazł drogi przez 
 ## Pliki stanu
 - `world.json` (Lua, co ~2 s): worldSessionId, startedAtMs, atMs, nextCommandSeq, lastEventSeq, lastResultSeq, droppedEvents, brainOnline, `agents`: mapa klucz → {state, alarmActive, routeId, routeIndex, moving, position, planRevision}. Stany: IDLE, PATROL, HOME, ALERT, RETURN, COMMAND_MOVE, STOPPED.
 - `brain-heartbeat.json` (Brain, co 1 s): atMs, worldSessionId, lastEventSeq (potwierdzenie do backpressure), provider.
+
+## Gracze-agenci (pliki, nie mailbox)
+Ciało w kliencie i umysł w Brain wymieniają pliki w `runtime/players/<klucz>/`, opis w PLAYER_AGENTS.md.
+- `state.json` (ciało, co 1 s): atMs, name, level, experience, hp, hpMax, mana, manaMax, cap, x, y, z, target, potions, gold, vips `[{name, online}]`, seen `[{name, kind, hp, x, y, z}]`.
+- `events.jsonl` (ciało): `heard` {from, text, level, private}, `message` {text}, `death`, `vip` {from, online}, `adapter_error` {error}.
+- `orders.json` (umysł): goal {type: idle|goto|floor|door|hunt|explore|follow|trade|depot, id, x, y, z, kind, name, heading, flee, buy, deposit}, say `[{id, text, atMs, to?}]`, healSpell, healMana, attackSpell, attackMana, runes, keep (identyfikatory wartego zabrania łupu), pvp (nazwa celu).
+- `events.jsonl` ma też `trade_done` {money} i `depot_done` {stored, ok}.
+- Żądania deweloperskie: `dev-kit.request` `Postać,zestaw[,refresh]`, `nav-survey.request`, `survey.request`.
+- Słowo `trade` przy NPC z `"shop": true` otwiera okno sklepu bez udziału Brain.
 
 ## Odporność
 - Mailbox w ignorowanym `runtime/`, zablokowany dla Apache (`.htaccess`). Ścieżek nigdy nie podaje model.

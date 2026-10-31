@@ -5,7 +5,7 @@ local T = TibiaAI
 function T.spawnAgent(key)
 	local def = T.agentDefs[key]
 	local wp = def.waypoints[def.spawn]
-	local npc = Game.createNpc(def.npcName, Position(wp.x, wp.y, wp.z))
+	local npc = Game.createNpc(T.displayName(def), Position(wp.x, wp.y, wp.z))
 	if not npc then
 		T.journal("agent_spawn_failed", { agentKey = key, spawn = def.spawn })
 		return nil
@@ -15,6 +15,7 @@ function T.spawnAgent(key)
 	T.agents[key] = agent
 	T.journal("agent_spawned", { agentKey = key, creatureId = npc:getId(), behavior = def.behavior.type, position = T.posTable(npc:getPosition()) })
 	T.verifyWaypoints(agent, npc)
+	T.verifyGuidePlaces(agent, npc)
 	return agent
 end
 

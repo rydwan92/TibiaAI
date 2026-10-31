@@ -5,6 +5,7 @@
 local T = TibiaAIAutotest
 local POTION = 266 -- health potion (data/scripts/actions/items/potions.lua: heals 125-175)
 local BACKPACK = 2854 -- a death can drop the backpack; without one, potions do not count as inventory
+local EMPTY_FLASK = 285 -- what a health potion leaves behind
 
 local function me() return g_game.getLocalPlayer() end
 
@@ -25,6 +26,7 @@ function T.combatStart()
   T.messages = {}
   T.exclusive = true
   modules.game_interface.processMouseAction = function() return true end -- ignore clicks on the map
+  T.request("dev-no-flasks.request", cfg.character)
   local giveDelay = 0
   if not me():getInventoryItem(InventorySlotBack) then
     T.request("dev-give-item.request", cfg.character .. "," .. BACKPACK .. ",1")
@@ -110,6 +112,7 @@ function T.combatPotion()
     T.result("potion_heal", me():getHealth() > hp0, string.format("hp %d -> %d", hp0, me():getHealth()))
     T.result("potion_consumed", seen == count0 - 2, string.format("potions %d -> %d for 2 uses", count0, seen))
     T.result("potion_cooldown", gap >= 900, string.format("2nd potion applied %d ms after the 1st (queued by the server)", gap))
+    T.result("no_flasks_left", me():getInventoryCount(EMPTY_FLASK, 0) == 0, string.format("%d empty flasks in the backpack", me():getInventoryCount(EMPTY_FLASK, 0)))
     T.log("server messages: %s", table.concat(T.messages, " | "))
     T.combatSwapToWeakTarget()
   end, function()

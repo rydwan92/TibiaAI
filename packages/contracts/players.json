@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Player agents: ordinary characters on ordinary accounts, played through a real client, so every game rule applies to them. key: stable identity for memory. bravery, curiosity, sociability, greed: 0..1, they shape choices. voice: how the character writes in chat. Kits are given once, as a declared developer exception (arena.kits in agents.json).",
+  "home": "Montag",
+  "identity": "in_character",
+  "merchant": "mira",
+  "supplies": {
+    "knight": [
+      {
+        "id": 266,
+        "count": 10
+      },
+      {
+        "id": 268,
+        "count": 2
+      },
+      {
+        "id": 3577,
+        "count": 6
+      }
+    ],
+    "paladin": [
+      {
+        "id": 3447,
+        "count": 150
+      },
+      {
+        "id": 266,
+        "count": 6
+      },
+      {
+        "id": 268,
+        "count": 4
+      },
+      {
+        "id": 3577,
+        "count": 6
+      }
+    ],
+    "sorcerer": [
+      {
+        "id": 268,
+        "count": 10
+      },
+      {
+        "id": 266,
+        "count": 4
+      },
+      {
+        "id": 17512,
+        "count": 20
+      },
+      {
+        "id": 3577,
+        "count": 6
+      }
+    ],
+    "druid": [
+      {
+        "id": 268,
+        "count": 10
+      },
+      {
+        "id": 266,
+        "count": 4
+      },
+      {
+        "id": 3577,
+        "count": 6
+      }
+    ]
+  },
+  "vocations": {
+    "knight": "Stoisz w pierwszej linii, masz najwiecej hp i bijesz wrecz. Malo many, leczysz sie miksturami. Potwory z silnym magicznym atakiem sa dla ciebie grozniejsze niz te bijace wrecz.",
+    "paladin": "Strzelasz z dystansu, trzymaj potwory z dala i odsuwaj sie. Dobrze ci idzie na nieumarlych czarami swietymi. Dbaj o strzaly.",
+    "sorcerer": "Bijesz czarami i runami, masz malo hp i duzo many. Nie daj sie otoczyc, trzymaj dystans, pilnuj many. Rozne potwory sa slabe na rozne zywioly.",
+    "druid": "Leczysz siebie i innych, bijesz lodem i ziemia. Masz malo hp i duzo many, przydajesz sie w grupie."
+  },
+  "reflexes": {
+    "healAt": 0.55,
+    "fleeAt": 0.25,
+    "manaAt": 0.3,
+    "tooStrongFactor": 0.35
+  },
+  "agents": {
+    "kael": {
+      "character": "Kael",
+      "vocation": "knight",
+      "kit": "knight",
+      "bravery": 0.75,
+      "curiosity": 0.4,
+      "sociability": 0.5,
+      "greed": 0.5,
+      "healSpell": "exura",
+      "voice": "pisze bardzo krotko, malymi literami, rzadko 'xd', lubi sie pochwalic zdobycza"
+    },
+    "sira": {
+      "character": "Sira",
+      "vocation": "paladin",
+      "kit": "paladin",
+      "bravery": 0.45,
+      "curiosity": 0.9,
+      "sociability": 0.8,
+      "greed": 0.3,
+      "healSpell": "exura",
+      "voice": "ciekawa swiata, pyta, co inni widzieli, pisze normalnymi zdaniami, czasem 'hej'"
+    },
+    "ravn": {
+      "character": "Ravn",
+      "vocation": "sorcerer",
+      "kit": "sorcerer",
+      "bravery": 0.3,
+      "curiosity": 0.6,
+      "sociability": 0.35,
+      "greed": 0.8,
+      "healSpell": "exura",
+      "attackSpell": "exori min flam",
+      "voice": "oszczedny w slowach, sarkastyczny, liczy zysk, pisze jednym zdaniem"
+    }
+  }
+}

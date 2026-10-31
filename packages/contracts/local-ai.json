@@ -10,7 +10,7 @@
   "maxQueue": 3,
   "maxCallsPerMinute": 20,
   "maxPromptChars": 6000,
-  "maxOutputTokens": 140,
-  "maxReplyChars": 180,
+  "maxOutputTokens": 320,
+  "maxReplyChars": 400,
   "keepAlive": "30m"
 }

@@ -10,6 +10,16 @@ Stan na 2026-10-30. **SPRAWDZONE** oznacza użycie w tym projekcie z dowodem. **
 | OTClient | 4.1 `dd56414` + assets 15.11 (`appearances` zgodne z serwerem, SHA-256 `5997985a…`) | klient, także sterownik testów | `scripts\client.ps1 -CopyPassword` |
 | `scripts\client-autotest.ps1` | projekt | test prawdziwego klienta: `smoke`, `combat`, `conversation` | RUNBOOK §4.4 |
 | `scripts\npc-scenario.ps1` | projekt | pełny scenariusz NPC w kliencie | NPC_RUNTIME.md |
+| `packages/contracts/tasks.json` | projekt | zlecenia jako dane, wspólne dla Lua i Brain | NPC_RUNTIME.md |
+| `scripts\npc-two-players.ps1` | projekt | dwa prawdziwe klienty naraz, wynik z dziennika silnika | TESTING.md |
+| `scripts\player-agents.ps1` | projekt | konta, start, stop i stan graczy-agentów | PLAYER_AGENTS.md |
+| `scripts\player-run.ps1` | projekt | bieg agentów z pomiarami i raportem JSON | PLAYER_AGENTS.md |
+| `tools\world_atlas.py` | projekt | miasta, przejścia, teleporty i lista fragmentów z OTBM | PLAYER_AGENTS.md |
+| `tools\game_data.py` | projekt | potwory, czary, runy i narzędzia z datapacku do `game-data.json` | PLAYER_AGENTS.md |
+| `tools\make_shop.py` | projekt | cennik kupca z łupu potworów, które naprawdę się pojawiają | PLAYER_AGENTS.md |
+| `tools\make_spawns.py` | projekt | spawny i łowiska z pomiaru silnika, deterministycznie | PLAYER_AGENTS.md |
+| `tools\otclient-agent` | projekt | ciało gracza-agenta w kliencie, aktywne tylko z `--agent-dir` | PLAYER_AGENTS.md |
+| `scripts\ai-status.ps1` | projekt | co robi AI teraz; bez zapytań do modelu | NPC_RUNTIME.md |
 | `scripts\incident.ps1` | projekt | incydent widziany tylko przez NPC w pobliżu | NPC_RUNTIME.md |
 | `tools\otclient-framecap` | projekt | limit 60 FPS w kliencie; bez niego model zwalnia pięciokrotnie | NPC_RUNTIME.md |
 | `scripts\scan.ps1`, `/ai scan` | projekt | widok przejść mapy z silnika | AGENTS.md |

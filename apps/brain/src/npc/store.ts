@@ -159,6 +159,16 @@ export class NpcMemoryStore {
       npcKey, playerGuid, factKey, value, eventKey, atMs);
   }
 
+  prefs(npcKey: string, playerGuid: number): Record<string, string> {
+    const rows = this.db.prepare('SELECT pref_key, value FROM npc_player_prefs WHERE npc_key = ? AND player_guid = ?').all(npcKey, playerGuid) as { pref_key: string; value: string }[];
+    return Object.fromEntries(rows.map((r) => [r.pref_key, r.value]));
+  }
+
+  setPref(npcKey: string, playerGuid: number, key: string, value: string, atMs: number): void {
+    this.db.prepare(`INSERT INTO npc_player_prefs (npc_key, player_guid, pref_key, value, updated_at_ms) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (npc_key, player_guid, pref_key) DO UPDATE SET value = excluded.value, updated_at_ms = excluded.updated_at_ms`).run(npcKey, playerGuid, key, value, atMs);
+  }
+
   openCommitments(npcKey: string, playerGuid: number): Commitment[] {
     return this.db.prepare(`SELECT id, who, text, status, created_at_ms FROM npc_commitments WHERE npc_key = ? AND player_guid = ? AND status = 'open'
       ORDER BY created_at_ms`).all(npcKey, playerGuid) as unknown as Commitment[];

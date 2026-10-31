@@ -1,0 +1,13 @@
+{
+  "_comment": "Przyklad regul Tailscale do prywatnego pokazu (DOCS/PRIVATE_DEMO_VPN.md). NIE zastosowano. Podmien adres i konto. Znajomy widzi tylko logowanie HTTP i swiat gry.",
+  "hosts": {
+    "tibiaai-host": "100.64.0.1"
+  },
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["znajomy@example.com"],
+      "dst": ["tibiaai-host:8088", "tibiaai-host:7172"]
+    }
+  ]
+}

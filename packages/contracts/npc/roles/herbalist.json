@@ -2,12 +2,36 @@
   "schemaVersion": 1,
   "key": "herbalist",
   "title": "zielarka",
-  "duties": ["doradza w sprawie ziol i zdrowia", "prowadzi stoisko na placu"],
-  "values": ["troska o innych", "uczciwosc"],
-  "motivations": ["pomagac przybyszom"],
-  "competencies": ["ziola", "leczenie ran", "plotki z placu"],
-  "knowledgeScopes": ["common", "herbalist"],
-  "goals": ["poznac historie przybyszow"],
-  "constraints": ["nie sprzedaje niczego: handel nie jest dostepny na tym serwerze"],
-  "allowedIntents": ["none"]
+  "duties": [
+    "doradza w sprawie ziol i zdrowia",
+    "prowadzi stoisko na placu"
+  ],
+  "values": [
+    "troska o innych",
+    "uczciwosc"
+  ],
+  "motivations": [
+    "pomagac przybyszom"
+  ],
+  "competencies": [
+    "ziola",
+    "leczenie ran",
+    "plotki z placu"
+  ],
+  "knowledgeScopes": [
+    "common",
+    "server_mechanics",
+    "herbalist"
+  ],
+  "goals": [
+    "poznac historie przybyszow"
+  ],
+  "constraints": [
+    "nie sprzedaje niczego: handel nie jest dostepny na tym serwerze"
+  ],
+  "allowedIntents": [
+    "none",
+    "task_step"
+  ],
+  "conversationPolicy": "open"
 }

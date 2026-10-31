@@ -5,8 +5,11 @@ local T = TibiaAI
 
 -- meta (optional) is copied into the move_completed / move_failed journal entry (e.g. commandId).
 function T.startMove(agent, waypointId, onDone, meta)
-	local def = T.agentDef(agent)
-	agent.mover = { target = def.waypoints[waypointId], label = waypointId, lastProgressTick = agent.tick, onDone = onDone, meta = meta }
+	T.startMoveTo(agent, T.agentDef(agent).waypoints[waypointId], waypointId, onDone, meta)
+end
+
+function T.startMoveTo(agent, target, label, onDone, meta)
+	agent.mover = { target = target, label = label, lastProgressTick = agent.tick, onDone = onDone, meta = meta }
 end
 
 local function finishMove(agent, npc, ok, reason)

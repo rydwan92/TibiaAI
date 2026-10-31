@@ -143,3 +143,34 @@ test('alarm count is per agent', () => {
   const texts = commands(mb.root).map((c) => `${c.agentKey}:${c.payload.args.text}`);
   assert.deepEqual(texts, ['ardan:To 1. alarm cwiczebny w tej zmianie. Zachowajcie spokoj.']);
 });
+
+function commandFixture() {
+  const dir = tempDir();
+  const mailbox = new Mailbox(join(dir, 'mailbox'));
+  const memory = new Memory(join(dir, 'brain.sqlite'));
+  return { mailbox, memory, brain: new Brain(mailbox, memory, quiet) };
+}
+
+test('a command that cannot be written spends no number, so Lua is never left waiting', () => {
+  const { brain, mailbox, memory } = commandFixture();
+  const real = mailbox.writeCommand.bind(mailbox);
+  mailbox.writeCommand = () => { throw new Error('disk full'); };
+  assert.equal(brain.sendCommand('sessZ', 'ardan', 'c1', 'stop', {}, 1, Date.now()), null);
+  assert.equal(memory.maxCommandSeq('sessZ'), 0, 'the failed attempt left no row');
+  mailbox.writeCommand = real;
+  assert.ok(brain.sendCommand('sessZ', 'ardan', 'c2', 'stop', {}, 1, Date.now()));
+  assert.equal(memory.maxCommandSeq('sessZ'), 1, 'the next command takes the same number');
+});
+
+test('reply effects and their marker commit together: a failure retries and applies once', () => {
+  const { memory } = commandFixture();
+  const env = { schemaVersion: 1, messageId: 'm', kind: 'command', worldSessionId: 's', agentKey: 'mira', createdAtMs: 1, correlationId: 'c', payload: { commandId: 'cmd', planRevision: 0, expiresAtMs: 2, action: 'say', args: { text: 'hej' } } };
+  memory.insertCommand(env as never, 1, { playerGuid: 1 });
+  assert.throws(() => memory.tx(() => {
+    memory.tx(() => memory.markPlanApplied('cmd'));
+    throw new Error('crash before commit');
+  }));
+  assert.ok(memory.pendingPlan('cmd', 'completed'), 'the marker rolled back with the effects');
+  memory.tx(() => memory.markPlanApplied('cmd'));
+  assert.equal(memory.pendingPlan('cmd', 'completed'), null, 'applied exactly once');
+});

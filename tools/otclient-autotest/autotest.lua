@@ -54,10 +54,16 @@ local function distance(a, b)
   return math.max(math.abs(a.x - b.x), math.abs(a.y - b.y))
 end
 
+-- Names shown in game carry the AI marker ("Ardan [AI]"), so the plain name matches its first word.
+function T.isNamed(shown, name)
+  shown, name = shown:lower(), name:lower()
+  return shown == name or shown:sub(1, #name + 1) == name .. " "
+end
+
 local function creatureNamed(name)
   local player = g_game.getLocalPlayer()
   for _, c in ipairs(g_map.getSpectators(player:getPosition(), false)) do
-    if c:getName():lower() == name:lower() then return c end
+    if T.isNamed(c:getName(), name) then return c end
   end
 end
 
@@ -255,7 +261,7 @@ function T.init()
   T.cfg = cfg
   traceActions()
   handlers.onTalk = function(name, level, mode, text, channelId, pos)
-    if T.heard and name:lower() == cfg.npc:lower() then
+    if T.heard and T.isNamed(name, cfg.npc) then
       T.heard[#T.heard + 1] = text
       log("talk %s: %s", name, text)
     end

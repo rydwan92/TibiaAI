@@ -86,16 +86,18 @@ powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1            
 powershell -ExecutionPolicy Bypass -File scripts\lab-fixture.ps1 -Combatant            # raz: osobne konto i postać Kael
 powershell -ExecutionPolicy Bypass -File scripts\client-autotest.ps1 -Scenario combat  # kolizja, obrażenia, mikstura, walka, śmierć
 ```
-Scenariusz NPC (cała lista kroków z restartem świata, kilka minut): `scripts\npc-scenario.ps1`. Jedna rozmowa: `scripts\client-autotest.ps1 -Scenario conversation -Npc Ardan -Lines "hi|Jak mam na imie?" -Expect "mar"`.
+Scenariusz NPC (cała lista kroków z restartem świata, około 20 minut): `scripts\npc-scenario.ps1`, wybrane kroki: `-Only guide_arrives,lesson_on`. Dwóch graczy naraz, dwa okna klienta: `scripts\npc-two-players.ps1`. Jedna rozmowa: `scripts\client-autotest.ps1 -Scenario conversation -Npc Ardan -Lines "hi|Jak mam na imie?" -Expect "mar"`.
 Skrypt otwiera okno klienta, zminimalizowane; nie klikaj w nim, scenariusze walki i rozmowy i tak blokują wejście. Wynik PASS/FAIL trafia na konsolę, log do `runtime\logs\client-autotest-*.log`. Wyjątki developerskie (ustawienie HP, przedmioty, wylogowanie) są zapisywane w dzienniku jako `dev_exception_used`.
 
-## 5. Agenci (Ardan, Brom, Mira): jak ich znaleźć i przetestować
+## 5. Agenci (Ardan, Brom, Mira, Tolek, Lena): jak ich znaleźć i przetestować
 Rozmowa z NPC przez model: DOCS/NPC_RUNTIME.md.
 - `Knight Sample` i `GOD` startują obok placu po `scripts\lab-fixture.ps1` (poza grą). Kael to postać eksperymentu; nie zaleca się gry nią.
 Definicje i procedura dodawania: DOCS/AGENTS.md.
 - **Ardan** (strażnik): spawn 5010,5003,7, na południe od świątyni Montag. Patroluje trasę `montag_square`: temple_south (5010,5003), square_west (5006,5005), road_south (5010,5009), square_east (5016,5005). Przy alarmie idzie do gate_watch (5019,5012).
 - **Mira** (zielarka): stoi przy herb_stall (5020,5003,7). Przy alarmie chowa się w świątyni (temple_shelter 5007,4998,7).
 - **Brom** (strażnik, wariant weterana): stoi w old_post (5014,5003,7). Bez reakcji na alarm.
+- **Tolek** (przewodnik): stoi w guide_post (5005,5004,7). Prowadzi do świątyni, na plac, do stoiska Miry i do bramy.
+- **Lena** (nauczycielka angielskiego): stoi w lesson_bench (5007,5002,7). Prowadzi do świątyni i na plac.
 - Ze świątyni wyjdź na zachód, potem na południe i na wschód przez otwarcie przy x≈4998–5001, y=5001.
 - Powitanie: stań blisko NPC (Ardan: 4 kratki, Mira: 3) i napisz `hi`, `witaj`, `czesc` lub `dzien dobry` na kanale Default. NPC się odwraca i odpowiada. Przy włączonym Brain odpowiedź pochodzi z pamięci („Znowu ty…”, „Milo cie znow widziec…”), bez Brain z reguły lokalnej.
 - Alarm treningowy (zdarzenie testowe, nie wykrycie potwora), działa na wszystkich agentów strefy `montag_gate`:
@@ -107,8 +109,18 @@ Definicje i procedura dodawania: DOCS/AGENTS.md.
   - `scripts\scan.ps1 -X 5010 -Y 5003`: mapa przejść w okolicy;
   - `python -I tools\journal.py`: dziennik bieżącej sesji.
 
+## 5a. Gracze-agenci (Kael, Sira, Ravn)
+Opis: DOCS/PLAYER_AGENTS.md. Każdy to osobny klient, około 540 MB RAM.
+- Konta i postacie raz: `scripts\player-agents.ps1 -Create`.
+- Start po `scripts\start.ps1`: `scripts\player-agents.ps1 -Start` (`-Only kael,sira`, aby wybrać).
+- Co robią: `scripts\player-agents.ps1 -Status`, dziennik w `runtime\players\<klucz>\diary.log`.
+- Bieg z pomiarami: `scripts\player-run.ps1 -Minutes 20`, wynik w `runtime\evidence\player-run-*.json`.
+- Koniec: `scripts\player-agents.ps1 -Stop`.
+- Po zmianie mapy: `tools\world_atlas.py`, żądania `nav-survey.request` i `survey.request`, `tools\make_spawns.py`, `scripts\sync-server.ps1`, restart. Skan zostawia Canary z 1,3 GB RAM do następnego restartu.
+
 ## 6. Brain i pamięć
 - Dostawca: `.env` → `TIBIAAI_BRAIN_PROVIDER=local-model` (Ollama, tylko lokalnie) lub `rules` (bez modelu). Zmiana wymaga `stop.ps1 -BrainOnly` i `start.ps1 -BrainOnly`. Polityka: `packages\contracts\local-ai.json`, ADR 0007. Gdy Ollama nie działa, Brain sam używa reguł (`model_unavailable_using_rules` w logu).
+- Co robi AI teraz: `scripts\ai-status.ps1`. Odczyt pasywny, bez zapytań do modelu.
 - Proces modelu: `scripts\ollama.ps1 -Start|-Stop|-Status`. To osobny proces gry na 127.0.0.1:11435 z `OLLAMA_NO_CLOUD=1`; `start.ps1` uruchamia go przy `local-model`, `stop.ps1` zatrzymuje razem z `llama-server`. Aplikacja Ollama użytkownika zostaje bez zmian.
 - Pomiar modelu i scenariusz na prawdziwej inferencji, bez klienta (proces Ollamy musi działać, Brain nie przeszkadza): `node --disable-warning=ExperimentalWarning apps\brain\test-integration\ollama.itest.ts`. Inny model wymaga wpisu w `allowedModels`.
 - Pamięć NPC (tylko odczyt): `node --disable-warning=ExperimentalWarning apps\brain\src\cli\npc-memory.ts ardan 5`.

@@ -6,9 +6,27 @@ export interface Position { x: number; y: number; z: number }
 
 export type Behavior = { type: 'patrol'; defaultRoute: string } | { type: 'stationary'; home: string };
 
+export interface Place {
+  label: string;
+  position: Position;
+  aliases: string[];
+}
+
+export interface SkillSpec {
+  /** Capabilities the actor's body must have. */
+  requires: string[];
+  /** Intents this skill lets a model propose. */
+  intents: string[];
+}
+
 export interface AgentDefinition {
   key: string;
+  /** Name players use. The name shown in game adds the marker; agentKey stays the identity. */
   npcName: string;
+  addressNames?: string[];
+  marked?: boolean;
+  skills?: string[];
+  guidePlaces?: string[];
   description?: string;
   actor: string;
   spawn: string;
@@ -26,12 +44,46 @@ export interface AgentsDocument {
   timing: Record<string, number>;
   alarmZones: string[];
   actorTypes: Record<string, { capabilities: string[] }>;
+  aiMarker?: { format: string; lookNote?: string; outfitAccent?: Record<string, number> };
+  places?: Record<string, Place>;
+  skills?: Record<string, SkillSpec>;
   agents: Record<string, Omit<AgentDefinition, 'key'>>;
   actions: string[];
   limits: { maxTtlMs: number; maxSayLength: number; maxEventTextLength: number; maxFileBytes: number };
 }
 
 export const DEFAULT_AGENTS_PATH = new URL('../../../packages/contracts/agents.json', import.meta.url);
+export const DEFAULT_TASKS_PATH = new URL('../../../packages/contracts/tasks.json', import.meta.url);
+
+export interface TaskStep {
+  id: string;
+  at: string;
+  from: number;
+  to: number;
+  words: string[];
+  /** Fixed line of this step: an instruction must not depend on the model. */
+  say: string;
+  notice?: string;
+  giveItem?: { id: number; count: number };
+  takeItem?: { id: number; count: number };
+  money?: number;
+  trust?: number;
+}
+
+export interface TaskDefinition {
+  label: string;
+  storage: number;
+  steps: TaskStep[];
+  refused: Record<string, string>;
+}
+
+let tasks: Record<string, TaskDefinition> | null = null;
+
+/** Errands as data, shared with the engine. Brain only reads them to recognise a step. */
+export function taskDefinitions(): Record<string, TaskDefinition> {
+  tasks ??= (JSON.parse(readFileSync(DEFAULT_TASKS_PATH, 'utf8')) as { tasks: Record<string, TaskDefinition> }).tasks;
+  return tasks;
+}
 
 const KEY_RE = /^[a-z][a-z0-9_]*$/;
 const isObj = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -45,6 +97,14 @@ export function validateAgentsDocument(doc: unknown): string[] {
   if (!Array.isArray(doc.actions)) errors.push('actions');
   if (!isObj(doc.limits)) errors.push('limits');
   const zones: unknown[] = Array.isArray(doc.alarmZones) ? doc.alarmZones : [];
+  if (doc.aiMarker !== undefined && !(isObj(doc.aiMarker) && typeof doc.aiMarker.format === 'string' && doc.aiMarker.format.includes('{name}'))) {
+    errors.push('aiMarker.format must contain {name}');
+  }
+  const places: Record<string, any> = isObj(doc.places) ? doc.places : {};
+  for (const [id, place] of Object.entries(places)) {
+    if (!isObj(place) || !isPos(place.position) || !Array.isArray(place.aliases) || typeof place.label !== 'string') errors.push(`place ${id}`);
+  }
+  const skills: Record<string, any> = isObj(doc.skills) ? doc.skills : {};
   for (const [key, def] of Object.entries<any>(isObj(doc.agents) ? doc.agents : {})) {
     const err = (msg: string) => errors.push(`${key}: ${msg}`);
     if (!KEY_RE.test(key)) err('agent key format');
@@ -68,6 +128,12 @@ export function validateAgentsDocument(doc: unknown): string[] {
       else for (const z of def.alarm.zones) if (!zones.includes(z)) err(`alarm zone ${z} not in alarmZones`);
     }
     if (!isObj(def.greeting) || !Array.isArray(def.greeting.words) || typeof def.greeting.range !== 'number') err('greeting');
+    const body: string[] = isObj(doc.actorTypes) ? doc.actorTypes[def.actor]?.capabilities ?? [] : [];
+    for (const name of def.skills ?? []) {
+      if (!(name in skills)) err(`unknown skill ${name}`);
+      else if (!skills[name].requires.every((c: string) => body.includes(c))) err(`skill ${name} needs capabilities the actor lacks`);
+    }
+    for (const id of def.guidePlaces ?? []) if (!(id in places)) err(`guide place ${id}`);
     if (def.hearing !== undefined && (!isObj(def.hearing) || typeof def.hearing.range !== 'number' ||
       (def.hearing.yellRange !== undefined && typeof def.hearing.yellRange !== 'number'))) err('hearing');
     if (!isObj(def.texts) || typeof def.texts.greetFallback !== 'string') err('texts.greetFallback');
@@ -111,6 +177,23 @@ export class AgentRegistry {
   capabilities(key: string): string[] {
     const def = this.get(key);
     return def ? this.doc.actorTypes[def.actor].capabilities : [];
+  }
+
+  /** Skills assigned to this agent. A fix to a skill reaches every agent that has it. */
+  skills(key: string): string[] {
+    return this.get(key)?.skills ?? [];
+  }
+
+  /** Name shown in game. Memory, mail and commands never use it. */
+  displayName(key: string): string {
+    const def = this.get(key);
+    if (!def) return key;
+    const format = this.doc.aiMarker?.format;
+    return def.marked && format ? format.replace('{name}', def.npcName) : def.npcName;
+  }
+
+  get places(): Record<string, Place> {
+    return this.doc.places ?? {};
   }
 
   get limits(): AgentsDocument['limits'] {

@@ -188,6 +188,20 @@ const MIGRATIONS: { version: number; sql: string }[] = [
         PRIMARY KEY (npc_key, day)
       );`,
   },
+  {
+    // ADR 0009: what a player chose with one NPC (language, lesson level). Settings, not memories:
+    // they are never compressed and never shared with another NPC.
+    version: 4,
+    sql: `
+      CREATE TABLE npc_player_prefs (
+        npc_key TEXT NOT NULL,
+        player_guid INTEGER NOT NULL,
+        pref_key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        updated_at_ms INTEGER NOT NULL,
+        PRIMARY KEY (npc_key, player_guid, pref_key)
+      );`,
+  },
 ];
 
 export interface HeardStatement {
@@ -203,6 +217,7 @@ export interface EncounterStats {
 }
 
 export class Memory {
+  private inTx = false;
   readonly db: DatabaseSync;
   readonly file: string;
 
@@ -233,8 +248,11 @@ export class Memory {
     }
   }
 
+  /** Joins a transaction already open, so effects and their marker can commit together. */
   tx<T>(fn: () => T): T {
+    if (this.inTx) return fn();
     this.db.exec('BEGIN IMMEDIATE');
+    this.inTx = true;
     try {
       const out = fn();
       this.db.exec('COMMIT');
@@ -242,6 +260,8 @@ export class Memory {
     } catch (err) {
       this.db.exec('ROLLBACK');
       throw err;
+    } finally {
+      this.inTx = false;
     }
   }
 
@@ -320,14 +340,18 @@ export class Memory {
       p.planRevision, env.createdAtMs, p.expiresAtMs, plan === undefined ? null : JSON.stringify(plan));
   }
 
-  /** Returns a command's stored plan once, on its first terminal result; duplicates get nothing. */
-  takePlan(commandId: string, status: string): { text: string; plan: unknown } | null {
+  /** A command's stored plan until its effects are marked applied; duplicates get nothing. */
+  pendingPlan(commandId: string, status: string): { text: string; plan: unknown } | null {
     if (status === 'accepted') return null;
     const row = this.db.prepare('SELECT args_json, plan_json, plan_applied FROM commands WHERE command_id = ?').get(commandId) as
       { args_json: string; plan_json: string | null; plan_applied: number } | undefined;
     if (!row?.plan_json || row.plan_applied) return null;
-    this.db.prepare('UPDATE commands SET plan_applied = 1 WHERE command_id = ?').run(commandId);
     return { text: (JSON.parse(row.args_json) as { text: string }).text, plan: JSON.parse(row.plan_json) };
+  }
+
+  /** Call in the transaction that writes the plan's effects, so a crash leaves both or neither. */
+  markPlanApplied(commandId: string): void {
+    this.db.prepare('UPDATE commands SET plan_applied = 1 WHERE command_id = ?').run(commandId);
   }
 
   /** Stores an engine result. Success is recorded only from engine results, never assumed. */

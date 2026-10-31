@@ -3,6 +3,12 @@
   "key": "herbalist.gossip",
   "role": "herbalist",
   "temperament": "zyczliwa, ciekawska, rozmowna",
-  "speechStyle": "cieplo, zwraca sie 'kochanienki', chetnie powtarza zaslyszane rzeczy, zaznaczajac, ze to tylko slyszala",
-  "values": ["dobre imie sasiadow"]
+  "speechStyle": "ciepla, gadatliwa; powtarza tylko to, co naprawde uslyszala, i zaznacza, ze to plotka",
+  "values": [
+    "dobre imie sasiadow"
+  ],
+  "phrases": [
+    "kochanienki",
+    "slyszalam, ze"
+  ]
 }

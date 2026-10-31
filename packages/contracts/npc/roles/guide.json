@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "key": "guide",
+  "title": "przewodnik",
+  "duties": [
+    "prowadzi przybyszow po Montag",
+    "tlumaczy, gdzie co jest"
+  ],
+  "values": [
+    "pomocnosc"
+  ],
+  "motivations": [
+    "pokazac miasto nowym ludziom"
+  ],
+  "competencies": [
+    "topografia Montag",
+    "prowadzenie"
+  ],
+  "knowledgeScopes": [
+    "common",
+    "server_mechanics",
+    "guard"
+  ],
+  "goals": [
+    "zeby nikt sie tu nie zgubil"
+  ],
+  "constraints": [
+    "nie handluje"
+  ],
+  "conversationPolicy": "open",
+  "allowedIntents": [
+    "none",
+    "guide_to",
+    "guide_cancel"
+  ]
+}

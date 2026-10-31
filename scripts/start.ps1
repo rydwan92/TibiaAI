@@ -1,9 +1,9 @@
-# Start MariaDB and Canary as hidden background processes bound to 127.0.0.1.
+﻿# Start MariaDB and Canary as hidden background processes bound to 127.0.0.1.
 #   powershell -ExecutionPolicy Bypass -File scripts\start.ps1          # DB + Canary
 #   powershell -ExecutionPolicy Bypass -File scripts\start.ps1 -DbOnly  # DB only
 #   powershell -ExecutionPolicy Bypass -File scripts\start.ps1 -NoBrain # world without Brain
 #   powershell -ExecutionPolicy Bypass -File scripts\start.ps1 -BrainOnly
-param([switch]$DbOnly, [switch]$NoBrain, [switch]$BrainOnly)
+param([switch]$DbOnly, [switch]$NoBrain, [switch]$BrainOnly, [switch]$NoModel)
 . "$PSScriptRoot\lib.ps1"
 $cfg = Read-DotEnv
 New-Item -ItemType Directory -Force $LogDir, $PidDir, $DbTmp | Out-Null
@@ -17,7 +17,7 @@ function Rotate-Log([string]$name) {
 }
 
 function Start-Brain {
-    if ($cfg.TIBIAAI_BRAIN_PROVIDER -eq 'local-model') { & "$PSScriptRoot\ollama.ps1" -Start }
+    if ($cfg.TIBIAAI_BRAIN_PROVIDER -eq 'local-model' -and -not $NoModel) { & "$PSScriptRoot\ollama.ps1" -Start }
     if (Get-TrackedProcess 'brain') { Write-Host "Brain already running"; return }
     $node = (Get-Command node -ErrorAction Stop).Source
     $ver = (& $node --version).Trim()
@@ -74,9 +74,10 @@ if (Get-TrackedProcess 'login') {
     foreach ($port in $Lock.ports.loginHttp, $Lock.ports.loginGrpc) {
         if (Test-LocalPort $port) { throw "Port $port is used by another process" }
     }
+    $worldHost = Get-WorldHost $cfg
     $loginEnv = @{
-        SERVER_PATH = $ServerDir; SERVER_IP = '127.0.0.1'; SERVER_NAME = 'TibiaAI'; SERVER_PORT = "$($Lock.ports.game)"
-        SERVER_LOCATION = 'POL'; LOGIN_IP = '127.0.0.1'; LOGIN_HTTP_PORT = "$($Lock.ports.loginHttp)"
+        SERVER_PATH = $ServerDir; SERVER_IP = $worldHost; SERVER_NAME = 'TibiaAI'; SERVER_PORT = "$($Lock.ports.game)"
+        SERVER_LOCATION = 'POL'; LOGIN_IP = $worldHost; LOGIN_HTTP_PORT = "$($Lock.ports.loginHttp)"
         LOGIN_GRPC_PORT = "$($Lock.ports.loginGrpc)"; MYSQL_HOST = '127.0.0.1'; MYSQL_PORT = $cfg.TIBIAAI_DB_PORT
         MYSQL_DBNAME = $cfg.TIBIAAI_DB_NAME; MYSQL_USER = $cfg.TIBIAAI_DB_USER; MYSQL_PASS = $cfg.TIBIAAI_DB_PASSWORD
         ENV_LOG_LEVEL = 'info'

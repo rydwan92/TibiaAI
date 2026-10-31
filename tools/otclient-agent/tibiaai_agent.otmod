@@ -1,0 +1,10 @@
+Module
+  name: tibiaai_agent
+  description: Plays one character for a player agent. Does nothing unless started with --agent-dir.
+  author: TibiaAI
+  website: https://github.com/rydwan92/TibiaAI
+  autoload: true
+  autoload-priority: 6500
+  scripts: [ agent ]
+  @onLoad: TibiaAIAgent.init()
+  @onUnload: TibiaAIAgent.terminate()

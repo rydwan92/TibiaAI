@@ -1,6 +1,6 @@
 # Weryfikacja
 
-Stan na 2026-10-30. „Silnik” oznacza dowód z działającego Canary (dziennik lub wyniki mostu) bez klienta GUI. Test z atrapą modelu nie jest dowodem działania AI: rzeczywista inferencja i klient mają osobne wiersze.
+Stan na 2026-10-31. „Silnik” oznacza dowód z działającego Canary (dziennik lub wyniki mostu) bez klienta GUI. Test z atrapą modelu nie jest dowodem działania AI: rzeczywista inferencja i klient mają osobne wiersze.
 
 | Test | Oczekiwany wynik | Rodzaj | Stan | Jak uruchomić / dowód |
 | --- | --- | --- | --- | --- |
@@ -36,9 +36,15 @@ Stan na 2026-10-30. „Silnik” oznacza dowód z działającego Canary (dzienni
 | Słyszenie agentów | `agent_heard` tylko w zasięgu; pamięć z pochodzeniem u słuchacza | Silnik + jednostkowy | PASS | iteracja 0007, `hearing.test.ts` |
 | Limit pętli agent ↔ agent | Żadna mowa w odpowiedzi na `agent_heard`, także od złośliwego providera | Jednostkowy + silnik | PASS | `hearing.test.ts`, `brain.log` |
 | Plotka przy powitaniu | „Slyszalam, jak Ardan mowil…” po odpowiedzi | Gra | PASS (unit), GUI NOT RUN | `hearing.test.ts` |
-| Logika NPC z atrapą modelu | Warstwy, izolacja, budżet kontekstu, relacje, kompresja, retencja, spóźnione i zastąpione odpowiedzi | Jednostkowy (atrapa) | PASS 62/62 | `npc.test.ts` |
-| Prawdziwa inferencja | Pamięć, izolacja, wymuszenia, warianty, incydent, kompresja na `ornith-1.5:9b` | Integracja (bez klienta) | PASS 9/9, trzy przebiegi + regresja | `test-integration\ollama.itest.ts` |
-| Scenariusz NPC w kliencie | Przedstawienie, restart, inny gracz, próby wymuszenia, drugi NPC, incydent | Prawdziwy klient | PASS 11/11 + awaria modelu | `scripts\npc-scenario.ps1` |
+| Logika NPC z atrapą modelu | Warstwy, izolacja, budżet kontekstu, relacje, kompresja, retencja, polityki, intencje, lekcja, znacznik, zlecenie | Jednostkowy (atrapa) | PASS, liczby wspólne: 131/131 | `npc.test.ts`, `guide.test.ts` |
+| Prawdziwa inferencja, gwarancje | Pamięć, izolacja, wymuszenia, uczciwość `[AI]`, typowane akcje, kompresja na `ornith-1.5:9b` | Integracja (bez klienta) | PASS 21/21, trzy przebiegi | `test-integration\ollama.itest.ts` |
+| Prawdziwa inferencja, jakość | Wiedza ogólna i o serwerze, styl: zależy od modelu, nie blokuje regresji | Pomiar | 11–13/13; quiz świata 8–10/10 | jak wyżej |
+| Scenariusz NPC w kliencie | Przedstawienie, restart, inny gracz, próby wymuszenia, drugi NPC, incydent, przewodnik, zlecenie, lekcja | Prawdziwy klient | PASS, patrz iteracja 0013 | `scripts\npc-scenario.ps1` |
+| Dwóch graczy naraz | Jeden marsz, drugi gracz odrzucony, cudzy „stop” bez skutku | Dwa prawdziwe klienty | PASS 4/4 | `scripts\npc-two-players.ps1` |
+| Gracze-agenci | Trasy, wybory, rady, wiadomości, pomoc, handel, depozyt, PvP, lina, łopata: logika z atrapą, potem gra w prawdziwych klientach | Jednostkowy + 3 klienty | PASS, 131 testów, biegi 12–25 min | `players.test.ts`, `scripts\player-run.ps1`, `force.json` |
+| Kompresja pamięci | Usuwane tylko przeczytane rekordy, partie 41/100/2000, prywatność i plotki osobno, ponowienie bez utraty | Jednostkowy (atrapa) | PASS; w żywej bazie jeszcze nie wystąpiła | `npc.test.ts` |
+| Odporność Brain | Skutki odpowiedzi i ich znacznik w jednej transakcji; nieudany zapis polecenia nie zużywa numeru | Jednostkowy | PASS | `brain.test.ts` |
+| Status AI | Pasywny odczyt, stan chmury nie jest zgadywany | Jednostkowy + ręcznie | PASS | `guide.test.ts`, `scripts\ai-status.ps1` |
 
 ## Polecenia
 Całość jednym poleceniem: `powershell -ExecutionPolicy Bypass -File scripts\verify.ps1 [-Client] [-Model]` (raport w `runtime\logs\verify-*.json`). CI (GitHub Actions, `.github/workflows/brain.yml`) uruchamia testy jednostkowe i typecheck Brain przy każdym pushu.

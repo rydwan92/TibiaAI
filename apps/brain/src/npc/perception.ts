@@ -1,6 +1,7 @@
 // Perception: turns engine events into what one NPC actually experienced. Each engine event names
 // its listener in agentKey, so an NPC only ever records what reached it; there is no global stream.
-import type { Envelope, EventPayload } from '../contracts.ts';
+import { taskDefinitions } from '../agents.ts';
+import { agentRegistry, type Envelope, type EventPayload, type GuideOutcome } from '../contracts.ts';
 import type { NpcEventInput } from './store.ts';
 
 const NAME_PATTERNS = [
@@ -19,6 +20,15 @@ export function extractClaims(text: string): { key: string; value: string }[] {
   if (job) claims.push({ key: 'claimed_occupation', value: job[1].toLowerCase() });
   return claims;
 }
+
+const GUIDE_OUTCOME_TEXT: Record<GuideOutcome, string> = {
+  arrived: 'dotarlismy na miejsce', left_behind: 'gracz zostal w tyle i nie wrocil', player_gone: 'gracz zniknal lub wyszedl z gry',
+  cancelled: 'gracz zrezygnowal', blocked: 'droga byla zablokowana', alarm: 'przerwane przez alarm', stopped: 'zatrzymane poleceniem', timeout: 'trwalo zbyt dlugo',
+};
+
+const TASK_STEP_TEXT: Record<string, string> = {
+  accept: 'Gracz przyjal zlecenie.', deliver: 'Gracz dostarczyl przesylke.', reward: 'Gracz wykonal zlecenie i odebral zaplate.',
+};
 
 function isPlayerSpeech(p: EventPayload): p is Extract<EventPayload, { type: 'player_greeted' | 'player_said' }> {
   return p.type === 'player_greeted' || p.type === 'player_said';
@@ -60,6 +70,20 @@ export function perceive(ev: Envelope<EventPayload>): NpcEventInput | null {
       return { ...base, kind: 'witnessed', subjectGuid: null, actorName: 'swiat', text: 'Oglosono alarm cwiczebny przy bramie.', source: 'witnessed', certainty: 'confirmed', visibility: 'public', importance: 5 };
     case 'training_alarm_cleared':
       return { ...base, kind: 'witnessed', subjectGuid: null, actorName: 'swiat', text: 'Alarm cwiczebny odwolano.', source: 'witnessed', certainty: 'confirmed', visibility: 'public', importance: 3 };
+    case 'guide_ended': {
+      const label = agentRegistry().places[p.placeId]?.label ?? p.placeId;
+      return {
+        ...base, kind: 'action_result', subjectGuid: p.playerGuid, actorName: 'silnik', text: `Prowadzenie do miejsca: ${label}. Wynik: ${GUIDE_OUTCOME_TEXT[p.outcome]}.`,
+        source: 'server_confirmed', certainty: 'confirmed', visibility: 'private', importance: p.outcome === 'arrived' ? 5 : 4,
+      };
+    }
+    case 'task_step_done': {
+      const task = taskDefinitions()[p.taskId];
+      return {
+        ...base, kind: 'action_result', subjectGuid: p.playerGuid, actorName: 'silnik', text: `Zlecenie: ${task?.label ?? p.taskId}. ${TASK_STEP_TEXT[p.stepId] ?? `Wykonany krok ${p.stepId}.`}`,
+        source: 'server_confirmed', certainty: 'confirmed', visibility: 'private', importance: 7,
+      };
+    }
     case 'incident_observed':
       return { ...base, kind: 'witnessed', subjectGuid: null, actorName: 'swiat', text: p.description, source: 'witnessed', certainty: 'confirmed', visibility: 'public', importance: 6, worldMinutes: p.worldMinutes };
     default:

@@ -33,15 +33,20 @@ export interface Envelope<P> {
 }
 
 export type EventPayload =
-  | { type: 'player_greeted'; playerGuid: number; playerName: string; text: string; worldMinutes?: number }
-  | { type: 'player_said'; playerGuid: number; playerName: string; text: string; addressed: boolean; distance: number; worldMinutes?: number }
+  | { type: 'player_greeted'; playerGuid: number; playerName: string; text: string; worldMinutes?: number; tasks?: Record<string, number> }
+  | { type: 'player_said'; playerGuid: number; playerName: string; text: string; addressed: boolean; distance: number; worldMinutes?: number; tasks?: Record<string, number> }
+  | { type: 'task_step_done'; playerGuid: number; playerName: string; taskId: string; stepId: string; state: number }
   | { type: 'incident_observed'; incidentId: string; description: string; distance: number; worldMinutes?: number }
   | { type: 'training_alarm_started'; zoneId: string; triggeredBy?: string }
   | { type: 'training_alarm_cleared'; zoneId: string; clearedBy?: string }
   | { type: 'position_observed'; x: number; y: number; z: number }
+  | { type: 'guide_ended'; playerGuid: number; playerName: string; placeId: string; outcome: GuideOutcome; x: number; y: number; z: number }
   | { type: 'agent_heard'; speakerKey: string; text: string; yelled: boolean; distance: number };
 
-export type Action = 'say' | 'patrol' | 'move_to' | 'stop';
+export type GuideOutcome = 'arrived' | 'left_behind' | 'player_gone' | 'cancelled' | 'blocked' | 'alarm' | 'stopped' | 'timeout';
+const GUIDE_OUTCOMES: GuideOutcome[] = ['arrived', 'left_behind', 'player_gone', 'cancelled', 'blocked', 'alarm', 'stopped', 'timeout'];
+
+export type Action = 'say' | 'patrol' | 'move_to' | 'stop' | 'guide_start' | 'guide_cancel' | 'task_step';
 
 export interface CommandPayload {
   commandId: string;
@@ -107,6 +112,13 @@ export function parseEvent(raw: unknown): Validation<Envelope<EventPayload>> {
     case 'training_alarm_cleared':
       if (!isStr(p.zoneId, 64)) return fail('zone_id');
       break;
+    case 'task_step_done':
+      if (!isInt(p.playerGuid) || p.playerGuid <= 0 || !isStr(p.playerName, 64) || !isStr(p.taskId, 64) || !isStr(p.stepId, 64) || !isInt(p.state)) return fail('task_fields');
+      break;
+    case 'guide_ended':
+      if (!isInt(p.playerGuid) || p.playerGuid <= 0 || !isStr(p.playerName, 64) || !isStr(p.placeId, 64)) return fail('guide_fields');
+      if (!GUIDE_OUTCOMES.includes(p.outcome as GuideOutcome)) return fail('guide_outcome');
+    // falls through
     case 'position_observed':
       if (!isInt(p.x) || !isInt(p.y) || !isInt(p.z)) return fail('position');
       break;
@@ -158,6 +170,14 @@ export interface AgentStatus {
   moving?: string;
   position?: { x: number; y: number; z: number };
   planRevision: number;
+  guide?: GuideStatus;
+}
+
+export interface GuideStatus {
+  placeId: string;
+  playerGuid: number;
+  waiting: boolean;
+  ticks: number;
 }
 
 export interface WorldStatus {

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "key": "guide.joker",
+  "role": "guide",
+  "temperament": "wesoly, bezposredni, lubi ludzi",
+  "speechStyle": "luzny, zartobliwy ton, krotkie zdania; zartuje tylko wtedy, gdy nic nie grozi",
+  "phrases": [
+    "bez nerwow",
+    "to prosta sprawa"
+  ],
+  "values": [
+    "dobry humor"
+  ]
+}

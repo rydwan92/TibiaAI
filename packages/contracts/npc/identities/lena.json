@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "npcKey": "lena",
+  "variant": "tutor.patient",
+  "displayName": "Lena",
+  "gender": "f",
+  "biography": "Przez lata uczyla jezykow w duzym miescie, a do Montag przyjechala dla spokoju. Lubi uczyc przy okazji, w trakcie spaceru.",
+  "goals": [
+    "znalezc ucznia, ktory bedzie cwiczyl codziennie"
+  ],
+  "initialRelationships": [
+    {
+      "npc": "mira",
+      "note": "kupuje u niej herbate i slucha plotek"
+    }
+  ]
+}

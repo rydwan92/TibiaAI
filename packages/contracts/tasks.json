@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Errands given by agents. The engine owns them: state lives in the character's storage, items and gold come only from these definitions, never from a model. A step runs at one agent, moves the state from 'from' to 'to' and applies its effects, all or nothing. words: what a player says at that agent to ask for the step (normalised ASCII, whole phrases). Read by Lua and Brain; copied to the server by scripts/sync-server.ps1. say: the fixed line spoken with a step, because a player must understand what to do next; notice: what the engine tells the player.",
+  "tasks": {
+    "letter_for_brom": {
+      "label": "list od Miry do Broma",
+      "storage": 47100,
+      "steps": [
+        {
+          "id": "accept",
+          "at": "mira",
+          "from": 0,
+          "to": 1,
+          "giveItem": {
+            "id": 3505,
+            "count": 1
+          },
+          "words": [
+            "zadanie",
+            "zlecenie",
+            "przysluga",
+            "przysluge",
+            "pomoc",
+            "pomoge",
+            "pomoc ci",
+            "praca",
+            "prace",
+            "quest",
+            "task"
+          ],
+          "say": "Kochanienki, zanies ten list do Broma, {name}. Stoi przy starym posterunku, po polnocnej stronie placu. Potem wroc do mnie.",
+          "notice": "Otrzymujesz list do Broma."
+        },
+        {
+          "id": "deliver",
+          "at": "brom",
+          "from": 1,
+          "to": 2,
+          "takeItem": {
+            "id": 3505,
+            "count": 1
+          },
+          "words": [
+            "list",
+            "listu",
+            "przesylka",
+            "przesylke",
+            "od miry",
+            "letter"
+          ],
+          "say": "O, list od Miry! Dzieki, {name}. Wroc do niej i powiedz, ze dotarl.",
+          "notice": "Oddajesz list Bromowi."
+        },
+        {
+          "id": "reward",
+          "at": "mira",
+          "from": 2,
+          "to": 3,
+          "money": 50,
+          "trust": 1,
+          "words": [
+            "zanioslem",
+            "zanioslam",
+            "dostarczylem",
+            "dostarczylam",
+            "oddalem",
+            "oddalam",
+            "dotarl",
+            "gotowe",
+            "zrobione",
+            "delivered"
+          ],
+          "say": "Dziekuje ci, {name}. Dobrze wiedziec, ze mozna na tobie polegac."
+        }
+      ],
+      "refused": {
+        "already_done": "Juz mi pomogles, {name}. Dziekuje.",
+        "in_progress": "Czekam, az to zalatwisz, {name}.",
+        "no_capacity": "Nie uniesiesz tego, {name}. Zrob miejsce w plecaku.",
+        "item_missing": "Nie masz przy sobie listu, {name}."
+      }
+    }
+  }
+}

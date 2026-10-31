@@ -20,6 +20,7 @@ export function applyConfirmedReply(store: NpcMemoryStore, r: ConfirmedReply): v
       eventKey: `reply:${r.commandId}`, npcKey: r.npcKey, kind: 'said_by_npc', subjectGuid: plan.playerGuid, actorName: 'ty', text: r.text,
       source: 'server_confirmed', certainty: 'confirmed', visibility: 'private', importance: plan.promise ? 7 : 3, worldSessionId: r.worldSessionId, realAtMs: r.atMs,
     });
+    if (plan.continuation) return; // the second line of one reply is not another interaction
     recordInteraction(store, r.npcKey, plan.playerGuid, plan.playerName, r.commandId, r.atMs);
     if (plan.remember) store.setClaim(r.npcKey, plan.playerGuid, 'remembered', plan.remember, r.commandId, r.atMs);
     if (plan.promise) store.addCommitment(r.npcKey, plan.playerGuid, 'npc', plan.promise, r.commandId, r.atMs);

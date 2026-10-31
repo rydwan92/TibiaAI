@@ -8,6 +8,8 @@ Agenci są opisani danymi w `packages/contracts/agents.json` (ADR 0004). Ten sam
 | `ardan` | Ardan, strażnik | `patrol`, trasa `montag_square` (4 punkty) | idzie do `gate_watch`, krzyczy, ostrzega co 20 s |
 | `mira` | Mira, zielarka | `stationary`, dom `herb_stall` (5020,5003,7) | chowa się w `temple_shelter` (świątynia, PZ) |
 | `brom` | Brom, strażnik (wariant weterana) | `stationary`, dom `old_post` (5014,5003,7) | nie reaguje |
+| `tolek` | Tolek, przewodnik | `stationary`, dom `guide_post` (5005,5004,7), umiejętność `guide` | przerywa prowadzenie, idzie do świątyni |
+| `lena` | Lena, nauczycielka angielskiego | `stationary`, dom `lesson_bench` (5007,5002,7), umiejętność `guide` | przerywa lekcję i prowadzenie, idzie do świątyni |
 
 Charakter, biografia i wiedza NPC są w `packages/contracts/npc/` (NPC_RUNTIME.md). `agents.json` opisuje ciało i zasady w świecie.
 
@@ -16,6 +18,9 @@ Charakter, biografia i wiedza NPC są w `packages/contracts/npc/` (NPC_RUNTIME.m
 | --- | --- |
 | klucz agenta | `[a-z][a-z0-9_]*`, stabilny identyfikator (pamięć Brain, pliki mailbox) |
 | `npcName`, `description` | nazwa i opis NPC w grze (rejestrowane przez `Game.createNpcType`) |
+| `addressNames` | dodatkowe formy imienia, np. wołacz „Tolku” (reszta form wynika z `npcName`) |
+| `marked` | agent nosi znacznik z `aiMarker`. Nazwa w grze powstaje przy starcie, `agentKey` się nie zmienia |
+| `skills`, `guidePlaces` | umiejętności i miejsca dostępne temu ciału (ADR 0009) |
 | `actor` | typ ciała z `actorTypes`: `npc` albo `client_player`; określa capabilities |
 | `outfit`, `speed` | wygląd (lookType itd.) i prędkość animacji |
 | `spawn` | id punktu startowego (musi istnieć w `waypoints`) |

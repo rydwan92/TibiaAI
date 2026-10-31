@@ -63,7 +63,19 @@ function T.validateDefinition(def)
 	if type(def.texts) ~= "table" or type(def.texts.greetFallback) ~= "string" then
 		return "texts.greetFallback"
 	end
+	if def.skills ~= nil and type(def.skills) ~= "table" then
+		return "skills"
+	end
 	return nil
+end
+
+-- The name shown in game. agentKey stays the identity, so changing the marker touches no memory.
+function T.displayName(def)
+	local marker = T.defs.aiMarker
+	if def.marked and type(marker) == "table" and type(marker.format) == "string" then
+		return (marker.format:gsub("{name}", def.npcName))
+	end
+	return def.npcName
 end
 
 T.defs = T.defs or { agents = {}, timing = {} }
@@ -138,6 +150,8 @@ function T.newAgentState(key)
 		routeIndex = 1,
 		resumeIndex = 1,
 		mover = nil, -- { target, label, lastProgressTick, onDone }
+		guide = nil, -- { playerGuid, playerName, placeId, ticks, waiting, waitStartTick, commandId }
+		unreachablePlaces = {}, -- placeId -> true when the engine found no path at spawn
 		waitUntilTick = 0,
 		talkUntilTick = 0,
 		alarmZone = nil,

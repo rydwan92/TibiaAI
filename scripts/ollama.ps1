@@ -8,15 +8,17 @@ $policy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root 'packages\contracts\l
 $port = ([uri]$policy.endpoint).Port
 New-Item -ItemType Directory -Force $PidDir, $LogDir | Out-Null
 
-function Test-CloudBlocked {
-    # Proof on the running process: a request for a cloud model must fail with "cloud is disabled".
+function Get-CloudState {
+    # Read-only: the running server reports its own cloud setting, so no cloud model is ever called.
+    # Without that answer the state is UNKNOWN, whatever the environment was meant to be.
     try {
-        $body = '{"model":"glm-5.2:cloud","stream":false,"messages":[{"role":"user","content":"ok"}]}'
-        Invoke-RestMethod -Uri "$($policy.endpoint)/api/chat" -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 15 | Out-Null
-        return $false
+        $cloud = (Invoke-RestMethod -Uri "$($policy.endpoint)/api/status" -TimeoutSec 3).cloud
     } catch {
-        return ("$($_.ErrorDetails.Message) $($_.Exception.Message)" -match 'cloud is disabled|disabled|not found|403')
+        return 'UNKNOWN (no /api/status answer)'
     }
+    if ($cloud.disabled -eq $true) { return "CONFIRMED (server reports cloud.disabled, source: $($cloud.source))" }
+    if ($cloud.disabled -eq $false) { return 'NOT BLOCKED (server reports cloud enabled)' }
+    return 'UNKNOWN (no cloud state in /api/status)'
 }
 
 if ($Start) {
@@ -61,7 +63,7 @@ if ($Stop) {
 
 if ($Status -or $Start) {
     if (Test-LocalPort $port) {
-        Write-Host ("cloud blocked on {0}: {1}" -f $policy.endpoint, (Test-CloudBlocked))
+        Write-Host ("cloud block on {0}: {1}" -f $policy.endpoint, (Get-CloudState))
         $models = (Invoke-RestMethod "$($policy.endpoint)/api/tags").models
         $wanted = $models | Where-Object { $_.name -eq $policy.model }
         Write-Host ("model {0}: {1}" -f $policy.model, $(if ($wanted -and -not $wanted.remote_host) { 'installed, local' } else { 'MISSING: ollama pull ' + $policy.model }))

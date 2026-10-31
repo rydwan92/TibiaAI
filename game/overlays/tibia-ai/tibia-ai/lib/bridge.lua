@@ -14,7 +14,7 @@ local MAX_COMMANDS_PER_POLL = 10
 local MAX_EVENT_BACKLOG = 100
 local MAX_TTL_MS = 10000
 local HEARTBEAT_STALE_MS = 5000 -- 3 s watchdog + 1 s clock resolution on each side
-local ALLOWED_ACTIONS = { say = true, patrol = true, move_to = true, stop = true }
+local ALLOWED_ACTIONS = { say = true, patrol = true, move_to = true, stop = true, guide_start = true, guide_cancel = true, task_step = true }
 local MOVEMENT_ACTIONS = { patrol = true, move_to = true, stop = true }
 
 T.bridge = T.bridge or {
@@ -108,7 +108,15 @@ local function rememberResult(commandId, payload)
 end
 
 -- Validation ------------------------------------------------------------------------------------
-local ALLOWED_ARG_KEYS = { say = { text = true, toPlayerGuid = true }, patrol = { routeId = true }, move_to = { waypointId = true }, stop = {} }
+local ALLOWED_ARG_KEYS = {
+	say = { text = true, toPlayerGuid = true },
+	patrol = { routeId = true },
+	move_to = { waypointId = true },
+	stop = {},
+	guide_start = { placeId = true, toPlayerGuid = true, text = true },
+	guide_cancel = { toPlayerGuid = true },
+	task_step = { taskId = true, stepId = true, toPlayerGuid = true, text = true },
+}
 
 local function validateArgs(def, action, args)
 	if type(args) ~= "table" then
@@ -128,6 +136,24 @@ local function validateArgs(def, action, args)
 		return type(args.routeId) == "string" and def.routes ~= nil and def.routes[args.routeId] ~= nil
 	elseif action == "move_to" then
 		return type(args.waypointId) == "string" and def.waypoints[args.waypointId] ~= nil
+	elseif action == "guide_start" then
+		if type(args.toPlayerGuid) ~= "string" or not args.toPlayerGuid:match("^%d+$") then
+			return false
+		end
+		if args.text ~= nil and (type(args.text) ~= "string" or #args.text > 200 or args.text:find("%c")) then
+			return false
+		end
+		return type(args.placeId) == "string" and T.guidePlace(def, args.placeId) ~= nil
+	elseif action == "guide_cancel" then
+		return type(args.toPlayerGuid) == "string" and args.toPlayerGuid:match("^%d+$") ~= nil
+	elseif action == "task_step" then
+		if type(args.toPlayerGuid) ~= "string" or not args.toPlayerGuid:match("^%d+$") or type(args.stepId) ~= "string" then
+			return false
+		end
+		if args.text ~= nil and (type(args.text) ~= "string" or #args.text > 200 or args.text:find("%c")) then
+			return false
+		end
+		return type(args.taskId) == "string" and T.taskDefs[args.taskId] ~= nil
 	end
 	return true
 end

@@ -8,7 +8,7 @@ import { agentRegistry } from '../src/contracts.ts';
 import { Brain } from '../src/brain.ts';
 import { Mailbox } from '../src/mailbox.ts';
 import { Memory } from '../src/memory.ts';
-import { MemoryCompressor, DEFAULT_COMPRESSION, parseSummary, type Summarizer } from '../src/npc/compression.ts';
+import { MAX_BATCH_EVENTS, MemoryCompressor, DEFAULT_COMPRESSION, parseSummary, type Summarizer } from '../src/npc/compression.ts';
 import { buildProfile, NpcCatalog, readNpcConfigFiles, validateNpcConfig } from '../src/npc/config.ts';
 import { buildContext } from '../src/npc/context.ts';
 import { missingMentions, NpcDialogueProvider, parseDecision, toGameAscii } from '../src/npc/dialogue.ts';
@@ -419,6 +419,71 @@ test('compression: long-term limits merge low-value memories and keep important 
   const rows = store.visibleMemories('ardan', 5, 50);
   assert.ok(rows.length <= DEFAULT_COMPRESSION.maxMemoriesPerSubject);
   assert.ok(rows.some((r) => r.summary === 'Epizod 0'), 'important memory is kept');
+});
+
+function compressionFixture(total: number) {
+  const now = Date.UTC(2026, 9, 30, 12);
+  const store = new NpcMemoryStore(new Memory(':memory:'), { maxEventsPerDay: 100_000, keepAboveLimitImportance: 6, duplicateWindowMs: 0 });
+  for (let i = 0; i < total; i++) {
+    store.addEvent(row({ eventKey: `e${i}`, text: `zdarzenie ${i}`, realAtMs: now - 9 * DAY + i }));
+  }
+  return { store, now };
+}
+
+test('compression: only rows the model read are deleted, in batches of 41, 100 and 2000', async () => {
+  for (const total of [41, 100, 2000]) {
+    const { store, now } = compressionFixture(total);
+    const read: number[] = [];
+    const counting: Summarizer = { summarize: async (_k, events) => { read.push(...events.map((e) => e.id)); return { summary: 'Streszczenie jednej partii zdarzen.', importance: 4 }; } };
+    const c = new MemoryCompressor(store, counting, { ...DEFAULT_COMPRESSION, maxBatchesPerRun: 1 }, () => now);
+    await c.run();
+    const left = store.db.prepare('SELECT COUNT(*) AS n FROM npc_events').get() as { n: number };
+    assert.equal(left.n, total - read.length, 'one pass deletes exactly what it read');
+    assert.ok(read.length <= MAX_BATCH_EVENTS);
+    const many = new MemoryCompressor(store, counting, { ...DEFAULT_COMPRESSION, maxBatchesPerRun: 100 }, () => now);
+    await many.run();
+    assert.equal(new Set(read).size, total, `every one of ${total} rows was read`);
+    assert.equal((store.db.prepare('SELECT COUNT(*) AS n FROM npc_events').get() as { n: number }).n, 0);
+  }
+});
+
+test('compression: a long day keeps later summaries instead of cutting them off', async () => {
+  const { store, now } = compressionFixture(90);
+  let n = 0;
+  const wordy: Summarizer = { summarize: async () => ({ summary: `Partia ${++n}: ${'x'.repeat(300)}`, importance: 4 }), };
+  await new MemoryCompressor(store, wordy, DEFAULT_COMPRESSION, () => now).run();
+  const texts = (store.db.prepare('SELECT summary FROM npc_memories').all() as { summary: string }[]).map((r) => r.summary).join(' ');
+  for (let i = 1; i <= n; i++) assert.ok(texts.includes(`Partia ${i}:`), `summary ${i} survives`);
+});
+
+test('compression: private lines stay out of public memories and a rumour stays a rumour, in either order', async () => {
+  for (const order of [['public', 'private'], ['private', 'public']]) {
+    const { store, now } = compressionFixture(0);
+    const day = now - 10 * 86_400_000;
+    order.forEach((visibility, i) => store.addEvent({
+      eventKey: `v${i}`, npcKey: 'mira', kind: 'witnessed', subjectGuid: null, actorName: 'A', text: `${visibility} ${i}`, source: i === 0 ? 'heard' : 'server_confirmed',
+      certainty: i === 0 ? 'rumor' : 'confirmed', visibility: visibility as 'public' | 'private', importance: 4, worldSessionId: 's', realAtMs: day + i,
+    }));
+    const rows: { text: string[] }[] = [];
+    const echo: Summarizer = { summarize: async (_k, events) => { rows.push({ text: events.map((e) => e.text) }); return { summary: events.map((e) => e.text).join(', ').padEnd(12, '.'), importance: 4 }; } };
+    await new MemoryCompressor(store, echo, DEFAULT_COMPRESSION, () => now).run();
+    assert.ok(rows.every((r) => r.text.length === 1), 'never summarised together');
+    const m = store.db.prepare('SELECT summary, visibility, certainty FROM npc_memories ORDER BY id').all() as { summary: string; visibility: string; certainty: string }[];
+    assert.equal(m.length, 2);
+    for (const row of m) assert.ok(row.summary.startsWith(row.visibility), JSON.stringify(row));
+    assert.deepEqual(m.map((r) => r.certainty), ['rumor', 'confirmed'], 'the rumour keeps its doubt');
+  }
+});
+
+test('compression: long-term merging keeps private and public apart', async () => {
+  const { store, now } = compressionFixture(0);
+  const insert = store.db.prepare(`INSERT INTO npc_memories (npc_key, subject_guid, kind, summary, participants_json, sources_json, certainty, visibility, importance,
+    from_ms, to_ms, batch_id, process_version, created_at_ms) VALUES ('mira', 7, 'episode', ?, '["A"]', '["heard"]', 'claimed', ?, 3, ?, ?, NULL, 1, 1)`);
+  for (let i = 0; i < 20; i++) insert.run(`${i % 2 ? 'tajne' : 'jawne'} ${i}`, i % 2 ? 'private' : 'public', now - 1000 + i, now - 1000 + i);
+  await new MemoryCompressor(store, summarizer(), { ...DEFAULT_COMPRESSION, maxBatchesPerRun: 0 }, () => now).run();
+  const merged = store.db.prepare(`SELECT summary, visibility FROM npc_memories WHERE kind = 'merged'`).all() as { summary: string; visibility: string }[];
+  assert.ok(merged.length >= 2);
+  for (const r of merged) assert.equal(r.summary.includes('tajne'), r.visibility === 'private');
 });
 
 test('compression: invalid model summaries are refused', () => {

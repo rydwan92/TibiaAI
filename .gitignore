@@ -12,3 +12,4 @@ runtime/
 node_modules/
 apps/brain/dist/
 *.tsbuildinfo
+__pycache__/

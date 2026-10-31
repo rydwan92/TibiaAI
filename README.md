@@ -1,7 +1,7 @@
 # TibiaAI
 Projekt Tibia z agentami AI: prywatne, lokalne laboratorium OpenTibia (Canary + OTClient), w którym NPC działają w prawdziwym świecie gry, a ich decyzje i pamięć dostarcza osobny proces Brain.
 
-Pierwsza scena: strażnik **Ardan** patroluje plac w Montag, przerywa patrol po alarmie treningowym, ostrzega i wraca na trasę. Zielarka **Mira** czeka przy stoisku, a stary strażnik **Brom** pilnuje swojego posterunku. Rozmawiają przez lokalny model (Ollama, bez chmury), każdy z własną tożsamością, pamięcią i relacjami z postaciami graczy, które przetrwają restart: [DOCS/NPC_RUNTIME.md](DOCS/NPC_RUNTIME.md). Każde zdarzenie i wynik działania trafiają do dziennika.
+Pierwsza scena: strażnik **Ardan** patroluje plac w Montag, przerywa patrol po alarmie treningowym, ostrzega i wraca na trasę. Zielarka **Mira** czeka przy stoisku, a stary strażnik **Brom** pilnuje swojego posterunku. Przewodnik **Tolek** naprawdę prowadzi gracza na miejsce, a **Lena** uczy angielskiego. Agenci mają przy imieniu znacznik `[AI]`. Rozmawiają przez lokalny model (Ollama, bez chmury), każdy z własną tożsamością, pamięcią i relacjami z postaciami graczy, które przetrwają restart: [DOCS/NPC_RUNTIME.md](DOCS/NPC_RUNTIME.md). Każde zdarzenie i wynik działania trafiają do dziennika.
 
 Agenci są opisani danymi w `packages/contracts/agents.json`. Nowy NPC to wpis w tym pliku, bez nowego kodu: [DOCS/AGENTS.md](DOCS/AGENTS.md).
 

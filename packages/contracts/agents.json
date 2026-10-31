@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n} {speaker} {quote}.",
+  "_comment": "Single source of agent definitions (ADR 0004). Read by the Lua runtime in Canary (copied by scripts/sync-server.ps1) and by Brain. Coordinates are on the data-canary map and are verified by the engine at startup (waypoint_check). In-game texts avoid diacritics (client encoding not verified). Placeholders: {name} {nth} {since} {n} {speaker} {quote} {place}. agentKey is the permanent identity; the name shown in game is built from npcName and aiMarker, so changing the marker never touches memory.",
   "timing": {
     "talkPauseTicks": 10,
     "brainReplyTicks": 14,
@@ -30,8 +30,382 @@
       "Valkyrie"
     ],
     "devCharacters": [
-      "Kael"
-    ]
+      "Kael",
+      "Sira",
+      "Ravn"
+    ],
+    "devTasks": [
+      "letter_for_brom"
+    ],
+    "kitStorage": 47200,
+    "kits": {
+      "knight": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3361,
+          "slot": "armor"
+        },
+        {
+          "id": 3355,
+          "slot": "head"
+        },
+        {
+          "id": 3559,
+          "slot": "legs"
+        },
+        {
+          "id": 3552,
+          "slot": "feet"
+        },
+        {
+          "id": 3264,
+          "slot": "left"
+        },
+        {
+          "id": 3412,
+          "slot": "right"
+        },
+        {
+          "id": 266,
+          "count": 10
+        },
+        {
+          "id": 268,
+          "count": 3
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 5
+        }
+      ],
+      "paladin": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3361,
+          "slot": "armor"
+        },
+        {
+          "id": 3355,
+          "slot": "head"
+        },
+        {
+          "id": 3559,
+          "slot": "legs"
+        },
+        {
+          "id": 3552,
+          "slot": "feet"
+        },
+        {
+          "id": 3350,
+          "slot": "left"
+        },
+        {
+          "id": 35562,
+          "slot": "right",
+          "contains": [
+            {
+              "id": 3447,
+              "count": 100
+            },
+            {
+              "id": 3447,
+              "count": 100
+            }
+          ]
+        },
+        {
+          "id": 266,
+          "count": 8
+        },
+        {
+          "id": 268,
+          "count": 5
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 5
+        },
+        {
+          "id": 17512,
+          "count": 25
+        }
+      ],
+      "sorcerer": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3361,
+          "slot": "armor"
+        },
+        {
+          "id": 3355,
+          "slot": "head"
+        },
+        {
+          "id": 3559,
+          "slot": "legs"
+        },
+        {
+          "id": 3552,
+          "slot": "feet"
+        },
+        {
+          "id": 3074,
+          "slot": "left"
+        },
+        {
+          "id": 3412,
+          "slot": "right"
+        },
+        {
+          "id": 266,
+          "count": 5
+        },
+        {
+          "id": 268,
+          "count": 10
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 5
+        },
+        {
+          "id": 17512,
+          "count": 25
+        }
+      ]
+    },
+    "kitSpells": {
+      "knight": [
+        "Bruise Bane",
+        "Brutal Strike",
+        "Cure Poison",
+        "Find Fiend",
+        "Find Person",
+        "Great Light",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Light",
+        "Wound Cleansing"
+      ],
+      "paladin": [
+        "Arrow Call",
+        "Blank Rune",
+        "Conjure Arrow",
+        "Conjure Explosive Arrow",
+        "Conjure Poisoned Arrow",
+        "Cure Poison",
+        "Destroy Field Rune",
+        "Find Fiend",
+        "Find Person",
+        "Great Light",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Intense Healing",
+        "Light",
+        "Light Healing",
+        "Magic Patch"
+      ],
+      "sorcerer": [
+        "Apprentice's Strike",
+        "Blank Rune",
+        "Buzz",
+        "Cancel Magic Shield",
+        "Creature Illusion",
+        "Cure Poison",
+        "Destroy Field Rune",
+        "Energy Beam",
+        "Energy Field Rune",
+        "Find Fiend",
+        "Find Person",
+        "Fire Bomb Rune",
+        "Fire Field Rune",
+        "Great Energy Beam",
+        "Great Fireball Rune",
+        "Great Light",
+        "Heavy Magic Missile Rune",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Ignite",
+        "Intense Healing",
+        "Light",
+        "Light Healing",
+        "Light Magic Missile Rune",
+        "Light Stone Shower Rune",
+        "Lightest Missile Rune",
+        "Magic Patch",
+        "Magic Shield",
+        "Poison Field Rune",
+        "Poison Wall Rune",
+        "Scorch",
+        "Stalagmite Rune",
+        "Summon Creature",
+        "Terra Strike",
+        "Ultimate Healing"
+      ]
+    }
+  },
+  "aiMarker": {
+    "format": "{name} [AI]",
+    "lookNote": "Postac prowadzona przez AI.",
+    "outfitAccent": {
+      "lookHead": 86
+    }
+  },
+  "places": {
+    "temple": {
+      "label": "swiatynia",
+      "position": {
+        "x": 5004,
+        "y": 4999,
+        "z": 7
+      },
+      "aliases": [
+        "swiatyni",
+        "swiatynia",
+        "swiatyne",
+        "swiatynie",
+        "swiatynia",
+        "temple",
+        "kosciol",
+        "kosciola"
+      ]
+    },
+    "square": {
+      "label": "plac",
+      "position": {
+        "x": 5008,
+        "y": 5005,
+        "z": 7
+      },
+      "aliases": [
+        "plac",
+        "placu",
+        "rynek",
+        "rynku",
+        "square"
+      ]
+    },
+    "herb_stall": {
+      "label": "stoisko Miry",
+      "position": {
+        "x": 5019,
+        "y": 5004,
+        "z": 7
+      },
+      "aliases": [
+        "stoisko",
+        "stoiska",
+        "zielarki",
+        "zielarka",
+        "zielarke",
+        "miry",
+        "mire",
+        "herbalist"
+      ]
+    },
+    "gate": {
+      "label": "brama",
+      "position": {
+        "x": 5018,
+        "y": 5012,
+        "z": 7
+      },
+      "aliases": [
+        "brama",
+        "bramy",
+        "brame",
+        "bramie",
+        "gate"
+      ]
+    },
+    "sealed_storeroom": {
+      "label": "zamkniety magazyn",
+      "position": {
+        "x": 5005,
+        "y": 4994,
+        "z": 7
+      },
+      "aliases": [
+        "magazyn",
+        "magazynu",
+        "storeroom"
+      ]
+    }
+  },
+  "skills": {
+    "guide": {
+      "requires": [
+        "speak",
+        "walk"
+      ],
+      "intents": [
+        "guide_to",
+        "guide_cancel"
+      ],
+      "params": {
+        "waitDistance": 4,
+        "resumeDistance": 3,
+        "leftBehindTicks": 25,
+        "maxTicks": 240,
+        "holdTicks": 8
+      },
+      "cancelWords": [
+        "stop",
+        "stoj",
+        "anuluj",
+        "zatrzymaj sie",
+        "cancel",
+        "wystarczy"
+      ]
+    },
+    "tasks": {
+      "requires": [
+        "speak"
+      ],
+      "intents": [
+        "task_step"
+      ]
+    }
   },
   "actorTypes": {
     "npc": {
@@ -146,7 +520,8 @@
         "alarmComment": "To {n}. alarm cwiczebny w tej zmianie. Zachowajcie spokoj.",
         "greetRumor": "",
         "busyReply": "Hmm?"
-      }
+      },
+      "marked": true
     },
     "mira": {
       "npcName": "Mira",
@@ -217,7 +592,12 @@
         "alarmComment": "",
         "greetRumor": "Slyszalam, jak {speaker} mowil {since}: \"{quote}\"",
         "busyReply": "Slucham cie, kochanienki."
-      }
+      },
+      "marked": true,
+      "skills": [
+        "tasks"
+      ],
+      "shop": true
     },
     "brom": {
       "npcName": "Brom",
@@ -270,6 +650,203 @@
         "busyReply": "Co mowisz, przyjacielu?",
         "alarmComment": "",
         "greetRumor": ""
+      },
+      "marked": true,
+      "skills": [
+        "tasks"
+      ]
+    },
+    "tolek": {
+      "npcName": "Tolek",
+      "addressNames": [
+        "Tolku",
+        "Tolka",
+        "Tolkiem"
+      ],
+      "description": "Tolek, a guide of Montag",
+      "actor": "npc",
+      "outfit": {
+        "lookType": 129,
+        "lookHead": 86,
+        "lookBody": 94,
+        "lookLegs": 79,
+        "lookFeet": 114,
+        "lookAddons": 0
+      },
+      "speed": 110,
+      "spawn": "guide_post",
+      "behavior": {
+        "type": "stationary",
+        "home": "guide_post"
+      },
+      "skills": [
+        "guide"
+      ],
+      "guidePlaces": [
+        "temple",
+        "square",
+        "herb_stall",
+        "gate",
+        "sealed_storeroom"
+      ],
+      "waypoints": {
+        "guide_post": {
+          "x": 5005,
+          "y": 5004,
+          "z": 7
+        },
+        "temple_safe": {
+          "x": 5008,
+          "y": 4999,
+          "z": 7
+        }
+      },
+      "routes": {},
+      "greeting": {
+        "words": [
+          "hi",
+          "hello",
+          "hey",
+          "witaj",
+          "czesc",
+          "siema",
+          "dzien dobry"
+        ],
+        "range": 4,
+        "cooldownSeconds": 8
+      },
+      "hearing": {
+        "range": 7,
+        "yellRange": 30
+      },
+      "alarm": {
+        "zones": [
+          "montag_gate"
+        ],
+        "moveTo": "temple_safe",
+        "yell": false,
+        "rewarnSeconds": 0
+      },
+      "marked": true,
+      "texts": {
+        "greetFallback": "Czesc, {name}! Tolek, przewodnik. Chcesz gdzies dojsc?",
+        "greetFirst": "Czesc, {name}! Tolek jestem, przewodnik. Powiedz, dokad cie zaprowadzic.",
+        "greetRepeat": "O, {name}! Znowu razem, {nth}. raz, ostatnio {since}.",
+        "greetDuringAlarm": "Teraz alarm, {name}. Do swiatyni, szybko!",
+        "busyReply": "Mhm?",
+        "alarmStart": "Alarm. Ide do swiatyni, chodz tez.",
+        "alarmArrive": "Jestem w swiatyni.",
+        "alarmBlocked": "Nie moge dojsc do swiatyni, zostaje tu.",
+        "alarmRewarn": "",
+        "alarmClear": "Po alarmie. Wracam na plac.",
+        "alarmComment": "",
+        "greetRumor": "",
+        "guideStart": "Jasne, {name}. Prowadze na miejsce: {place}. Trzymaj sie blisko.",
+        "guideBusy": "Prowadze teraz kogos innego, {name}. Zaczekaj chwile.",
+        "guideNoPath": "Nie znam drogi, {name}: {place} jest teraz niedostepne.",
+        "guideWait": "Hej, {name}, zostajesz w tyle! Czekam.",
+        "guideResume": "Dobra, idziemy dalej.",
+        "guideArrived": "Jestesmy, {name}. To tutaj: {place}.",
+        "guideLeftBehind": "Nie widze cie, {name}. Wracam na plac.",
+        "guideCancelled": "Jak chcesz, {name}. Wracam na plac.",
+        "guideBlocked": "Droga zablokowana, {name}. Nie dojde tam teraz.",
+        "guideAlarm": "Przerywam, {name}. Alarm! Kieruj sie do swiatyni.",
+        "guideTimeout": "Za dlugo to trwa, {name}. Wracam na plac."
+      }
+    },
+    "lena": {
+      "npcName": "Lena",
+      "addressNames": [
+        "Leno",
+        "Leny",
+        "Lene"
+      ],
+      "description": "Lena, an English teacher in Montag",
+      "actor": "npc",
+      "outfit": {
+        "lookType": 138,
+        "lookHead": 86,
+        "lookBody": 84,
+        "lookLegs": 93,
+        "lookFeet": 114,
+        "lookAddons": 0
+      },
+      "speed": 110,
+      "spawn": "lesson_bench",
+      "behavior": {
+        "type": "stationary",
+        "home": "lesson_bench"
+      },
+      "skills": [
+        "guide"
+      ],
+      "guidePlaces": [
+        "temple",
+        "square"
+      ],
+      "waypoints": {
+        "lesson_bench": {
+          "x": 5007,
+          "y": 5002,
+          "z": 7
+        },
+        "temple_safe": {
+          "x": 5009,
+          "y": 4998,
+          "z": 7
+        }
+      },
+      "routes": {},
+      "greeting": {
+        "words": [
+          "hi",
+          "hello",
+          "hey",
+          "witaj",
+          "czesc",
+          "siema",
+          "dzien dobry"
+        ],
+        "range": 3,
+        "cooldownSeconds": 8
+      },
+      "hearing": {
+        "range": 7,
+        "yellRange": 30
+      },
+      "alarm": {
+        "zones": [
+          "montag_gate"
+        ],
+        "moveTo": "temple_safe",
+        "yell": false,
+        "rewarnSeconds": 0
+      },
+      "marked": true,
+      "texts": {
+        "greetFallback": "Hello, {name}! Jestem Lena, ucze angielskiego. Chcesz sprobowac?",
+        "greetFirst": "Hello, {name}! Jestem Lena, ucze angielskiego.",
+        "greetRepeat": "Hello again, {name}! To juz {nth}. raz, ostatnio {since}.",
+        "greetDuringAlarm": "Przerywamy lekcje, {name}. Alarm, do swiatyni!",
+        "busyReply": "Sorry, could you repeat?",
+        "alarmStart": "Alarm! Przerywamy lekcje. Ide do swiatyni.",
+        "alarmArrive": "Jestem w swiatyni.",
+        "alarmBlocked": "Nie moge dojsc do swiatyni.",
+        "alarmRewarn": "",
+        "alarmClear": "Po alarmie. Wracam na lawke.",
+        "alarmComment": "",
+        "greetRumor": "",
+        "guideStart": "Let's go, {name}. Prowadze: {place}.",
+        "guideBusy": "Sorry, {name}, prowadze teraz kogos innego.",
+        "guideNoPath": "Sorry, {name}, nie znam drogi: {place}.",
+        "guideWait": "Wait for me, {name}! Czekam.",
+        "guideResume": "OK, let's continue.",
+        "guideArrived": "We are here, {name}. To jest {place}.",
+        "guideLeftBehind": "Nie widze cie, {name}. Wracam na lawke.",
+        "guideCancelled": "OK, {name}. Wracam na lawke.",
+        "guideBlocked": "The way is blocked, {name}. Droga zablokowana.",
+        "guideAlarm": "Przerywamy, {name}. Alarm, do swiatyni!",
+        "guideTimeout": "Trwa to zbyt dlugo, {name}. Wracam na lawke."
       }
     }
   },
@@ -277,7 +854,10 @@
     "say",
     "patrol",
     "move_to",
-    "stop"
+    "stop",
+    "guide_start",
+    "guide_cancel",
+    "task_step"
   ],
   "limits": {
     "maxTtlMs": 10000,

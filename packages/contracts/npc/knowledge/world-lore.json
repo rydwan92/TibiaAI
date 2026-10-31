@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Story of this world, written by the project. It is fiction agreed for the game, not a fact about the server, so it never replaces mechanics. It must stay consistent with the map: the town is safe, the wild around it is not.",
+  "source": "lore projektu",
+  "serverVersion": "canary fe0f932, protokol 15.11",
+  "entries": [
+    {
+      "id": "lore-founding",
+      "category": "lore",
+      "scope": "common",
+      "tags": [
+        "historia",
+        "powstalo",
+        "zalozenie",
+        "dawniej",
+        "montag",
+        "poczatki",
+        "swiatynia"
+      ],
+      "text": "Montag wyroslo wokol swiatyni, przy ktorej wedrowcy szukali schronienia. Dlatego do dzis swiatynia jest miejscem, gdzie nikt nie walczy."
+    },
+    {
+      "id": "lore-council",
+      "category": "factions",
+      "scope": "common",
+      "tags": [
+        "rada",
+        "rzadzi",
+        "wladza",
+        "burmistrz",
+        "krol",
+        "dowodca"
+      ],
+      "text": "Montag nie ma krola. Sprawami miasta zajmuje sie rada, a straz jej podlega."
+    },
+    {
+      "id": "lore-quiet",
+      "category": "lore",
+      "scope": "common",
+      "tags": [
+        "niebezpiecznie",
+        "bezpiecznie",
+        "bestie",
+        "potwory",
+        "spokojnie",
+        "alarm",
+        "wojna"
+      ],
+      "text": "W samym Montag jest bezpiecznie, ale za miastem zyja bestie: wilki, pajaki, a glebiej gorsze rzeczy. Straz cwiczy alarmy, bo starsi mowia, ze spokoj nie trwa wiecznie."
+    },
+    {
+      "id": "lore-trade",
+      "category": "economy",
+      "scope": "common",
+      "tags": [
+        "kupcy",
+        "handel",
+        "targ",
+        "karawana",
+        "sklep",
+        "pieniadze"
+      ],
+      "text": "Kupcy przestali tu przyjezdzac, gdy droga na poludnie stala sie niepewna. Plac czeka na nowych, ale na razie nikt tu nie handluje."
+    },
+    {
+      "id": "lore-gate",
+      "category": "lore",
+      "scope": "guard",
+      "tags": [
+        "brama",
+        "potyczka",
+        "walka",
+        "historia"
+      ],
+      "text": "Przy bramie doszlo kiedys do potyczki, w ktorej straz poniosla ofiary. Straznicy pamietaja o tym do dzis."
+    },
+    {
+      "id": "lore-herbs-craft",
+      "category": "lore",
+      "scope": "herbalist",
+      "tags": [
+        "ziola",
+        "napar",
+        "herbata",
+        "przepis",
+        "choroba",
+        "leczenie"
+      ],
+      "text": "Mira parzy napary z ziol z zachodnich lasow. Znaja je wszyscy w Montag, choc mikstury z nich nie powstaja."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 -- Generic agent controller: deterministic state machine driven by agent definitions.
--- States: IDLE -> PATROL | HOME (by behavior) ; ALERT -> RETURN on alarms ; COMMAND_MOVE, STOPPED.
--- TALK is a short pause (talkUntilTick). Priority: stop > alarm > talk > routine.
+-- States: IDLE -> PATROL | HOME (by behavior) ; ALERT -> RETURN on alarms ; COMMAND_MOVE, STOPPED ;
+-- GUIDE -> RETURN (guide.lua). TALK is a short pause (talkUntilTick).
+-- Priority: stop > alarm > guide > talk > routine. While guiding, move_to and patrol are refused.
 -- Ticks come from a GlobalEvent (NPC onThink only runs while a player sees the NPC,
 -- Npc::manageIdle in Canary v3.6.1).
 local T = TibiaAI
@@ -144,6 +145,7 @@ end
 
 local function agentAlarmStart(agent, npc, zoneId, byName)
 	local def = T.agentDef(agent)
+	T.guideEnd(agent, npc, "alarm")
 	agent.alarmZone = zoneId
 	agent.resumeIndex = agent.routeIndex
 	agent.mover = nil
@@ -210,11 +212,21 @@ end
 
 -- Speech reaches an NPC through Canary only when the player is in hearing range. A message goes to
 -- one NPC: the one it names, else the one the player is talking to, else (for a greeting) the
--- closest. Everything else within hearing is overheard and never answered.
+-- closest. Everything else within hearing is overheard and never answered. Names come from npcName
+-- and addressNames, never from the marked name shown in game.
 function T.namesNpc(def, message)
+	-- Only the opening counts ("Miro, ...", "Witaj Miro"): a name later in a sentence is talk about
+	-- someone ("zanioslem list do Broma"), not a call to them.
+	local first, second = message:lower():match("^[%p%s]*(%S+)%s*(%S*)")
+	local text = " " .. (first or "") .. " " .. (second or "") .. " "
+	for _, name in ipairs(def.addressNames or {}) do
+		if text:find("%A" .. name:lower() .. "%A") then
+			return true
+		end
+	end
 	-- Polish vocative: Ardan -> Ardanie, Mira -> Miro.
 	local stem = def.npcName:lower():gsub("[aeiouy]$", "")
-	return (" " .. message:lower() .. " "):find("%A" .. stem .. "%a?%a?%a?%A") ~= nil
+	return text:find("%A" .. stem .. "%a?%a?%a?%A") ~= nil
 end
 
 local function namesOtherNpc(agent, message)
@@ -263,6 +275,17 @@ function T.onNpcSay(npc, creature, msgType, message)
 		return
 	end
 	local guid = player:getGuid()
+	local guided = agent.guide ~= nil and agent.guide.playerGuid == guid
+	-- A shop opens without Brain: buying must keep working when the model is away.
+	if def.shop and distance <= def.greeting.range and (" " .. message:lower() .. " "):find("[%s,]trade[%s,.!?]") then
+		npc:turnToCreature(player)
+		npc:openShopWindow(player)
+		return
+	end
+	-- Cancelling a walk needs neither Brain nor the model.
+	if guided and T.guideIsCancel(message) then
+		return T.guideEnd(agent, npc, "cancelled")
+	end
 	local now = os.time()
 	if agent.lastSpeech[guid] and now - agent.lastSpeech[guid] < T.timing.speechCooldownSeconds then
 		return
@@ -270,9 +293,9 @@ function T.onNpcSay(npc, creature, msgType, message)
 	agent.lastSpeech[guid] = now
 
 	local greeting = isGreeting(def, message)
-	local addressed = distance <= def.greeting.range and not namesOtherNpc(agent, message)
-		and (T.namesNpc(def, message) or inConversation(agent, guid) or (greeting and isClosestAgent(agent, npc, player)))
-	local fields = { playerGuid = guid, playerName = player:getName(), text = message:sub(1, 300), worldMinutes = T.worldMinutes() }
+	local addressed = (guided or distance <= def.greeting.range) and not namesOtherNpc(agent, message)
+		and (guided or T.namesNpc(def, message) or inConversation(agent, guid) or (greeting and isClosestAgent(agent, npc, player)))
+	local fields = { playerGuid = guid, playerName = player:getName(), text = message:sub(1, 300), worldMinutes = T.worldMinutes(), tasks = T.taskStates(player) }
 	if not addressed then
 		fields.addressed, fields.distance = false, distance
 		T.bridgeEmit(agent.key, "player_said", fields)
@@ -367,6 +390,10 @@ function T.agentOnTick(agent, npc)
 		return
 	end
 
+	if agent.state == "GUIDE" then
+		return T.guideTick(agent, npc)
+	end
+
 	if agent.tick < agent.talkUntilTick or agent.tick < agent.waitUntilTick then
 		return
 	end
@@ -400,6 +427,9 @@ function T.agentExecute(agent, cmd, report)
 	if agent.alarmZone and (action == "patrol" or action == "move_to") then
 		return report("rejected", "alarm_active")
 	end
+	if agent.guide and (action == "patrol" or action == "move_to") then
+		return report("rejected", "guide_active")
+	end
 	if action == "say" then
 		if agent.fallbackUsed[cmd.correlationId] then
 			return report("rejected", "superseded_by_fallback")
@@ -430,7 +460,28 @@ function T.agentExecute(agent, cmd, report)
 			report(ok and "completed" or "failed", reason, T.posTable(n:getPosition()))
 		end, { commandId = cmd.commandId })
 		return
+	elseif action == "guide_start" then
+		if agent.fallbackUsed[cmd.correlationId] then
+			return report("rejected", "superseded_by_fallback")
+		end
+		takePendingReply(agent, cmd.correlationId)
+		local ok, reason = T.guideStart(agent, npc, tonumber(args.toPlayerGuid), args.placeId, args.text or "", cmd.commandId)
+		return report(ok and "completed" or "rejected", ok and "guide_started" or reason)
+	elseif action == "task_step" then
+		if agent.fallbackUsed[cmd.correlationId] then
+			return report("rejected", "superseded_by_fallback")
+		end
+		takePendingReply(agent, cmd.correlationId)
+		local ok, reason = T.taskStep(agent, npc, tonumber(args.toPlayerGuid), args.taskId, args.stepId, args.text or "", cmd.commandId)
+		return report(ok and "completed" or "rejected", ok and "task_step_done" or reason)
+	elseif action == "guide_cancel" then
+		if not agent.guide or agent.guide.playerGuid ~= tonumber(args.toPlayerGuid) then
+			return report("rejected", "guide_not_active")
+		end
+		T.guideEnd(agent, npc, "cancelled")
+		return report("completed", "guide_cancelled")
 	elseif action == "stop" then
+		T.guideEnd(agent, npc, "stopped")
 		agent.mover = nil
 		setState(agent, "STOPPED", "command")
 		return report("completed", "stopped", T.posTable(npc:getPosition()))
@@ -446,6 +497,7 @@ function T.agentStatus(agent)
 		routeId = agent.routeId,
 		routeIndex = agent.routeIndex,
 		moving = agent.mover and agent.mover.label or nil,
+		guide = agent.guide and { placeId = agent.guide.placeId, playerGuid = agent.guide.playerGuid, waiting = agent.guide.waiting, ticks = agent.guide.ticks } or nil,
 		position = npc and T.posTable(npc:getPosition()) or nil,
 		planRevision = agent.planRevision,
 	}

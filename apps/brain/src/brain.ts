@@ -8,8 +8,10 @@ import {
 import type { Mailbox } from './mailbox.ts';
 import type { Memory } from './memory.ts';
 import { applyConfirmedReply } from './npc/confirmed.ts';
+import { taskDefinitions } from './agents.ts';
 import type { DialoguePlan } from './npc/dialogue.ts';
 import { extractClaims, isConversationTurn, perceive } from './npc/perception.ts';
+import { applySentiment } from './npc/relations.ts';
 import type { NpcMemoryStore } from './npc/store.ts';
 import type { Intent, Provider } from './providers/provider.ts';
 import { RulesProvider } from './providers/rules.ts';
@@ -25,6 +27,7 @@ const EVENT_MAX_AGE_MS = 15_000; // older observations (e.g. queued while Brain 
 const RETENTION_INTERVAL_MS = 10 * 60_000;
 const RUMOR_MAX_AGE_MS = 10 * 60_000; // ADR 0005: only fresh statements are passed on
 const DECISION_MAX_AGE_MS = 20_000; // a slow provider's answer older than this is dropped
+const MAX_EFFECT_TRIES = 5;
 
 interface Scheduled {
   dueAtMs: number;
@@ -41,7 +44,8 @@ export class Brain {
   private readonly memory: Memory;
   private readonly log: Logger;
   private readonly now: () => number;
-  readonly provider: Provider;
+  private provider: Provider;
+  private readonly effectFailures = new Map<string, number>();
   private readonly npcStore: NpcMemoryStore | null;
   private latestWorld: WorldStatus | null = null;
 
@@ -135,6 +139,7 @@ export class Brain {
       }
       this.log('event_received', { eventId: ev.messageId, type: ev.payload.type, sequence: ev.sequence, stale });
       if (stale) continue; // remembered, but no action for old sessions/observations
+      this.dropStaleContinuations(ev);
 
       const heard = ev.payload.type === 'player_greeted' ? this.memory.latestHeard(ev.agentKey, nowMs - RUMOR_MAX_AGE_MS) : undefined;
       const decided = this.provider.decide(ev, {
@@ -142,6 +147,7 @@ export class Brain {
         encounterBefore,
         alarmsThisSession: this.memory.countObservations(ev.worldSessionId, 'training_alarm_started', ev.agentKey),
         alarmActive: this.latestWorld?.agents[ev.agentKey]?.alarmActive ?? false,
+        guide: this.latestWorld?.agents[ev.agentKey]?.guide,
         latestHeard: heard && { ...heard, speakerName: agentRegistry().get(heard.speakerKey)?.npcName ?? heard.speakerKey },
         nowMs,
       });
@@ -155,6 +161,16 @@ export class Brain {
     }
   }
 
+  /** The second line of a reply is dropped once the player moved on or an alarm took over. */
+  private dropStaleContinuations(ev: Envelope<EventPayload>): void {
+    const p = ev.payload;
+    const alarm = p.type === 'training_alarm_started';
+    const newTurn = isConversationTurn(ev) && (p.type === 'player_greeted' || p.type === 'player_said');
+    if (!alarm && !newTurn) return;
+    this.scheduled = this.scheduled.filter((s) => !(s.intent.plan?.continuation && s.event.agentKey === ev.agentKey &&
+      (alarm || (newTurn && s.intent.toPlayerGuid === (p as { playerGuid: number }).playerGuid))));
+  }
+
   /** What this NPC perceived goes to its own memory, including claims the player made directly. */
   private rememberPerception(ev: Envelope<EventPayload>): void {
     if (!this.npcStore) return;
@@ -163,6 +179,11 @@ export class Brain {
     const p = ev.payload;
     if (isConversationTurn(ev) && (p.type === 'player_greeted' || p.type === 'player_said')) {
       for (const c of extractClaims(p.text)) this.npcStore.setClaim(ev.agentKey, p.playerGuid, c.key, c.value, ev.messageId, ev.createdAtMs);
+    }
+    // Trust grows from what the engine confirmed, never from what was said about it.
+    if (p.type === 'task_step_done') {
+      const step = taskDefinitions()[p.taskId]?.steps.find((s) => s.id === p.stepId);
+      if (step?.trust) applySentiment(this.npcStore, ev.agentKey, p.playerGuid, step.trust, `zlecenie: ${p.taskId}`, ev.messageId, ev.createdAtMs);
     }
   }
 
@@ -191,7 +212,18 @@ export class Brain {
       }
       const r = parsed.value;
       this.memory.applyResult(r, nowMs);
-      this.applyReplyEffects(r, nowMs);
+      try {
+        this.applyReplyEffects(r, nowMs);
+      } catch (err) {
+        // The file stays, so the next tick retries; the effects were rolled back as a whole.
+        const tries = (this.effectFailures.get(name) ?? 0) + 1;
+        this.effectFailures.set(name, tries);
+        this.log('reply_effects_failed', { commandId: r.payload.commandId, tries, error: (err as Error).message });
+        if (tries < MAX_EFFECT_TRIES) continue;
+        this.mailbox.archive('results', name, true);
+        this.effectFailures.delete(name);
+        continue;
+      }
       this.mailbox.archive('results', name);
       this.log('result_received', { commandId: r.payload.commandId, status: r.payload.status, reasonCode: r.payload.reasonCode,
         duplicate: r.payload.duplicate ?? false, correlationId: r.correlationId });
@@ -201,13 +233,18 @@ export class Brain {
   /** Speech counts as said only when the engine reports it, and its effects apply exactly once. */
   private applyReplyEffects(r: Envelope<ResultPayload>, nowMs: number): void {
     if (!this.npcStore || r.payload.duplicate) return;
-    const row = this.memory.takePlan(r.payload.commandId, r.payload.status);
+    const row = this.memory.pendingPlan(r.payload.commandId, r.payload.status);
     if (!row) return;
-    if (r.payload.status === 'completed') {
-      applyConfirmedReply(this.npcStore, {
-        commandId: r.payload.commandId, npcKey: r.agentKey, text: row.text, worldSessionId: r.worldSessionId, atMs: nowMs, plan: row.plan as DialoguePlan,
-      });
-    } else {
+    const store = this.npcStore;
+    this.memory.tx(() => {
+      if (r.payload.status === 'completed') {
+        applyConfirmedReply(store, {
+          commandId: r.payload.commandId, npcKey: r.agentKey, text: row.text, worldSessionId: r.worldSessionId, atMs: nowMs, plan: row.plan as DialoguePlan,
+        });
+      }
+      this.memory.markPlanApplied(r.payload.commandId);
+    });
+    if (r.payload.status !== 'completed') {
       this.log('reply_not_delivered', { commandId: r.payload.commandId, status: r.payload.status, reasonCode: r.payload.reasonCode });
     }
   }
@@ -218,10 +255,20 @@ export class Brain {
     for (const s of due) {
       if (s.event.worldSessionId !== this.worldSessionId) continue;
       const planRevision = world?.agents[s.event.agentKey]?.planRevision ?? 0;
-      const args: Record<string, string> = { text: s.intent.text };
+      const args: Record<string, string> = s.intent.action === 'guide_cancel' ? {} : { text: s.intent.text };
       if (s.intent.toPlayerGuid !== undefined) args.toPlayerGuid = String(s.intent.toPlayerGuid);
-      this.sendCommand(s.event.worldSessionId, s.event.agentKey, s.event.messageId, 'say', args, world?.nextCommandSeq ?? 1, nowMs, planRevision, s.intent.plan);
+      if (s.intent.placeId !== undefined) args.placeId = s.intent.placeId;
+      if (s.intent.taskId !== undefined) {
+        args.taskId = s.intent.taskId;
+        args.stepId = s.intent.stepId ?? '';
+      }
+      this.sendCommand(s.event.worldSessionId, s.event.agentKey, s.event.messageId, s.intent.action, args, world?.nextCommandSeq ?? 1, nowMs, planRevision, s.intent.plan);
     }
+  }
+
+  /** The model can come up after Brain: rules hold the world until then. */
+  useProvider(provider: Provider): void {
+    this.provider = provider;
   }
 
   sendCommand(session: string, agentKey: string, correlationId: string, action: CommandPayload['action'],
@@ -243,8 +290,16 @@ export class Brain {
     }
     let seq = Math.max(worldNextSeq, this.memory.maxCommandSeq(session) + 1);
     while (this.mailbox.commandSlotTaken(session, seq)) seq++;
-    this.memory.insertCommand(env, seq, plan);
-    this.mailbox.writeCommand(env, seq);
+    // One step: Lua waits for consecutive numbers, so a number must not be spent without a file.
+    try {
+      this.memory.tx(() => {
+        this.memory.insertCommand(env, seq, plan);
+        this.mailbox.writeCommand(env, seq);
+      });
+    } catch (err) {
+      this.log('command_write_failed', { action, seq, error: (err as Error).message });
+      return null;
+    }
     this.log('command_sent', { commandId: env.payload.commandId, seq, action, args, correlationId });
     return env.payload.commandId;
   }

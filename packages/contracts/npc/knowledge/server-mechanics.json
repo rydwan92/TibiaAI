@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Mechanics of this server version, each with its evidence. Add an entry only with a source from this pinned version: guides for other Tibia versions do not count.",
+  "source": "konfiguracja i pomiary tego serwera",
+  "serverVersion": "canary fe0f932, protokol 15.11",
+  "entries": [
+    {
+      "id": "mech-no-pvp",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "pvp",
+        "atak",
+        "gracz",
+        "walka",
+        "zabic"
+      ],
+      "text": "Ten swiat jest no-pvp: gracze nie moga atakowac sie nawzajem.",
+      "source": "scripts/sync-server.ps1, worldType"
+    },
+    {
+      "id": "mech-potion-delay",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "mikstura",
+        "potion",
+        "leczenie",
+        "cooldown"
+      ],
+      "text": "Po uzyciu mikstury nastepna zadziala dopiero po okolo sekundzie.",
+      "source": "iteracja 0010, zmierzone 1003-1004 ms"
+    },
+    {
+      "id": "mech-forge-off",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "forge",
+        "fiendish",
+        "kuznia"
+      ],
+      "text": "Forge jest na tym serwerze wylaczony: nie ma potworow Fiendish.",
+      "source": "scripts/sync-server.ps1, forgeFiendishLimit = 0"
+    },
+    {
+      "id": "mech-ai-marker",
+      "category": "mechanics",
+      "scope": "common",
+      "tags": [
+        "ai",
+        "znacznik",
+        "bot",
+        "sztuczna",
+        "inteligencja",
+        "czlowiek",
+        "prawdziwy"
+      ],
+      "text": "Znacznik [AI] przy imieniu oznacza postac prowadzona przez lokalna sztuczna inteligencje. Zwykli NPC go nie maja.",
+      "source": "packages/contracts/agents.json, aiMarker"
+    },
+    {
+      "id": "mech-vocations",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "profesja",
+        "profesje",
+        "klasa",
+        "knight",
+        "paladin",
+        "sorcerer",
+        "druid",
+        "monk",
+        "rycerz",
+        "mag",
+        "lucznik",
+        "vocation"
+      ],
+      "text": "Profesje na tym serwerze to Knight, Paladin, Sorcerer, Druid i Monk. Po awansie: Elite Knight, Royal Paladin, Master Sorcerer, Elder Druid i Exalted Monk.",
+      "source": "data/XML/vocations.xml"
+    },
+    {
+      "id": "mech-potions",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "mikstura",
+        "mikstury",
+        "potion",
+        "leczy",
+        "leczenie",
+        "mana",
+        "zdrowie"
+      ],
+      "text": "Zwykla mikstura zdrowia leczy 125 do 175 punktow, zwykla mikstura many daje 75 do 125 many. Mocniejsze wymagaja poziomu 50 albo 80 i odpowiedniej profesji.",
+      "source": "data/scripts/actions/items/potions.lua"
+    },
+    {
+      "id": "mech-flask",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "flaszka",
+        "flaszki",
+        "flask",
+        "butelka",
+        "pusta",
+        "capacity"
+      ],
+      "text": "Komenda !flask on wylacza puste flaszki po miksturach, a !flask off je przywraca.",
+      "source": "data/scripts/talkactions/player/flask.lua"
+    },
+    {
+      "id": "mech-rates",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "doswiadczenie",
+        "exp",
+        "poziom",
+        "level",
+        "mnoznik",
+        "rate",
+        "loot",
+        "lup",
+        "expienie"
+      ],
+      "text": "Doswiadczenie, umiejetnosci, magia i lup maja tu mnoznik 1x, bez etapow.",
+      "source": "runtime config.lua: rateExp, rateSkill, rateMagic, rateLoot, rateUseStages"
+    },
+    {
+      "id": "mech-commands",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "komenda",
+        "komendy",
+        "commands",
+        "polecenia",
+        "online",
+        "bless",
+        "autoloot",
+        "bank",
+        "balance"
+      ],
+      "text": "Komendy gracza: !commands pokazuje liste. Sa tez !online, !serverinfo, !aol, !bless, !autoloot, !balance, !deposit, !withdraw i !transfer.",
+      "source": "data/scripts/talkactions/player"
+    },
+    {
+      "id": "mech-account",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "konto",
+        "postac",
+        "postacie",
+        "druga",
+        "zalogowac",
+        "logowanie",
+        "mc"
+      ],
+      "text": "Na jednym koncie moze byc zalogowana tylko jedna postac naraz.",
+      "source": "runtime config.lua: maxPlayersOnlinePerAccount"
+    },
+    {
+      "id": "mech-idle",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "afk",
+        "bezczynny",
+        "wyrzuca",
+        "kick",
+        "idle",
+        "wyrzucilo"
+      ],
+      "text": "Postac bezczynna przez 15 minut jest wyrzucana z gry.",
+      "source": "runtime config.lua: kickIdlePlayerAfterMinutes"
+    },
+    {
+      "id": "mech-death",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "smierc",
+        "umrzec",
+        "zginac",
+        "zginalem",
+        "umarlem",
+        "kara",
+        "strata"
+      ],
+      "text": "Po smierci postac wraca do swiatyni, traci doswiadczenie i moze stracic plecak z zawartoscia.",
+      "source": "iteracja 0013: postac Kael stracila poziom i plecak po smierci"
+    },
+    {
+      "id": "mech-spawns",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "potwory",
+        "potwor",
+        "polowanie",
+        "polowac",
+        "expic",
+        "expienie",
+        "dzicz",
+        "bestie",
+        "monster",
+        "hunt",
+        "walka"
+      ],
+      "text": "Potwory zyja na calej mapie. Tuz przy miastach na powierzchni jest spokojnie, a im dalej i im glebiej, tym sa silniejsze. Pietro w dol znaczy tyle, co okolo 60 pol dalej.",
+      "source": "tools/make_spawns.py, game/world/canary-monster.xml (2339 potworow)"
+    },
+    {
+      "id": "mech-travel",
+      "category": "mechanics",
+      "scope": "server_mechanics",
+      "tags": [
+        "miasta",
+        "miasto",
+        "podroz",
+        "teleport",
+        "statek",
+        "droga",
+        "alexandria",
+        "thalom",
+        "katorga",
+        "nahag",
+        "tihamah",
+        "strongarm"
+      ],
+      "text": "Na mapie jest 7 miast: Montag, Tihamah, Nahag Village, Alexandria, Thalom, Katorga i Strongarm. Z Montag dojdziesz i wrocisz pieszo oraz przez teleporty z Nahag Village, Alexandrii i Thalom. Z Katorgi nie ma drogi powrotnej, a Tihamah i Strongarm sa odciete. Nie ma tu statkow.",
+      "source": "runtime/atlas: 180 teleportow, przejscie po mapie z silnika, iteracja 0014"
+    }
+  ]
+}

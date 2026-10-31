@@ -95,6 +95,14 @@ function T.runSelftest()
 		check("control char rejected", reason(cmd(nil, { args = { text = "a\nb" } })) == "invalid_args")
 		check("npc named in the vocative", T.namesNpc({ npcName = "Ardan" }, "Ardanie, jak sie masz?") and T.namesNpc({ npcName = "Mira" }, "Witaj Miro"))
 		check("other words do not name the npc", not T.namesNpc({ npcName = "Ardan" }, "Witaj straznika"))
+		check("a name later in the sentence is not a call", not T.namesNpc({ npcName = "Brom" }, "Miro, zanioslem list do Broma"))
+		check("a greeting before the name still calls", T.namesNpc({ npcName = "Brom" }, "Witaj Bromie, co slychac"))
+		check("addressNames cover irregular forms", T.namesNpc({ npcName = "Tolek", addressNames = { "Tolku" } }, "Tolku, pokaz droge"))
+		check("marker changes only the shown name", T.displayName({ npcName = "Ardan", marked = true }) == "Ardan [AI]" and T.displayName({ npcName = "Zwykly" }) == "Zwykly")
+		check("cancel word recognised", T.guideIsCancel("stop, wystarczy!") and not T.guideIsCancel("koniec lekcji"))
+		check("task definitions loaded", T.taskDefs.letter_for_brom ~= nil and #T.taskDefs.letter_for_brom.steps == 3)
+		check("task step for an unknown task refused", reason(cmd(nil, { action = "task_step", args = { taskId = "nothing", stepId = "accept", toPlayerGuid = "5" } })) == "invalid_args")
+		check("guide refused without the skill", reason(cmd(nil, { action = "guide_start", args = { placeId = "temple", toPlayerGuid = "5", text = "ok" } })) == "invalid_args")
 	else
 		failures[#failures + 1] = "no spawned agent for command validation"
 	end

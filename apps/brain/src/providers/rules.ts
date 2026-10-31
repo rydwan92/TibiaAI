@@ -1,6 +1,8 @@
 // Rules provider: deterministic, offline, default. Texts come from the agent definition
 // (agents.json "texts"); an empty template means "no reply" and the engine keeps its local rules.
-import type { Envelope, EventPayload } from '../contracts.ts';
+import { taskDefinitions } from '../agents.ts';
+import { agentRegistry, type Envelope, type EventPayload } from '../contracts.ts';
+import { parseGuideRequest, parseTaskRequest } from '../npc/requests.ts';
 import type { Intent, Provider, ProviderContext } from './provider.ts';
 
 export function sinceText(fromMs: number, nowMs: number): string {
@@ -24,6 +26,24 @@ export const ALARM_COMMENT_DELAY_MS = 4000;
 /** Delay of a rumor after the greeting reply (same 3 s engine cooldown for non-reply speech). */
 export const RUMOR_DELAY_MS = 3500;
 
+/** The walk a player asked this agent for, when the agent has the skill and may go there. */
+export function guideRequest(ctx: ProviderContext, text: string, playerGuid: number, playerName: string): Intent | null {
+  const places = agentRegistry().places;
+  const placeId = parseGuideRequest(text, places);
+  if (!placeId || !ctx.agent.skills?.includes('guide') || !ctx.agent.guidePlaces?.includes(placeId)) return null;
+  const line = fillTemplate(ctx.agent.texts.guideStart ?? '', { name: safeName(playerName), place: places[placeId].label });
+  return { action: 'guide_start', text: line || '...', delayMs: 0, placeId, toPlayerGuid: playerGuid };
+}
+
+/** The errand step a player asked for here, when the agent has the skill. */
+export function taskRequest(ctx: ProviderContext, agentKey: string, p: { text: string; tasks?: Record<string, number>; playerGuid: number; playerName: string }): Intent | null {
+  if (!ctx.agent.skills?.includes('tasks')) return null;
+  const found = parseTaskRequest(p.text, agentKey, p.tasks ?? {}, taskDefinitions());
+  if (!found) return null;
+  const text = fillTemplate(found.step.say, { name: safeName(p.playerName) });
+  return { action: 'task_step', text, delayMs: 0, taskId: found.taskId, stepId: found.step.id, toPlayerGuid: p.playerGuid };
+}
+
 const quote = (text: string) => (text.length > 60 ? `${text.slice(0, 57)}...` : text).replace(/"/g, "'");
 
 export class RulesProvider implements Provider {
@@ -37,6 +57,8 @@ export class RulesProvider implements Provider {
 
     switch (p.type) {
       case 'player_greeted': {
+        const walk = guideRequest(ctx, p.text, p.playerGuid, p.playerName) ?? taskRequest(ctx, event.agentKey, p);
+        if (walk) return [walk];
         const name = safeName(p.playerName);
         const before = ctx.encounterBefore ?? { count: 0, lastAtMs: null };
         const greeting = before.count === 0 || before.lastAtMs === null
@@ -48,9 +70,12 @@ export class RulesProvider implements Provider {
           : [];
         return [...greeting, ...rumor];
       }
-      case 'player_said':
+      case 'player_said': {
+        if (!p.addressed) return [];
+        const walk = guideRequest(ctx, p.text, p.playerGuid, p.playerName) ?? taskRequest(ctx, event.agentKey, p);
         // Without a model only direct address gets a short acknowledgement.
-        return p.addressed ? say(texts.busyReply, { name: safeName(p.playerName) }) : [];
+        return walk ? [walk] : say(texts.busyReply, { name: safeName(p.playerName) });
+      }
       case 'agent_heard':
         // Never answer another agent's speech (ADR 0005: no agent<->agent loops); it is memory only.
         return [];

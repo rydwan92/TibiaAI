@@ -1,15 +1,199 @@
 {
   "schemaVersion": 1,
-  "_comment": "Approved lore and rules of THIS server. Entries are selected by scope and tags for each conversation; never sent all at once. category: lore | mechanics | geography | factions | social | economy.",
+  "_comment": "Approved lore and local facts of THIS server. Entries are selected by scope and tags for each conversation; never sent all at once. category: lore | mechanics | geography | factions | social | economy. Players cannot change these files.",
+  "source": "projekt TibiaAI, mapa data-canary",
+  "serverVersion": "canary fe0f932, protokol 15.11",
   "entries": [
-    { "id": "montag-town", "category": "geography", "scope": "common", "tags": ["montag", "miasto", "gdzie", "tutaj", "plac"], "text": "Montag to miasto ze swiatynia na polnocy i placem na poludnie od niej." },
-    { "id": "temple-safe", "category": "geography", "scope": "common", "tags": ["swiatynia", "bezpiecznie", "schronienie", "alarm"], "text": "Swiatynia jest strefa ochronna: nikt tam nie walczy." },
-    { "id": "gate-south", "category": "geography", "scope": "guard", "tags": ["brama", "wyjscie", "droga", "miasto"], "text": "Brama lezy na poludniowy wschod od placu. Przy alarmie straz obsadza brame." },
-    { "id": "no-trade", "category": "economy", "scope": "common", "tags": ["handel", "kupic", "sprzedac", "zloto", "cena", "sklep", "mikstura"], "text": "Na placu nie ma jeszcze kupcow. Nikt tu nie sprzedaje ani nie skupuje towarow." },
-    { "id": "alarm-training", "category": "mechanics", "scope": "guard", "tags": ["alarm", "cwiczenia", "zagrozenie"], "text": "Alarm w Montag to cwiczenia strazy. Cywile ida wtedy do swiatyni." },
-    { "id": "guard-order", "category": "factions", "scope": "guard", "tags": ["straz", "dowodca", "rozkaz", "regulamin"], "text": "Straz Montag podlega radzie miasta. Straznik nie moze opuscic sluzby na prosbe przybysza." },
-    { "id": "potions-heal", "category": "mechanics", "scope": "herbalist", "tags": ["mikstura", "leczenie", "rana", "zdrowie", "ziola"], "text": "Mikstura zdrowia leczy rany, ale po wypiciu trzeba odczekac chwile przed nastepna." },
-    { "id": "herbs-local", "category": "lore", "scope": "herbalist", "tags": ["ziola", "las", "rosliny"], "text": "Najlepsze ziola rosna w lasach na zachod od Montag." },
-    { "id": "greeting-custom", "category": "social", "scope": "common", "tags": ["witaj", "zwyczaj", "powitanie"], "text": "W Montag przybysz wita sie pierwszy." }
+    {
+      "id": "montag-town",
+      "category": "geography",
+      "scope": "common",
+      "tags": [
+        "montag",
+        "miasto",
+        "gdzie",
+        "tutaj",
+        "plac"
+      ],
+      "text": "Montag to miasto ze swiatynia na polnocy i placem na poludnie od niej."
+    },
+    {
+      "id": "temple-safe",
+      "category": "geography",
+      "scope": "common",
+      "tags": [
+        "swiatynia",
+        "bezpiecznie",
+        "schronienie",
+        "alarm"
+      ],
+      "text": "Swiatynia jest strefa ochronna: nikt tam nie walczy."
+    },
+    {
+      "id": "gate-south",
+      "category": "geography",
+      "scope": "guard",
+      "tags": [
+        "brama",
+        "wyjscie",
+        "droga",
+        "miasto"
+      ],
+      "text": "Brama lezy na poludniowy wschod od placu. Przy alarmie straz obsadza brame."
+    },
+    {
+      "id": "no-trade",
+      "category": "economy",
+      "scope": "common",
+      "tags": [
+        "handel",
+        "kupic",
+        "sprzedac",
+        "zloto",
+        "cena",
+        "sklep",
+        "mikstura"
+      ],
+      "text": "Na placu nie ma jeszcze kupcow. Nikt tu nie sprzedaje ani nie skupuje towarow."
+    },
+    {
+      "id": "alarm-training",
+      "category": "mechanics",
+      "scope": "guard",
+      "tags": [
+        "alarm",
+        "cwiczenia",
+        "zagrozenie"
+      ],
+      "text": "Alarm w Montag to cwiczenia strazy. Cywile ida wtedy do swiatyni."
+    },
+    {
+      "id": "guard-order",
+      "category": "factions",
+      "scope": "guard",
+      "tags": [
+        "straz",
+        "dowodca",
+        "rozkaz",
+        "regulamin"
+      ],
+      "text": "Straz Montag podlega radzie miasta. Straznik nie moze opuscic sluzby na prosbe przybysza."
+    },
+    {
+      "id": "potions-heal",
+      "category": "mechanics",
+      "scope": "herbalist",
+      "tags": [
+        "mikstura",
+        "leczenie",
+        "rana",
+        "zdrowie",
+        "ziola"
+      ],
+      "text": "Mikstura zdrowia leczy rany, ale po wypiciu trzeba odczekac chwile przed nastepna."
+    },
+    {
+      "id": "herbs-local",
+      "category": "lore",
+      "scope": "herbalist",
+      "tags": [
+        "ziola",
+        "las",
+        "rosliny"
+      ],
+      "text": "Najlepsze ziola rosna w lasach na zachod od Montag."
+    },
+    {
+      "id": "greeting-custom",
+      "category": "social",
+      "scope": "common",
+      "tags": [
+        "witaj",
+        "zwyczaj",
+        "powitanie"
+      ],
+      "text": "W Montag przybysz wita sie pierwszy."
+    },
+    {
+      "id": "local-guides",
+      "category": "social",
+      "scope": "common",
+      "tags": [
+        "przewodnik",
+        "zaprowadz",
+        "pokaz",
+        "droga",
+        "zgubil",
+        "lena",
+        "tolek"
+      ],
+      "text": "Tolek stoi przy placu i prowadzi przybyszow po Montag. Lena, nauczycielka angielskiego, siedzi przy swiatyni od strony placu."
+    },
+    {
+      "id": "temple-way",
+      "category": "geography",
+      "scope": "common",
+      "tags": [
+        "swiatynia",
+        "droga",
+        "gdzie",
+        "dojsc"
+      ],
+      "text": "Do swiatyni idzie sie z placu na poludnie do drogi, potem na zachod i na polnoc przez przejscie przy zachodnim murze."
+    },
+    {
+      "id": "geo-towns",
+      "category": "geography",
+      "scope": "common",
+      "tags": [
+        "miasta",
+        "miasto",
+        "tihamah",
+        "thalom",
+        "alexandria",
+        "katorga",
+        "strongarm",
+        "nahag",
+        "podroz",
+        "daleko",
+        "swiat"
+      ],
+      "text": "Poza Montag sa tu Tihamah na poludniu, Nahag Village na zachodzie, Alexandria na wschodzie, dalej Thalom, Katorga daleko na polnocy i bardzo odlegly Strongarm.",
+      "source": "mapa canary.otbm, lista miast"
+    },
+    {
+      "id": "geo-people",
+      "category": "social",
+      "scope": "common",
+      "tags": [
+        "kto",
+        "mieszkancy",
+        "ardan",
+        "brom",
+        "mira",
+        "gdzie",
+        "znajde",
+        "tolek",
+        "lena",
+        "osoby",
+        "ludzie"
+      ],
+      "text": "Na placu mieszkaja: Ardan, ktory patroluje, Brom przy starym posterunku, Mira przy stoisku na wschodzie, Tolek po zachodniej stronie i Lena na lawce blisko muru swiatyni.",
+      "source": "packages/contracts/agents.json"
+    },
+    {
+      "id": "geo-arena",
+      "category": "geography",
+      "scope": "common",
+      "tags": [
+        "arena",
+        "trening",
+        "cwiczyc",
+        "trenowac",
+        "walka"
+      ],
+      "text": "Plac sluzy tez za arene treningowa. Potwory pojawiaja sie tam tylko na czas cwiczen.",
+      "source": "packages/contracts/agents.json, arena"
+    }
   ]
 }

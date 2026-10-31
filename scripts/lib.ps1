@@ -115,6 +115,17 @@ function Wait-JournalEntry([string]$kind, [string]$sinceIso, [int]$timeoutSec) {
     return $null
 }
 
+function Get-WorldHost([hashtable]$cfg) {
+    # Address the world binds to and tells clients. Loopback unless a private demo sets it
+    # (DOCS/PRIVATE_DEMO_VPN.md); anything outside the Tailscale range is refused.
+    $worldHost = if ($cfg.TIBIAAI_WORLD_HOST) { $cfg.TIBIAAI_WORLD_HOST.Trim() } else { '127.0.0.1' }
+    if ($worldHost -eq '127.0.0.1') { return $worldHost }
+    if ($worldHost -notmatch '^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}$') {
+        throw "TIBIAAI_WORLD_HOST must be 127.0.0.1 or a Tailscale address (100.64.0.0/10), got $worldHost"
+    }
+    return $worldHost
+}
+
 function Install-ClientFrameCap {
     # Our own mod next to the client's: without a framerate limit it starves the model on the shared GPU.
     $dir = Join-Path $OtclientDir 'mods\tibiaai_framecap'

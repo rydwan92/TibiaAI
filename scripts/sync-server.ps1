@@ -1,4 +1,4 @@
-# Assemble runtime\server from pinned upstream + our overlay, and generate config.lua.
+﻿# Assemble runtime\server from pinned upstream + our overlay, and generate config.lua.
 # Upstream files under vendor\ stay untouched. Re-run after editing game\overlays\tibia-ai.
 # Does not touch the database or runtime data other than the server directory's copied code.
 . "$PSScriptRoot\lib.ps1"
@@ -41,11 +41,15 @@ New-Item -ItemType Directory -Force (Join-Path $ServerDir 'data-canary\tibia-ai'
 Copy-Item $agentsJson (Join-Path $ServerDir 'data-canary\tibia-ai\agents.json') -Force
 # The engine reads incident descriptions from the shared world rules.
 Copy-Item (Join-Path $Root 'packages\contracts\npc\world.json') (Join-Path $ServerDir 'data-canary\tibia-ai\world.json') -Force
+# The world's monsters are ours (tools\make_spawns.py): the map ships without any.
+Copy-Item (Join-Path $Root 'game\world\canary-monster.xml') (Join-Path $ServerDir 'data-canary\world\canary-monster.xml') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\tasks.json') (Join-Path $ServerDir 'data-canary\tibia-ai\tasks.json') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\shop.json') (Join-Path $ServerDir 'data-canary\tibia-ai\shop.json') -Force
 
 # config.lua from config.lua.dist with explicit overrides; fail if a key is missing upstream.
 $overrides = [ordered]@{
     'dataPackDirectory'       = '"data-canary"'
-    'ip'                      = '"127.0.0.1"'
+    'ip'                      = "`"$(Get-WorldHost $cfg)`""
     'bindOnlyGlobalAddress'   = 'true'
     'serverName'              = '"TibiaAI"'
     'serverMotd'              = '"TibiaAI local lab"'
@@ -57,7 +61,7 @@ $overrides = [ordered]@{
     'mysqlDatabase'           = "`"$($cfg.TIBIAAI_DB_NAME)`""
     'mysqlPort'               = $cfg.TIBIAAI_DB_PORT
     'metricsPrometheusAddress' = '"127.0.0.1:9464"'
-    'worldType'               = '"no-pvp"'
+    'worldType'               = '"pvp"'
     # Forge would turn arena monsters into Fiendish ones (health x3.6, stronger hits) every 10 s,
     # which breaks predictable training and floods the log on a map without monsters.
     'forgeInfluencedLimit'    = '0'

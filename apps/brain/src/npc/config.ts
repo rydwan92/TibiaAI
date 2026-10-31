@@ -8,9 +8,24 @@ import { fileURLToPath } from 'node:url';
 
 export const DEFAULT_NPC_DIR = fileURLToPath(new URL('../../../../packages/contracts/npc', import.meta.url));
 
+export interface ConversationPolicy {
+  /** Default language of this policy; a player's wish or their own language can change it. */
+  language: string;
+  maxReplyChars: number;
+  rules: string[];
+  /** Repeated right before the player's words: a small model follows what stands closest. */
+  reminder: string;
+  /** The NPC speaks from the model's own knowledge of the real world. */
+  generalKnowledge: boolean;
+}
+
 export interface WorldConfig {
   worldName: string;
-  conduct: string[];
+  /** Rules that hold for every NPC under every policy. */
+  safety: string[];
+  conversationPolicies: Record<string, ConversationPolicy>;
+  /** Said in place of a reply that dodges a direct question about being an AI. */
+  aiDisclosureLine: string;
   incidents: Record<string, string>;
 }
 
@@ -25,6 +40,7 @@ export interface RoleConfig {
   goals: string[];
   constraints: string[];
   allowedIntents: string[];
+  conversationPolicy: string;
 }
 
 export interface VariantConfig {
@@ -32,6 +48,8 @@ export interface VariantConfig {
   role: string;
   temperament: string;
   speechStyle: string;
+  /** Favourite phrases, used occasionally. */
+  phrases?: string[];
   values?: string[];
   motivations?: string[];
   constraints?: string[];
@@ -44,6 +62,8 @@ export interface IdentityConfig {
   gender: 'm' | 'f';
   biography: string;
   goals?: string[];
+  /** Overrides the role's policy. A way of talking, not an ability. */
+  conversationPolicy?: string;
   initialRelationships?: { npc: string; note: string }[];
 }
 
@@ -53,6 +73,9 @@ export interface KnowledgeEntry {
   scope: string;
   tags: string[];
   text: string;
+  /** Where this fact comes from. Required for mechanics. */
+  source?: string;
+  serverVersion?: string;
 }
 
 /** Merged, read-only view of one NPC. Contains no state and no capabilities. */
@@ -66,6 +89,8 @@ export interface NpcProfile {
   variantKey: string;
   temperament: string;
   speechStyle: string;
+  phrases: string[];
+  conversationPolicy: string;
   duties: string[];
   values: string[];
   motivations: string[];
@@ -78,7 +103,7 @@ export interface NpcProfile {
 }
 
 const CATEGORIES = ['lore', 'mechanics', 'geography', 'factions', 'social', 'economy'];
-const FORBIDDEN_CHARACTER_FIELDS = ['capabilities', 'allowedIntents', 'actions', 'actor'];
+const FORBIDDEN_CHARACTER_FIELDS = ['capabilities', 'allowedIntents', 'actions', 'actor', 'skills'];
 const isStr = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
 const isStrList = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
 const unique = (...lists: (string[] | undefined)[]) => [...new Set(lists.flatMap((l) => l ?? []))];
@@ -102,7 +127,8 @@ export function readNpcConfigFiles(dir: string = DEFAULT_NPC_DIR): NpcConfigFile
     roles: readDir<RoleConfig>(join(dir, 'roles')),
     variants: readDir<VariantConfig>(join(dir, 'variants')),
     identities: readDir<IdentityConfig>(join(dir, 'identities')),
-    knowledge: readDir<{ entries: KnowledgeEntry[] }>(join(dir, 'knowledge')).flatMap((f) => f.entries),
+    knowledge: readDir<{ source?: string; serverVersion?: string; entries: KnowledgeEntry[] }>(join(dir, 'knowledge'))
+      .flatMap((f) => f.entries.map((e) => ({ source: f.source, serverVersion: f.serverVersion, ...e }))),
   };
 }
 
@@ -110,7 +136,12 @@ export function readNpcConfigFiles(dir: string = DEFAULT_NPC_DIR): NpcConfigFile
 export function validateNpcConfig(files: NpcConfigFiles): string[] {
   const errors: string[] = [];
   const { world, roles, variants, identities, knowledge } = files;
-  if (!isStr(world.worldName) || !isStrList(world.conduct) || world.conduct.length === 0) errors.push('world: worldName and conduct are required');
+  if (!isStr(world.worldName) || !isStrList(world.safety) || world.safety.length === 0) errors.push('world: worldName and safety are required');
+  const policies = world.conversationPolicies ?? {};
+  for (const [key, p] of Object.entries(policies)) {
+    if (!isStr(p.language) || !isStrList(p.rules) || p.rules.length === 0 || !(p.maxReplyChars > 0) || !isStr(p.reminder)) errors.push(`policy ${key}: language, rules, reminder and maxReplyChars are required`);
+  }
+  if (!isStr(world.aiDisclosureLine)) errors.push('world: aiDisclosureLine is required');
   const roleKeys = new Set(roles.map((r) => r.key));
   const variantKeys = new Set(variants.map((v) => v.key));
   const scopes = new Set(roles.flatMap((r) => r.knowledgeScopes ?? []));
@@ -122,6 +153,7 @@ export function validateNpcConfig(files: NpcConfigFiles): string[] {
       if (!isStrList(r[k])) e(`${k} must be a list of strings`);
     }
     if (!r.allowedIntents?.includes('none')) e('allowedIntents must include none');
+    if (!(r.conversationPolicy in policies)) e(`unknown conversationPolicy ${r.conversationPolicy}`);
   }
   for (const v of variants) {
     const e = (m: string) => errors.push(`variant ${v.key}: ${m}`);
@@ -135,6 +167,7 @@ export function validateNpcConfig(files: NpcConfigFiles): string[] {
     if (!variantKeys.has(i.variant)) e(`unknown variant ${i.variant}`);
     if (!isStr(i.displayName) || !isStr(i.biography)) e('displayName and biography are required');
     if (i.gender !== 'm' && i.gender !== 'f') e('gender must be m or f');
+    if (i.conversationPolicy !== undefined && !(i.conversationPolicy in policies)) e(`unknown conversationPolicy ${i.conversationPolicy}`);
     for (const f of FORBIDDEN_CHARACTER_FIELDS) if (f in i) e(`${f} is not allowed: character layers cannot grant abilities`);
   }
   const ids = new Set<string>();
@@ -145,6 +178,7 @@ export function validateNpcConfig(files: NpcConfigFiles): string[] {
     if (!CATEGORIES.includes(k.category)) e(`unknown category ${k.category}`);
     if (!scopes.has(k.scope)) e(`scope ${k.scope} is not used by any role`);
     if (!isStrList(k.tags) || k.tags.length === 0 || !isStr(k.text)) e('tags and text are required');
+    if (k.category === 'mechanics' && (!isStr(k.source) || !isStr(k.serverVersion))) e('mechanics need a source and a server version');
   }
   return errors;
 }
@@ -161,6 +195,8 @@ export function buildProfile(identity: IdentityConfig, variant: VariantConfig, r
     variantKey: variant.key,
     temperament: variant.temperament,
     speechStyle: variant.speechStyle,
+    phrases: variant.phrases ?? [],
+    conversationPolicy: identity.conversationPolicy ?? role.conversationPolicy,
     duties: role.duties,
     values: unique(role.values, variant.values),
     motivations: unique(role.motivations, variant.motivations),
@@ -202,10 +238,14 @@ export class NpcCatalog {
     return [...this.profiles.keys()].sort();
   }
 
-  /** Intents the model may propose: the role's list limited by what the engine body can do. */
-  allowedIntents(npcKey: string, capabilities: string[], intentCapability: Record<string, string>): string[] {
+  policy(profile: NpcProfile): ConversationPolicy {
+    return this.world.conversationPolicies[profile.conversationPolicy];
+  }
+
+  /** Intents the model may propose: the role's list limited by the abilities of this agent's body. */
+  allowedIntents(npcKey: string, abilities: string[], intentAbility: Record<string, string>): string[] {
     const p = this.profile(npcKey);
     if (!p) return ['none'];
-    return p.allowedIntents.filter((i) => i === 'none' || capabilities.includes(intentCapability[i] ?? ''));
+    return p.allowedIntents.filter((i) => i === 'none' || abilities.includes(intentAbility[i] ?? ''));
   }
 }

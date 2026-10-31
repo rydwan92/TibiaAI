@@ -41,6 +41,27 @@ Kod Lua/datapack pochodzi ze źródeł `fe0f932`, a binarka z release `v3.6.1` z
 - Postacie Sample z `schema.sql` startują w Strongarm (miasto 8), a agenci są w Montag (miasto 1).
 - `Creature:remove()` na graczu wylogowuje go z zapisem.
 - OTClient z opcją „max” klatek renderuje bez limitu nawet przy włączonym vsync. Na wspólnej karcie spowalnia to model z 46 do 9 tok/s; limit do 60 FPS usuwa problem. `client_options` nadpisuje `g_app.setMaxFps` przy starcie, więc limit trzeba ustawić po załadowaniu opcji.
+- `npc:getPathTo` potrafi chwilowo nie zwrócić drogi do osiągalnego miejsca, co zaobserwowano u NPC tuż po poprzednim marszu. Brak drogi nie jest więc dowodem blokady, dopóki nie utrzyma się przez kilka tików.
+- `Game.createNpcType` i `Game.createNpc` przyjmują nazwy z nawiasami (`Ardan [AI]`). OTClient pokazuje taką nazwę nad postacią i w czacie.
+- `Creature:setIcon` istnieje w tym commicie; obsługa w OTClient niesprawdzona, nieużywane.
+- Ollama 0.32.3: `GET /api/status` zwraca `{"cloud":{"disabled":true,"source":"env"}}`. `/api/tags` instancji z `OLLAMA_NO_CLOUD=1` nadal wymienia modele chmurowe z `remote_host`, więc sama lista niczego nie dowodzi.
+- `data-canary/world/canary-monster.xml` w upstreamie jest pusty, a `canary-npc.xml` zawiera tylko NPC testowego. Potwory pochodzą z naszego `game/world/canary-monster.xml`, kopiowanego przez `sync-server.ps1`.
+- `Player:addItem(id, count, canDrop, subType, slot)`: przy czterech lub więcej argumentach `count` to liczba **osobnych** przedmiotów. Jeden stos 100 strzał to `addItem(id, 1, true, 100, slot)`; inaczej w slocie ląduje jedna sztuka.
+- `Tile(pos)` buduje pole z pamięci podręcznej mapy. Przejście po całej mapie podnosi Canary z 0,25 do 1,3 GB do restartu.
+- Łuk i kusza biorą amunicję wyłącznie z kołczanu w prawej ręce (`Player::getQuiverAmmoOfType`). Slot amunicji nic im nie daje, a strzały nie mają tam wstępu bez `enablePlayerPutItemInAmmoSlot`; przy `canDrop=true` lądują na ziemi.
+- Czary wymagają nauki: bez `player:learnSpell` serwer odpowiada „You need to learn this spell first”.
+- Komunikat „A wolf loses 21 hitpoints due to an attack by Kael” dociera do wszystkich obok. O ataku na siebie mówi tylko „You lose ...”.
+- OTClient startuje z wyłączonym trybem bezpiecznym; agent ustawia `g_game.setSafeFight(true)` po każdym wejściu.
+- Po ataku na gracza strefa ochronna jest zamknięta przez `pzLocked` (60 s): „You can not enter a protection zone after attacking another player”.
+- Sklep NPC: maska `shop` w `npcType:register`, `npc:openShopWindow(player)`, `onBuyItem` z `npc:sellItem`. W kliencie `onOpenNpcTrade(items)`, gdzie `item[1]` to przedmiot, `[4]` cena kupna, `[5]` cena sprzedaży; `onPlayerGoods(money, goods)`.
+- Depozyt: szafka (`type="depot"`, 3497–3500) → `depot chest` 3502 → `depot box I` 22797; każde otwiera się przez `g_game.open(item, container)`.
+- Teleporty nie zawsze mają powrót. Z Katorgi nie da się wyjść pieszo, a postać tkwi tam do śmierci.
+- Mapa ma współrzędne x do 20275, więc klucze pól w Brain używają 32 768 wartości na oś.
+- Teleporty są w OTBM jako atrybut 8 przedmiotu z `type="teleport"` w `items.xml`.
+- OTClient: `g_game.addVip`, zdarzenia `onAddVip` i `onVipStateChange`, `g_game.follow`, `modules.game_console.addTab` i `sendMessage(text, tab)` potwierdzone w `dd56414`. `g_game.talkPrivate` sam nie pokazuje linii w zakładce nadawcy, robi to konsola.
+- Potwory mówią trybami `MonsterSay` i `MonsterYell`, a ich nazwa przychodzi w `onTalk` jak nazwa gracza; filtr jest w ciele agenta i w umyśle.
+- Puste flaszki po miksturach można wyłączyć per postać: `player:kv():set("talkaction.potions.flask", true)`, to samo robi `!flask on`.
+- Player:addItem(id, count, false) zwraca nil, gdy przedmiot się nie mieści; przy `true` upuszcza go na ziemię. Stan zleceń jest w storage 47100+ (zakres zarezerwowany zaczyna się od 10000000).
 - Zatrzymanie `ollama.exe` nie kończy potomnego `llama-server.exe`: zostaje on sierotą z załadowanym modelem. Ollama 0.32.3 w tej konfiguracji.
 
 ## Do weryfikacji

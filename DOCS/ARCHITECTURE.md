@@ -1,7 +1,7 @@
 # Architektura
 
-## Stan wdrożenia (2026-10-30, po iteracji 0012)
-Granice agenta i ciało bojowe: ADR 0006. Lokalny model: ADR 0007. Tożsamość, pamięć i relacje NPC: ADR 0008, NPC_RUNTIME.md. Narzędzia: TOOLING.md.
+## Stan wdrożenia (2026-10-31, po iteracji 0013)
+Granice agenta i ciało bojowe: ADR 0006. Lokalny model: ADR 0007. Tożsamość, pamięć i relacje NPC: ADR 0008, NPC_RUNTIME.md. Polityki rozmowy, przewodnik, znacznik: ADR 0009. Plan walki: COMBAT_PLAN.md. Narzędzia: TOOLING.md.
 Komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mailbox plików (ADR 0002). Agenci są opisani danymi (ADR 0004). MyAAC nie jest używany: konto tworzy `scripts/setup.ps1`, logowanie obsługuje login-server.
 
 ```
@@ -15,6 +15,7 @@ game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts
     registry.lua     walidacja definicji, stan agentów, wyszukiwanie po npcId
     movement.lua     wykonawca ruchu (Npc:move + getPathTo), weryfikacja punktów, skan mapy
     controller.lua   generyczna maszyna stanów; typy zachowań (patrol, stationary); alarm; powitanie; komendy
+    guide.lua        umiejętność prowadzenia gracza, bez nazw NPC; wynik ogłasza tylko silnik
     bridge.lua       mailbox: zdarzenia, komendy, wyniki, world.json, heartbeat, backpressure
     npc_types.lua    rejestracja NpcType z definicji (bez sklepu, walki i losowego chodzenia)
     startup.lua      worldSessionId, spawn agentów, waypoint_check
@@ -28,16 +29,18 @@ apps/brain/src/
   contracts.ts       kontrakt v1: envelope, event, command, result, world.json
   actions.ts         rejestr akcji z capabilities
   providers/         Provider, RulesProvider, LocalModelClient, polityka local-only
-  npc/               config, store, relations, perception, retrieval, context, dialogue, confirmed, compression
+  npc/               config, store, relations, perception, requests, retrieval, context, dialogue, confirmed, compression
+  players/           gracze-agenci (ADR 0010): types, nav (trasy), knowledge (dane gry), choices (co można zrobić), mind, fleet
   memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
   mailbox.ts         pliki mailbox po stronie Node
   retention.ts       przycinanie archiwum mailboxa i starych wierszy operacyjnych
   timeline.ts        oś decyzji z dziennika świata i logu Brain (czyste funkcje)
   brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji, retencja co 10 min
-  cli/               timeline.ts (odczyt), npc-memory.ts (podgląd pamięci), sqlite-tool.ts (backup/check SQLite)
-scripts/             setup, sync-server, start, stop, status, logs, client, ollama, incident, npc-scenario, alarm, selftest, scan, backup, restore-test
-tools/               journal.py, otbm_towns.py, otclient-autotest/ (test prawdziwego klienta), otclient-framecap/ (limit klatek)
+  cli/               timeline.ts (odczyt), ai-status.ts i npc-memory.ts (podgląd), sqlite-tool.ts (backup/check SQLite)
+scripts/             setup, sync-server, start, stop, status, ai-status, logs, client, ollama, incident, npc-scenario, npc-two-players, alarm, selftest, scan, backup, restore-test
+tools/               journal.py, otbm_towns.py, world_atlas.py, game_data.py, make_spawns.py, otclient-autotest/ (test prawdziwego klienta), otclient-framecap/ (limit klatek), otclient-agent/ (ciało gracza-agenta)
 infra/versions.lock.json  przypięte artefakty z SHA-256
+infra/vpn/           przykładowe reguły prywatnego pokazu, niezastosowane
 runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream
 ```
 

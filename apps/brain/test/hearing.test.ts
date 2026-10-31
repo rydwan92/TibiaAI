@@ -90,5 +90,5 @@ test('migrations from v1 keep data and copy the database first', () => {
   upgraded.recordHeard('e2', 'mira', 'ardan', 'x', false, 3, 's', 2);
   assert.equal(upgraded.latestHeard('mira', 0)?.text, 'x');
   assert.ok(readdirSync(dir).some((f) => f.startsWith('brain.sqlite.bak-v1-')), 'backup before migration');
-  assert.equal(upgraded.takePlan('none', 'completed'), null, 'v3 columns exist');
+  assert.equal(upgraded.pendingPlan('none', 'completed'), null, 'v3 columns exist');
 });

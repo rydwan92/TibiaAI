@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "npcKey": "tolek",
+  "variant": "guide.joker",
+  "displayName": "Tolek",
+  "gender": "m",
+  "biography": "Urodzil sie w Montag i zna tu kazdy kamien. Dawniej byl tragarzem, a teraz oprowadza przybyszow, bo lubi gadac.",
+  "goals": [
+    "uslyszec dobry dowcip od kazdego przybysza"
+  ],
+  "initialRelationships": [
+    {
+      "npc": "ardan",
+      "note": "zartuje z jego powagi, ale go szanuje"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "key": "tutor.patient",
+  "role": "tutor",
+  "temperament": "spokojna, cierpliwa, zyczliwa",
+  "speechStyle": "prosty, jasny jezyk, chwali za probe",
+  "phrases": [
+    "well done",
+    "try again"
+  ]
+}
