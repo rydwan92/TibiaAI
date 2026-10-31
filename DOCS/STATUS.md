@@ -1,6 +1,6 @@
 # Stan projektu
 
-Aktualizacja: 2026-10-30 (po iteracji 0012). Etap: M1 **VERIFIED w prawdziwym kliencie**; M2/M3 VERIFIED; M4 (lokalny model, dialog) VERIFIED w grze; **NPC z tożsamością, pamięcią i relacjami VERIFIED w kliencie dla pierwszego scenariusza**; walka przez klienta VERIFIED jako eksperyment.
+Aktualizacja: 2026-10-31 (po iteracji 0012). Etap: M1 **VERIFIED w prawdziwym kliencie**; M2/M3 VERIFIED; M4 (lokalny model, dialog) VERIFIED w grze; **NPC z tożsamością, pamięcią i relacjami VERIFIED w kliencie dla pierwszego scenariusza**; walka przez klienta VERIFIED jako eksperyment.
 Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 
 ## Działa (z dowodem)
@@ -27,7 +27,7 @@ Repozytorium: https://github.com/rydwan92/TibiaAI (publiczne, gałąź `main`).
 | Mira (tylko dane): stoi przy stoisku, przy alarmie chowa się w świątyni, wraca | VERIFIED w dzienniku | iteracja 0004 |
 | Most mailbox Lua ↔ Brain, walidacja w silniku, wielu agentów | VERIFIED 14/14 na żywym świecie | iteracja 0004 |
 | Agenci słyszą się w zasięgu; Brain pamięta „X powiedział Y” z pochodzeniem; brak odpowiedzi agent↔agent (zalążek M5) | VERIFIED w silniku | ADR 0005, iteracja 0007 |
-| Jedno polecenie weryfikacji `scripts/verify.ps1` (+ `-Client`, `-Model`) + CI GitHub Actions dla Brain | VERIFIED 9/9 z `-Client -Model`; CI: kod iteracji 0012 jeszcze nie wypchnięty | iteracja 0012 |
+| Jedno polecenie weryfikacji `scripts/verify.ps1` (+ `-Client`, `-Model`) + CI GitHub Actions dla Brain | VERIFIED 9/9 z `-Client -Model`; CI success (run 41199794386, commit `ad36d78`) | iteracja 0012 |
 | Self-test Lua w Canary | VERIFIED 28/28 | `scripts/selftest.ps1` |
 | Koszt naszych GlobalEventów zmierzony (most śr. 0,8–1,3 ms, maks. 12 ms; ~0,3% dispatchera) | VERIFIED (pomiar) | ADR 0002, iteracja 0006 |
 | Oś decyzji (obserwacja → decyzja → wykonanie → skutek) | VERIFIED na żywym alarmie | `apps/brain/src/cli/timeline.ts`, iteracja 0005 |
@@ -52,7 +52,7 @@ Konto eksperymentu: `kael@localhost`, postać Kael (test bojowy; jej poziom i pr
 Klienta uruchamiaj przez `scripts\client.ps1`: instaluje limit 60 FPS, bez którego model zwalnia pięciokrotnie.
 Baza Brain zawiera dane z testów: Ardan zna `Knight Sample` jako Marka (iteracja 0012).
 Mapa: aktywna kopia `runtime\maps\canary.otbm`, identyczna z oryginałem (`scripts\map-dev.ps1 -Status`).
-Kod iteracji 0012 nie jest zacommitowany ani wypchnięty, chyba że historia git mówi inaczej. Niezwiązany pusty plik użytkownika: `commands/powershell.txt`.
+Kod iteracji 0012 jest na `main` i na GitHubie (`ad36d78`). Niezwiązany pusty plik użytkownika: `commands/powershell.txt`, poza repozytorium.
 
 ## Następne pojedyncze zadanie
 Porównać `bonsai-2:9b` z `ornith-1.5:9b` testem `ollama.itest.ts` (wymaga pobrania). Później: pierwsze działanie NPC z dialogu i adapter `client_player` dla Kaela.
