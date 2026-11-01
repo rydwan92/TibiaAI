@@ -121,7 +121,7 @@ test('rules: persona texts come from the agent definition', () => {
   assert.match(rules.decide(ev, { agent: ardan, nowMs: now, encounterBefore: { count: 2, lastAtMs: now - 3 * 3600_000 } })[0].text,
     /3\. spotkanie, ostatnio 3 h temu/);
   assert.match(rules.decide({ ...ev, agentKey: 'mira' }, { agent: mira, nowMs: now })[0].text, /Jestem Mira/);
-  const alarm = makeEvent('s', { type: 'training_alarm_started', zoneId: 'montag_gate' });
+  const alarm = makeEvent('s', { type: 'training_alarm_started', zoneId: 'thais_gate' });
   assert.equal(rules.decide(alarm, { agent: ardan, nowMs: now, alarmsThisSession: 2 })[0].delayMs, 4000);
   assert.deepEqual(rules.decide(alarm, { agent: mira, nowMs: now }), [], 'empty alarmComment means no reply');
   assert.equal(sinceText(now - 30_000, now), 'przed chwila');
@@ -133,8 +133,8 @@ test('alarm count is per agent', () => {
   const brain = new Brain(mb, new Memory(join(dir, 'brain.sqlite')), quiet);
   writeWorld(mb.root, 'sessF');
   brain.tick();
-  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'montag_gate' }, { agentKey: 'mira' }));
-  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'montag_gate' }));
+  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'thais_gate' }, { agentKey: 'mira' }));
+  writeEvent(mb.root, makeEvent('sessF', { type: 'training_alarm_started', zoneId: 'thais_gate' }));
   let t = Date.now();
   const late = new Brain(mb, new Memory(join(dir, 'brain.sqlite')), quiet, () => t);
   late.tick();

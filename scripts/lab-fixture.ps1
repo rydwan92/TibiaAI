@@ -1,4 +1,4 @@
-# Lab fixture: places test characters in Montag, next to the agents. The Canary schema starts the
+# Lab fixture: places test characters in Thais, next to the agents. The Canary schema starts the
 # sample characters in town 8 (Strongarm), thousands of tiles from the agents. Run while they are offline.
 #   powershell -ExecutionPolicy Bypass -File scripts\lab-fixture.ps1 [-Characters "Knight Sample","GOD"] [-X 5008] [-Y 5006]
 # Reverse: UPDATE players SET town_id=8, posx=0, posy=0, posz=0 WHERE name='<name>'; (spawns at the town temple).
@@ -23,9 +23,9 @@ if ($Combatant) {
     if ("$exists".Trim() -eq '0') {
         Invoke-MariaDb "INSERT INTO accounts (name, email, password, type) VALUES ('kael', '$($cfg.TIBIAAI_AGENT_EMAIL)', SHA1('$($cfg.TIBIAAI_AGENT_PASSWORD)'), 1);" $db | Out-Null
         $columns = 'name, group_id, account_id, level, vocation, health, healthmax, experience, lookbody, lookfeet, lookhead, looklegs, looktype, maglevel, mana, manamax, manaspent, town_id, posx, posy, posz, conditions, cap, sex, skill_club, skill_club_tries, skill_sword, skill_sword_tries, skill_axe, skill_axe_tries, skill_dist, skill_dist_tries'
-        $values = "'Kael', 1, a.id, 8, 4, 185, 185, 4200, 113, 115, 95, 39, 129, 0, 90, 90, 0, 1, 5010, 5007, 7, '', 470, 1, 10, 0, 10, 0, 10, 0, 10, 0"
+        $values = "'Kael', 1, a.id, 8, 4, 185, 185, 4200, 113, 115, 95, 39, 129, 0, 90, 90, 0, 1, 32369,32252, 7, '', 470, 1, 10, 0, 10, 0, 10, 0, 10, 0"
         Invoke-MariaDb "INSERT INTO players ($columns) SELECT $values FROM accounts a WHERE a.name = 'kael';" $db | Out-Null
-        Write-Host "Created account kael and character Kael (Knight, level 8) at 5010,5007,7"
+        Write-Host "Created account kael and character Kael (Knight, level 8) at 32369,32252,7"
     } else {
         Write-Host "Kael already exists"
     }

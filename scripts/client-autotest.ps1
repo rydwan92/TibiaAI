@@ -31,7 +31,7 @@ Write-ControlRequest 'dev-kick.request' $Character
 if (-not (Wait-JournalEntry 'dev_exception_used' $since 10)) { throw "The world did not answer the logout request" }
 Start-Sleep 2
 # Death or an earlier test can leave it anywhere; every run starts at the same spot next to a wall.
-& "$PSScriptRoot\lab-fixture.ps1" -Characters $Character -X 5010 -Y 5007 -KnownOffline | Out-Null
+& "$PSScriptRoot\lab-fixture.ps1" -Characters $Character -X 32369 -Y 32252 -KnownOffline | Out-Null
 
 $exe = Join-Path $OtclientDir 'otclient.exe'
 $modDir = Join-Path $OtclientDir 'mods\tibiaai_autotest'

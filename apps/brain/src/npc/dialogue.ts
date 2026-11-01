@@ -5,7 +5,7 @@
 // decision, so the game never depends on the model.
 import { taskDefinitions } from '../agents.ts';
 import { agentRegistry, type Envelope, type EventPayload } from '../contracts.ts';
-import type { LocalModelClient } from '../providers/local-model.ts';
+import type { DialogueClient } from '../providers/local-model.ts';
 import type { Intent, Provider, ProviderContext } from '../providers/provider.ts';
 import { guideRequest, RulesProvider, sinceText } from '../providers/rules.ts';
 import type { ConversationPolicy, NpcCatalog } from './config.ts';
@@ -191,7 +191,7 @@ interface RecentCall {
 
 export class NpcDialogueProvider implements Provider {
   readonly name = 'npc-dialogue';
-  private readonly client: LocalModelClient;
+  private readonly client: DialogueClient;
   private readonly store: NpcMemoryStore;
   private readonly catalog: NpcCatalog;
   private readonly retriever: MemoryRetriever;
@@ -207,7 +207,7 @@ export class NpcDialogueProvider implements Provider {
   private lastReply: { atMs: number; npc: string; attempt: number; text: string } | null = null;
   private lastFallback: { atMs: number; npc: string; reason: string } | null = null;
 
-  constructor(client: LocalModelClient, store: NpcMemoryStore, catalog: NpcCatalog, retriever: MemoryRetriever, log: DialogueLog = () => {}, now: () => number = Date.now) {
+  constructor(client: DialogueClient, store: NpcMemoryStore, catalog: NpcCatalog, retriever: MemoryRetriever, log: DialogueLog = () => {}, now: () => number = Date.now) {
     this.client = client;
     this.store = store;
     this.catalog = catalog;
@@ -358,7 +358,7 @@ export class NpcDialogueProvider implements Provider {
     let nudge = '';
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const r = await this.client.chat([{ role: 'system', content: built.system }, { role: 'user', content: `${built.user}${nudge}` }], { schema: responseSchema(allowedIntents, placeIds) });
+        const r = await this.client.chat([{ role: 'system', content: built.system }, { role: 'user', content: `${built.user}${nudge}` }], { schema: responseSchema(allowedIntents, placeIds), purpose: 'npc' });
         const parsed = parseDecision(r.text, allowedIntents, maxChars, p.text, placeIds);
         this.log('model_decision', {
           eventId: event.messageId, npc, playerGuid: p.playerGuid, version, attempt, ok: parsed.ok,

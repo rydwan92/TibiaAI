@@ -1,7 +1,7 @@
 # Iteracja 0015 — życie gracza i naprawy pamięci
 Data: 2026-10-31
 Stan: VERIFIED w prawdziwych klientach, z wyjątkami w sekcji „Ograniczenia”
-Commit projektu: niezacommitowane. Upstream: Canary `fe0f932`, OTClient `dd56414`.
+Commit projektu: `f58b71b` na gałęzi `feat/player-agents`. Upstream: Canary `fe0f932`, OTClient `dd56414`.
 
 ## Cel i warunek odbioru
 Właściciel: agenci mają żyć jak gracze, wracać do miasta po zapasy, chować łup, walczyć ze sobą, gdy się nie dogadają, uczyć się po śmierci i nie przyznawać się do bycia AI. Przegląd zewnętrzny: najpierw naprawić utratę danych w pamięci. Odbiór: agent bez strzał sam zdobywa pieniądze i zapasy, a kompresja nie traci przeczytanych danych.

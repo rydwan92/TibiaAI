@@ -8,25 +8,42 @@ TibiaAIAgent = {}
 local A = TibiaAIAgent
 
 local TICK_MS = 300
+local EVENTS_MAX_BYTES = 2000000
+-- How far each shooter reaches: a knight needs no entry, he fights hand to hand.
+local RANGE = { paladin = 5, sorcerer = 3, druid = 3 }
+local KITE_AT = 1
+local KITE_MS = 900
 local STATE_MS = 1000
-local POTIONS = { health = 266, mana = 268 }
+local POTIONS = { health = { 266, 236, 239 }, mana = { 268, 237, 238 } }
 local MEAT = 3577
 local GOLD = 3031
 local BACKPACK = { x = 65535, y = 3, z = 0 }
 local PLATINUM = 3035
 local KEEP = { [3031] = true, [3035] = true, [3043] = true, [3577] = true, [3582] = true, [3585] = true, [266] = true, [268] = true, [17512] = true }
 local MIN_CAP_TO_LOOT = 10
+local PARTY_MS = 3000
+local OFFLINE_MS = 15000
+local SAY_FRESH_MS = 60000
+local AWAKE_MS = 480000 -- the server sends away whoever does nothing for 15 minutes
+local BREAK_TRIES = 4
+local LIGHT_SHOVEL = 5710
 local TRADE_STEP_MS = 700
+local SAIL_DISTANCE = 2
+local SAIL_STEP_MS = 2500
 local TRADE_ASK_MS = 6000
 local DEPOT_CHEST = 3502
 local DEPOT_BOX = 22797
 local LOCKER_MIN, LOCKER_MAX = 3497, 3500
 local DEPOT_GIVE_UP_MS = 30000
 local LOOT_MS = 12000
+local MAX_LOOT_MOVES = 8
 local VIP_DELAY_MS = 5000
+local VIP_ADD_MS = 5000
 local ARROW = 3447
 local BOW = 3350
-local EQUIP_MS = 5000
+local EQUIP_MS = 3000
+local ARROWS_MS = 20000
+local SLOTS = { 1, 3, 4, 5, 6, 7, 8 }
 local SPELL_COOLDOWN_MS = 2100
 local POTION_COOLDOWN_MS = 1100
 local STUCK_MS = 6000
@@ -36,6 +53,7 @@ local GIVE_UP_MS = 9000
 local IGNORE_MS = 25000
 
 local dir, cfg
+local eventSession, eventSeq = "", 0
 local orders = { goal = { type = "idle" }, say = {} }
 local handlers = {}
 local said = {}
@@ -46,15 +64,25 @@ local relogging = false
 local tickEvent
 local kitAsked = false
 local kitRefresh = false
-local lastUse, lastDig, lastEquip = 0, 0, 0
+local lastUse, lastDig, lastEquip, lastArrows, lastKite = 0, 0, 0, 0, 0
+local lastKitOrder = 0
+local sailGoal, sailStep = 0, 0
+local lastParty, lastRest = 0, nil
+local lastTurn, offlineAt, playedOnce = 0, nil, false
+local comeBackTries = 0
+local takeBreak, comeBack
 local ignored = {}
 local trade, depot
+local tradeGoal, tradeGreeted = 0, false
 local keep = {}
 local safeFightOff = false
 local chase = { id = 0, hp = 0, atMs = 0 }
 local lastTargetPos, lootAt, lootUntil, corpse = nil, nil, 0, nil
+local lootMoves = 0
 local vips = {}
 local vipsAdded = false
+local lastVipAdd = 0
+local loginHidden = false
 local enteredAt = 0
 
 local function now() return g_clock.millis() end
@@ -76,9 +104,11 @@ local function write(name, text)
   os.rename(dir .. name .. ".tmp", dir .. name)
 end
 
+-- Every record carries its run and number, so a repeated one is known for what it is.
 local function event(kind, fields)
   fields = fields or {}
-  fields.kind, fields.atMs = kind, os.time() * 1000
+  eventSeq = eventSeq + 1
+  fields.kind, fields.atMs, fields.session, fields.seq = kind, os.time() * 1000, eventSession, eventSeq
   local f = io.open(dir .. "events.jsonl", "ab")
   if f then
     f:write(json.encode(fields), "\n")
@@ -106,11 +136,23 @@ local function hostiles(p)
   return list
 end
 
-local function drink(p, id)
-  if now() - lastPotion < POTION_COOLDOWN_MS or p:getInventoryCount(id, 0) == 0 then return false end
-  lastPotion = now()
-  g_game.useInventoryItemWith(id, p, 0)
-  return true
+local function owned(p, ids)
+  local total = 0
+  for _, id in ipairs(ids) do total = total + p:getInventoryCount(id, 0) end
+  return total
+end
+
+-- The strongest potion this character may drink; the mind knows what its level allows.
+local function drink(p, kind)
+  if now() - lastPotion < POTION_COOLDOWN_MS then return false end
+  for _, id in ipairs((orders.potions and orders.potions[kind]) or POTIONS[kind]) do
+    if p:getInventoryCount(id, 0) > 0 then
+      lastPotion = now()
+      g_game.useInventoryItemWith(id, p, 0)
+      return true
+    end
+  end
+  return false
 end
 
 local function cast(words)
@@ -124,9 +166,9 @@ local function heal(p)
   local r = cfg.reflexes
   local hp = p:getHealth() / math.max(p:getMaxHealth(), 1)
   if hp < r.healAt then
-    if not drink(p, POTIONS.health) and p:getMana() >= (orders.healMana or 20) then cast(orders.healSpell or cfg.healSpell) end
+    if not drink(p, "health") and p:getMana() >= (orders.healMana or 20) then cast(orders.healSpell or cfg.healSpell) end
   end
-  if p:getMana() / math.max(p:getMaxMana(), 1) < r.manaAt and hp > r.healAt then drink(p, POTIONS.mana) end
+  if p:getMana() / math.max(p:getMaxMana(), 1) < r.manaAt and hp > r.healAt then drink(p, "mana") end
   return hp
 end
 
@@ -228,7 +270,9 @@ local function changeFloor(p, goal)
     if now() - lastDig > DIG_MS then
       lastDig = now()
       lastUse = 0
-      useThing(p, spot, function(thing) g_game.useInventoryItemWith(3457, thing, 0) end)
+      -- A new character gets a light shovel from the server, a shop sells the ordinary one.
+      local shovel = p:getInventoryCount(LIGHT_SHOVEL, 0) > 0 and LIGHT_SHOVEL or 3457
+      useThing(p, spot, function(thing) g_game.useInventoryItemWith(shovel, thing, 0) end)
     elseif not p:isAutoWalking() then
       p:autoWalk(spot)
     end
@@ -241,6 +285,31 @@ local function eat(p)
   if now() - lastMeal < 90000 then return end
   lastMeal = now()
   if p:getInventoryCount(MEAT, 0) > 0 then g_game.useInventoryItem(MEAT) end
+end
+
+-- After a greeting an NPC listens only in its own tab, which the client opens at its first answer.
+local function npcMessage(text)
+  local console = modules.game_console
+  local ok = pcall(function()
+    local tab = console.getTab("NPCs")
+    console.consoleTabBar:selectTab(tab)
+    console.sendMessage(text, tab)
+  end)
+  if not ok then g_game.talkPrivate(MessageModes.NpcTo, "NPCs", text) end
+end
+
+-- A passage or a lesson is arranged in words, like a person does it: greet, name it, agree.
+local function doTalk(p, goal, words)
+  local npc = { x = goal.x, y = goal.y, z = goal.z }
+  if gap(p:getPosition(), npc) > SAIL_DISTANCE then
+    walkTowards(p, npc)
+    return
+  end
+  if now() - lastUse < SAIL_STEP_MS then return end
+  lastUse = now()
+  if sailGoal ~= goal.id then sailGoal, sailStep = goal.id, 0 end
+  sailStep = sailStep % #words + 1
+  if sailStep == 1 then g_game.talk(words[1]) else npcMessage(words[sailStep]) end
 end
 
 local function playerNamed(p, name)
@@ -258,15 +327,27 @@ end
 
 -- Trade goes through the same window a person uses: sell what she buys, then buy the list.
 local function doTrade(p, goal)
+  if tradeGoal ~= goal.id then
+    tradeGoal, tradeGreeted = goal.id, false
+  end
   if not trade then
     if now() - lastUse >= TRADE_ASK_MS then
       lastUse = now()
-      g_game.talk("trade")
+      -- The town's own merchants want a greeting first and then talk on the NPC channel.
+      if goal.greet and not tradeGreeted then
+        tradeGreeted = true
+        g_game.talk("hi")
+      elseif goal.greet then
+        npcMessage("trade")
+      else
+        g_game.talk("trade")
+      end
     end
     return
   end
   if not trade.money or now() - trade.last < TRADE_STEP_MS then return end
   trade.last = now()
+  for _, want in ipairs(goal.buy or {}) do trade.sold[want.id] = true end -- what was just bought stays bought
   for _, offer in pairs(trade.items) do
     local id = offer[1]:getId()
     if offer[5] > 0 and (trade.goods[id] or 0) > 0 and not trade.sold[id] then
@@ -319,11 +400,12 @@ local function doDepot(p, goal)
     depot.taken = depot.taken or 0
     for slot = 0, depot.box:getItemsCount() - 1 do
       local item = depot.box:getItem(slot)
-      if depot.taken < want.count and item and item:getId() == want.id then
-        -- Coins lie in several stacks, and the first may be a handful.
-        local amount = math.min(item:getCount(), want.count - depot.taken)
+      local worth = item and item:getId() == PLATINUM and want.id == GOLD and 100 or 1
+      if depot.taken < want.count and item and (item:getId() == want.id or worth == 100) then
+        -- Coins lie in several stacks, the first may be a handful, and a hundred gold is one platinum.
+        local amount = math.min(item:getCount(), math.ceil((want.count - depot.taken) / worth))
         lastUse = now()
-        depot.taken = depot.taken + amount
+        depot.taken = depot.taken + amount * worth
         g_game.move(item, { x = 65535, y = 64 + depot.bag:getId(), z = 0 }, amount)
         return
       end
@@ -334,7 +416,7 @@ local function doDepot(p, goal)
     for _, id in ipairs(goal.deposit or {}) do
       if item and item:getId() == id then
         lastUse = now()
-        depot.stored = depot.stored + item:getCount()
+        if id == GOLD or id == PLATINUM then depot.stored = depot.stored + item:getCount() * (id == PLATINUM and 100 or 1) end
         g_game.move(item, { x = 65535, y = 64 + depot.box:getId(), z = 0 }, item:getCount())
         return
       end
@@ -369,6 +451,10 @@ local function act(p)
     openDoor(p, goal)
   elseif goal.type == "follow" then
     followFriend(p, goal)
+  elseif goal.type == "sail" then
+    doTalk(p, goal, { "hi", goal.word, "yes" })
+  elseif goal.type == "talk" then
+    doTalk(p, goal, goal.words)
   elseif goal.type == "trade" then
     doTrade(p, goal)
   elseif goal.type == "depot" then
@@ -393,6 +479,7 @@ local function fight(p, hp)
   elseif safeFightOff then
     safeFightOff = false
     g_game.setSafeFight(true)
+    if g_game.isAttacking() then g_game.cancelAttack() end
   end
   if goal.flee or hp < cfg.reflexes.fleeAt then
     if g_game.isAttacking() then g_game.cancelAttack() end
@@ -440,6 +527,14 @@ end
 
 -- Corpses are opened like a person does, and only what is worth the weight is taken.
 local function takeLoot()
+  -- A full backpack refuses everything; a person closes the corpse and walks on.
+  lootMoves = lootMoves + 1
+  if lootMoves > MAX_LOOT_MOVES then
+    g_game.close(corpse)
+    corpse, lootAt, lootMoves = nil, nil, 0
+    event("loot_stuck", {})
+    return
+  end
   for slot = corpse:getItemsCount() - 1, 0, -1 do
     local item = corpse:getItem(slot)
     if item and (KEEP[item:getId()] or keep[item:getId()]) and me():getFreeCapacity() >= MIN_CAP_TO_LOOT then
@@ -448,7 +543,7 @@ local function takeLoot()
     end
   end
   g_game.close(corpse)
-  corpse, lootAt = nil, nil
+  corpse, lootAt, lootMoves = nil, nil, 0
 end
 
 local function loot(p)
@@ -474,6 +569,35 @@ local function loot(p)
     end
   end
   return true
+end
+
+-- Who shoots keeps away: step back from what is too close, walk up to what is out of reach.
+local function keepRange(p, foes)
+  local reach = RANGE[cfg.vocation]
+  local nearest = foes[1]
+  if not reach or not nearest or p:isAutoWalking() or now() - lastKite < KITE_MS then return end
+  local here = p:getPosition()
+  local target = g_game.getAttackingCreature()
+  if target and gap(target:getPosition(), here) > reach then
+    lastKite = now()
+    walkTowards(p, target:getPosition())
+    return
+  end
+  if nearest.d > KITE_AT then return end
+  lastKite = now()
+  local best, bestScore = nil, nearest.d
+  for dx = -3, 3 do
+    for dy = -3, 3 do
+      local to = { x = here.x + dx, y = here.y + dy, z = here.z }
+      local tile = g_map.getTile(to)
+      if tile and tile:isWalkable() and tile:isPathable() then
+        local score = 99
+        for _, foe in ipairs(foes) do score = math.min(score, gap(foe.c:getPosition(), to)) end
+        if score > bestScore then best, bestScore = to, score end
+      end
+    end
+  end
+  if best then p:autoWalk(best) end
 end
 
 local function flee(p)
@@ -513,8 +637,11 @@ local function speak()
   for _, line in ipairs(orders.say or {}) do
     if not said[line.id] and (line.atMs or 0) <= os.time() * 1000 then
       said[line.id] = true
-      if line.to then privateMessage(line.to, line.text) else localMessage(line.text) end
-      return
+      -- Orders outlive a restart of the client; what was meant for then is not said now.
+      if os.time() * 1000 - (line.atMs or 0) <= SAY_FRESH_MS then
+        if line.to then privateMessage(line.to, line.text) else localMessage(line.text) end
+        return
+      end
     end
   end
 end
@@ -523,6 +650,21 @@ local function vipList()
   local list = {}
   for _, vip in pairs(vips) do list[#list + 1] = { name = vip.name, online = vip.online } end
   return list
+end
+
+local function wornGear(p)
+  local worn = {}
+  for _, slot in ipairs(SLOTS) do
+    local item = p:getInventoryItem(slot)
+    worn[tostring(slot)] = item and item:getId() or 0
+  end
+  return worn
+end
+
+local function ownedGear(p)
+  local have = {}
+  for _, want in ipairs(orders.wear or {}) do have[tostring(want.id)] = p:getInventoryCount(want.id, 0) end
+  return have
 end
 
 local function snapshot(p)
@@ -539,12 +681,15 @@ local function snapshot(p)
     atMs = os.time() * 1000, online = true, name = p:getName(), level = p:getLevel(), experience = p:getExperience(),
     hp = p:getHealth(), hpMax = p:getMaxHealth(), mana = p:getMana(), manaMax = p:getMaxMana(), cap = p:getFreeCapacity(),
     x = here.x, y = here.y, z = here.z, walking = p:isAutoWalking(), target = target and target:getName() or "",
-    potions = { health = p:getInventoryCount(POTIONS.health, 0), mana = p:getInventoryCount(POTIONS.mana, 0) },
+    potions = { health = owned(p, POTIONS.health), mana = owned(p, POTIONS.mana) },
+    magicLevel = p:getMagicLevel(),
     gold = p:getInventoryCount(GOLD, 0) + p:getInventoryCount(PLATINUM, 0) * 100,
     vocation = cfg.vocation,
     arrows = p:getInventoryCount(ARROW, 0),
     food = p:getInventoryCount(MEAT, 0),
     vips = vipList(),
+    worn = wornGear(p),
+    have = ownedGear(p),
     seen = seen, goalId = orders.goal.id or 0,
   }))
 end
@@ -570,15 +715,30 @@ local function askForKit()
   kitAsked, kitRefresh = true, false
 end
 
--- A bow without arrows does nothing, so it goes away and fists do the work until the next shop.
-local function readyWeapon(p)
-  if cfg.vocation ~= "paladin" or now() - lastEquip < EQUIP_MS then return end
-  local held = p:getInventoryItem(InventorySlotLeft)
-  local armed = held and held:getId() == BOW
+-- Wears what the character owns. The server toggles: on when in the bag, off when in hand. A bow
+-- without arrows does nothing, so it goes away and fists do the work until the next shop.
+local function wearGear(p)
+  if now() - lastEquip < EQUIP_MS then return end
   local arrows = p:getInventoryCount(ARROW, 0)
-  if (arrows == 0 and armed) or (arrows > 0 and not armed) then
-    lastEquip = now()
-    g_game.equipItemId(BOW, 0) -- the server toggles: on when in the bag, off when in hand
+  for _, want in ipairs(orders.wear or {}) do
+    local held = p:getInventoryItem(want.slot)
+    if want.id == BOW and arrows == 0 then
+      if held and held:getId() == BOW then
+        lastEquip = now()
+        g_game.equipItemId(BOW, 0)
+        return
+      end
+    elseif (not held or held:getId() ~= want.id) and (want.bought or p:getInventoryCount(want.id, 0) > 0) then
+      -- Something better was bought: equipping swaps it with what is worn.
+      lastEquip = now()
+      g_game.equipItemId(want.id, 0)
+      return
+    end
+  end
+  -- Bows draw only from the quiver, and shop arrows land in the backpack.
+  if cfg.vocation == "paladin" and arrows > 0 and now() - lastArrows >= ARROWS_MS then
+    lastArrows = now()
+    g_game.equipItemId(ARROW, 0)
   end
 end
 
@@ -599,12 +759,88 @@ local function addFriends()
   end
 end
 
+-- People this character came to like join the list one at a time, as the mind names them.
+local function hideLoginWindow()
+  if loginHidden then return end
+  loginHidden = true
+  if EnterGame and EnterGame.hide then pcall(EnterGame.hide) end
+end
+
+local function addLikedPeople()
+  if not orders.addVip or now() - lastVipAdd < VIP_ADD_MS then return end
+  lastVipAdd = now()
+  local known = {}
+  for _, vip in pairs(vips) do known[vip.name] = true end
+  for _, name in ipairs(orders.addVip) do
+    if not known[name] then return g_game.addVip(name) end
+  end
+end
+
+-- After a fight the server refuses a logout for a while; the icons say the same.
+local function inFightLock(p)
+  local states = p:getStates()
+  local has = function(flag) return math.floor(states / flag) % 2 == 1 end
+  return has(PlayerStates.Swords) or has(PlayerStates.PzBlock)
+end
+
+-- A party shares experience. The mind says who with; the shields tell how far it has got.
+local function keepParty(p)
+  local want = orders.party
+  if now() - lastParty < PARTY_MS then return end
+  lastParty = now()
+  if not want then
+    if p:getShield() ~= ShieldNone then g_game.partyLeave() end
+    return
+  end
+  local friend = playerNamed(p, want.name)
+  if not friend then return end
+  local theirs = friend:getShield()
+  if want.lead then
+    if theirs == ShieldNone then
+      g_game.partyInvite(friend:getId())
+    elseif theirs == ShieldBlue then
+      g_game.partyShareExperience(true)
+    end
+  elseif theirs == ShieldWhiteYellow then
+    g_game.partyJoin(friend:getId())
+  end
+end
+
 local function tick()
   tickEvent = scheduleEvent(tick, TICK_MS)
-  if not g_game.isOnline() or not me() or relogging then return end
+  if relogging then return end
+  if not g_game.isOnline() or not me() then
+    -- Kicked for idling or cut off: a person logs back in.
+    if playedOnce then
+      offlineAt = offlineAt or now()
+      if now() - offlineAt > OFFLINE_MS then
+        offlineAt = nil
+        comeBack()
+      end
+    end
+    return
+  end
+  offlineAt, playedOnce, comeBackTries = nil, true, 0
   local p = me()
+  if now() - lastTurn > AWAKE_MS then
+    lastTurn = now()
+    g_game.turn(math.random(0, 3))
+  end
   addFriends()
-  readyWeapon(p)
+  addLikedPeople()
+  hideLoginWindow()
+  wearGear(p)
+  keepParty(p)
+  if orders.rest and orders.rest.id ~= lastRest and not inFightLock(p) then
+    lastRest = orders.rest.id
+    takeBreak(orders.rest.seconds)
+    return
+  end
+  if orders.needKit and orders.needKit ~= lastKitOrder then
+    lastKitOrder = orders.needKit
+    kitRefresh = true
+    askForKit()
+  end
   if not kitAsked and cfg.kit then askForKit() end
   local ok, err = pcall(function()
     local hp = heal(p)
@@ -612,6 +848,7 @@ local function tick()
     eat(p)
     speak()
     local fighting = fight(p, hp)
+    if fighting then keepRange(p, hostiles(p)) end
     if (orders.goal.flee or hp < cfg.reflexes.fleeAt) and flee(p) then
       lastMoveAt = now()
     elseif not fighting then
@@ -668,12 +905,58 @@ local function relog()
       return scheduleEvent(wait, 1000)
     end
     relogging = false
-    kitAsked, kitRefresh = false, true
     vipsAdded, enteredAt = false, 0
     CharacterList.show()
     scheduleEvent(enterWorld, 1500)
   end
   scheduleEvent(wait, 3000)
+end
+
+-- The list of characters is enough most of the time; after a longer cut the whole login is repeated.
+comeBack = function()
+  comeBackTries = comeBackTries + 1
+  vipsAdded, enteredAt = false, 0
+  event("came_back", { tries = comeBackTries })
+  if comeBackTries % 2 == 1 and pcall(CharacterList.show) then
+    scheduleEvent(enterWorld, 1500)
+  else
+    login()
+  end
+end
+
+-- People leave for a while and come back. Logging out in a fight is refused, so it is tried again.
+takeBreak = function(seconds)
+  relogging = true
+  local tries = 0
+  local function leave()
+    if g_game.isOnline() then
+      tries = tries + 1
+      if tries > BREAK_TRIES then
+        relogging = false -- the server said no: the break is off, the character stays in play
+        return
+      end
+      g_game.safeLogout()
+      return scheduleEvent(leave, 3000)
+    end
+    scheduleEvent(function()
+      relogging = false
+      vipsAdded, enteredAt = false, 0
+      CharacterList.show()
+      scheduleEvent(enterWorld, 1500)
+    end, seconds * 1000)
+  end
+  leave()
+end
+
+-- Runs at start, before anything is written, so a mind reading the old file only meets its end.
+local function rotateEvents()
+  local f = io.open(dir .. "events.jsonl", "rb")
+  if not f then return end
+  local size = f:seek("end")
+  f:close()
+  if size < EVENTS_MAX_BYTES then return end
+  os.remove(dir .. "events.jsonl.1")
+  os.rename(dir .. "events.jsonl", dir .. "events.jsonl.1")
 end
 
 function A.init()
@@ -683,6 +966,8 @@ function A.init()
   local text = read("login.json")
   if not text then return end
   cfg = json.decode(text)
+  eventSession = tostring(os.time()) .. "-" .. tostring(math.random(100000, 999999))
+  rotateEvents()
   handlers.onTalk = function(name, level, mode, message, channelId, pos)
     if not me() or name == me():getName() or mode == MessageModes.MonsterSay or mode == MessageModes.MonsterYell then return end
     local private = mode == MessageModes.PrivateFrom
@@ -714,7 +999,9 @@ function A.init()
     end
   end
   handlers.onTextMessage = function(mode, message)
-    event("message", { text = message })
+    -- Raids and other announcements: red for everyone, or white and not about this character.
+    local announced = mode == MessageModes.Warning or (mode == MessageModes.Game and not message:find("^You") and not message:find("^Using"))
+    event("message", { text = message, broadcast = announced, mode = mode })
     if message:find("Loot of", 1, true) and not message:find(": nothing", 1, true) and lastTargetPos then
       lootAt, lootUntil = lastTargetPos, now() + LOOT_MS
     end

@@ -7,8 +7,8 @@ param([switch]$Init, [switch]$Status, [switch]$Reset)
 . "$PSScriptRoot\lib.ps1"
 $maps = Join-Path $Runtime 'maps'
 $dev = Join-Path $maps 'canary.otbm'
-$original = Join-Path $CanarySrc 'data-canary\world\canary.otbm'
-$live = Join-Path $ServerDir 'data-canary\world\canary.otbm'
+$original = $MapFile
+$live = Join-Path $ServerDir "$DataPack\world\$MapName.otbm"
 
 function Hash([string]$path) { if (Test-Path $path) { (Get-FileHash -Algorithm SHA256 $path).Hash.ToLower().Substring(0, 16) } else { 'missing' } }
 

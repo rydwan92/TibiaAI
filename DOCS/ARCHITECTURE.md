@@ -8,7 +8,7 @@ Komponenty działają natywnie na Windows, bez Compose (ADR 0003). Bridge to mai
 packages/contracts/agents.json   jedno źródło definicji agentów, timing, limity, akcje
 packages/contracts/local-ai.json polityka lokalnego modelu
 packages/contracts/npc/          world, roles, variants, identities, knowledge (ADR 0008)
-game/overlays/tibia-ai/          overlay na data-canary (kopiowany przez scripts/sync-server.ps1)
+game/overlays/tibia-ai/          overlay na data-otservbr-global (kopiowany przez scripts/sync-server.ps1)
   scripts/tibia-ai/init.lua      jedyny plik auto-ładowany; dofile modułów w stałej kolejności
   tibia-ai/lib/
     core.lua         JSON, dziennik world-journal.jsonl, zapis atomowy, szablony
@@ -28,9 +28,9 @@ apps/brain/src/
   agents.ts          rejestr agentów (ten sam agents.json), walidacja
   contracts.ts       kontrakt v1: envelope, event, command, result, world.json
   actions.ts         rejestr akcji z capabilities
-  providers/         Provider, RulesProvider, LocalModelClient, polityka local-only
+  providers/         Provider, RulesProvider, LocalModelClient, polityka local-only, CopilotModels i CreditLedger (ADR 0011)
   npc/               config, store, relations, perception, requests, retrieval, context, dialogue, confirmed, compression
-  players/           gracze-agenci (ADR 0010): types, nav (trasy), knowledge (dane gry), choices (co można zrobić), mind, fleet
+  players/           gracze-agenci (ADR 0010): types, nav (trasy), events (odbiór zdarzeń ciała), knowledge (dane gry), places (własna mapa postaci), choices (co można zrobić), mind, fleet
   memory.ts          SQLite (node:sqlite): obserwacje, spotkania, komendy, wyniki, migracje
   mailbox.ts         pliki mailbox po stronie Node
   retention.ts       przycinanie archiwum mailboxa i starych wierszy operacyjnych
@@ -38,7 +38,7 @@ apps/brain/src/
   brain.ts, main.ts  pętla 250 ms, heartbeat, harmonogram intencji, retencja co 10 min
   cli/               timeline.ts (odczyt), ai-status.ts i npc-memory.ts (podgląd), sqlite-tool.ts (backup/check SQLite)
 scripts/             setup, sync-server, start, stop, status, ai-status, logs, client, ollama, incident, npc-scenario, npc-two-players, alarm, selftest, scan, backup, restore-test
-tools/               journal.py, otbm_towns.py, world_atlas.py, game_data.py, make_spawns.py, otclient-autotest/ (test prawdziwego klienta), otclient-framecap/ (limit klatek), otclient-agent/ (ciało gracza-agenta)
+tools/               journal.py, otbm_towns.py, world_atlas.py, game_data.py, make_grounds.py, make_boats.py, make_shop.py, otclient-autotest/ (test prawdziwego klienta), otclient-framecap/ (limit klatek), otclient-agent/ (ciało gracza-agenta)
 infra/versions.lock.json  przypięte artefakty z SHA-256
 infra/vpn/           przykładowe reguły prywatnego pokazu, niezastosowane
 runtime/, vendor/    ignorowane: dane, logi, mailbox / pobrane upstream

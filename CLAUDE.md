@@ -1,7 +1,7 @@
 # TibiaAI: instrukcje projektu
 
 ## Cel i język
-Budujemy prywatne lokalne laboratorium OpenTibia z agentami działającymi w prawdziwym świecie gry. Rozmawiaj i dokumentuj po polsku, identyfikatory kodu po angielsku. Czytaj najpierw DOCS/STATUS.md, DOCS/PLAN.md, DOCS/ARCHITECTURE.md i DOCS/COMPATIBILITY.md.
+Budujemy prywatne lokalne laboratorium OpenTibia z agentami działającymi w prawdziwym świecie gry. Rozmawiaj i dokumentuj po polsku, identyfikatory kodu po angielsku. Czytaj najpierw DOCS/STEVIUM_PRODUCT_VISION.md, DOCS/VISION_PROGRESS.md, DOCS/STATUS.md, DOCS/PLAN.md, DOCS/ARCHITECTURE.md i DOCS/COMPATIBILITY.md. Po każdym większym etapie dopisz wpis do DOCS/VISION_PROGRESS.md.
 
 ## Zasady implementacji
 - Pierwszy priorytet: zalogowanie do świata, później jeden NPC, potem integracja Brain. Nie buduj najpierw panelu administracyjnego.

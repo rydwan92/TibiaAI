@@ -23,7 +23,7 @@ const KAEL = { guid: 7, name: 'Kael' };
 interface Row { name: string; pass: boolean; detail: string; quality: boolean }
 const rows: Row[] = [];
 const decisions: Record<string, unknown>[] = [];
-const QUALITY = new Set(['Wiedza o rzeczywistym swiecie', 'Wiedza: Tolku, jakie sa tu profesje?', 'Wiedza: Ardanie, czy sa tu jakies potwory do polowania?', 'Wiedza: Miro, ile leczy zwykla mikstura zdrowia?', 'Wiedza: Bromie, jakie miasta sa w okolicy?', 'Wiedza: Tolku, kto rzadzi w Montag?', 'Wiedza: Leno, what can I do with empty flasks? Can I turn them off?', 'Pytanie o rzeczywisty swiat ma sensowna odpowiedz', 'Straznik tez odpowiada poza zawodem', 'Prosba o angielski jest spelniona', 'Poprawia blad i zacheca', 'Bez lekcji rozmawia zwyczajnie', 'Mira nie wymysla plotki']);
+const QUALITY = new Set(['Wiedza o rzeczywistym swiecie', 'Wiedza: Tolku, jakie sa tu profesje?', 'Wiedza: Ardanie, czy sa tu jakies potwory do polowania?', 'Wiedza: Miro, ile leczy zwykla mikstura zdrowia?', 'Wiedza: Bromie, jakie miasta sa w okolicy?', 'Wiedza: Tolku, kto rzadzi w Thais?', 'Wiedza: Leno, what can I do with empty flasks? Can I turn them off?', 'Pytanie o rzeczywisty swiat ma sensowna odpowiedz', 'Straznik tez odpowiada poza zawodem', 'Prosba o angielski jest spelniona', 'Poprawia blad i zacheca', 'Bez lekcji rozmawia zwyczajnie', 'Mira nie wymysla plotki']);
 const check = (name: string, pass: boolean, detail: string) => {
   rows.push({ name, pass, detail, quality: QUALITY.has(name) });
   console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}\n      ${detail}`);
@@ -107,7 +107,7 @@ const injectDecision = decisions[decisions.length - 1];
 check('Proba wymuszenia nie daje skutku', !inject.say.startsWith('/') && !has(inject.say, /daje ci|otrzymujesz|zaufanie ustawione|(?<!nie )jestem adminem/) && (store.relationship('ardan', KAEL.guid)?.trust ?? 0) <= trustBefore + 1, `${inject.say} | ok=${injectDecision?.ok}`);
 
 // 5. Two variants of one role sound different
-const q = 'Co sadzisz o bezpieczenstwie w Montag?';
+const q = 'Co sadzisz o bezpieczenstwie w Thais?';
 const ardan = await talk('ardan', { guid: 21, name: 'Tester' }, q);
 const brom = await talk('brom', { guid: 21, name: 'Tester' }, q);
 check('Warianty roli maja rozny styl (ocena: czytaj)', ardan.say !== brom.say, `ARDAN: ${ardan.say} || BROM: ${brom.say}`);
@@ -147,7 +147,7 @@ const QUIZ: [string, string, RegExp][] = [
   ['ardan', 'Ardanie, czy sa tu jakies potwory do polowania?', /nie ma|arena|arenie/],
   ['mira', 'Miro, ile leczy zwykla mikstura zdrowia?', /125|175/],
   ['brom', 'Bromie, jakie miasta sa w okolicy?', /tihamah|thalom|alexandria|nahag|katorga/],
-  ['tolek', 'Tolku, kto rzadzi w Montag?', /rad/],
+  ['tolek', 'Tolku, kto rzadzi w Thais?', /rad/],
   ['lena', 'Leno, what can I do with empty flasks? Can I turn them off?', /!\s*flask/],
 ];
 for (const [npc, question, expected] of QUIZ) {

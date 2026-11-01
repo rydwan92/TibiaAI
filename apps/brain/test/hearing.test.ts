@@ -83,7 +83,7 @@ test('migrations from v1 keep data and copy the database first', () => {
   // Simulate a v1 database: undo everything the later migrations added.
   const npcTables = m.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'npc\\_%' ESCAPE '\\'").all() as { name: string }[];
   for (const t of npcTables) m.db.exec(`DROP TABLE ${t.name}`);
-  m.db.exec("DROP TABLE heard_statements; ALTER TABLE commands DROP COLUMN plan_json; ALTER TABLE commands DROP COLUMN plan_applied; DELETE FROM schema_migrations WHERE version >= 2;");
+  m.db.exec("DROP TABLE assistant_notes; DROP TABLE model_usage; DROP TABLE heard_statements; ALTER TABLE commands DROP COLUMN plan_json; ALTER TABLE commands DROP COLUMN plan_applied; DELETE FROM schema_migrations WHERE version >= 2;");
   m.close();
   const upgraded = new Memory(file);
   assert.equal(upgraded.encounterStats('ardan', 1).count, 1);

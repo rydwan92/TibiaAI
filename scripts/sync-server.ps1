@@ -15,46 +15,54 @@ if (Get-TrackedProcess 'canary') {
 New-Item -ItemType Directory -Force $ServerDir | Out-Null
 Copy-Item $CanaryExe $ServerDir -Force
 Copy-Item (Join-Path $CanarySrc 'key.pem') $ServerDir -Force
-foreach ($dir in 'data', 'data-canary') {
+foreach ($dir in 'data', $DataPack) {
     # robocopy /MIR keeps the copy identical to the pinned source (only inside runtime\server).
-    & robocopy.exe (Join-Path $CanarySrc $dir) (Join-Path $ServerDir $dir) /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
+    # The map is copied separately below and must survive /MIR.
+    & robocopy.exe (Join-Path $CanarySrc $dir) (Join-Path $ServerDir $dir) /MIR /XF "$MapName.otbm" /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed for $dir ($LASTEXITCODE)" }
 }
 
 # Overlay: our scripts and NPC declarations, copied over the datapack copy.
 if (Test-Path $Overlay) {
-    & robocopy.exe $Overlay (Join-Path $ServerDir 'data-canary') /E /NFL /NDL /NJH /NJS /NP | Out-Null
+    & robocopy.exe $Overlay (Join-Path $ServerDir $DataPack) /E /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy overlay failed ($LASTEXITCODE)" }
 }
-# Developer map: runtime\maps\canary.otbm (scripts\map-dev.ps1) replaces the pinned map in the
-# server copy only. Removing that file and syncing returns to the original from vendor\.
-$devMap = Join-Path $Runtime 'maps\canary.otbm'
-if (Test-Path $devMap) {
-    Copy-Item $devMap (Join-Path $ServerDir 'data-canary\world\canary.otbm') -Force
-    Write-Host "Using developer map $devMap"
-}
+# Developer map: runtime\maps\<map>.otbm (scripts\map-dev.ps1) replaces the pinned map in the server
+# copy only. Removing that file and syncing returns to the pinned one.
+$devMap = Join-Path $Runtime "maps\$MapName.otbm"
+$liveMap = Join-Path $ServerDir "$DataPack\world\$MapName.otbm"
+$sourceMap = if (Test-Path $devMap) { Write-Host "Using developer map $devMap"; $devMap } else { $MapFile }
+if (-not (Test-Path $sourceMap)) { throw "Map $sourceMap is missing; see DOCS/RUNBOOK.md" }
+if (-not (Test-Path $liveMap) -or (Get-Item $liveMap).Length -ne (Get-Item $sourceMap).Length) { Copy-Item $sourceMap $liveMap -Force }
+
+# Our own places: small map files beside the pinned map, which stays untouched (tools\map_place.py).
+$custom = Join-Path $ServerDir "$DataPack\world\custom"
+& python -I (Join-Path $Root 'tools\map_place.py') build (Join-Path $Root 'game\world\places') $custom (Join-Path $CanarySrc 'data\items\items.xml')
+if ($LASTEXITCODE -ne 0) { throw 'A place in game\world\places is invalid' }
+New-Item -ItemType Directory -Force (Join-Path $Runtime 'atlas') | Out-Null
+Move-Item -Force (Join-Path $custom 'stevium-blocked.json') (Join-Path $Runtime 'atlas\places-blocked.json')
 
 # Agent definitions: single source in packages\contracts (ADR 0004), read by Lua at script load.
 $agentsJson = Join-Path $Root 'packages\contracts\agents.json'
 $null = Get-Content -Raw -Encoding UTF8 $agentsJson | ConvertFrom-Json  # fail early on invalid JSON
-New-Item -ItemType Directory -Force (Join-Path $ServerDir 'data-canary\tibia-ai') | Out-Null
-Copy-Item $agentsJson (Join-Path $ServerDir 'data-canary\tibia-ai\agents.json') -Force
+$ourData = Join-Path $ServerDir "$DataPack\tibia-ai"
+New-Item -ItemType Directory -Force $ourData | Out-Null
+Copy-Item $agentsJson (Join-Path $ourData 'agents.json') -Force
 # The engine reads incident descriptions from the shared world rules.
-Copy-Item (Join-Path $Root 'packages\contracts\npc\world.json') (Join-Path $ServerDir 'data-canary\tibia-ai\world.json') -Force
-# The world's monsters are ours (tools\make_spawns.py): the map ships without any.
-Copy-Item (Join-Path $Root 'game\world\canary-monster.xml') (Join-Path $ServerDir 'data-canary\world\canary-monster.xml') -Force
-Copy-Item (Join-Path $Root 'packages\contracts\tasks.json') (Join-Path $ServerDir 'data-canary\tibia-ai\tasks.json') -Force
-Copy-Item (Join-Path $Root 'packages\contracts\shop.json') (Join-Path $ServerDir 'data-canary\tibia-ai\shop.json') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\npc\world.json') (Join-Path $ourData 'world.json') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\tasks.json') (Join-Path $ourData 'tasks.json') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\shop.json') (Join-Path $ourData 'shop.json') -Force
+Copy-Item (Join-Path $Root 'packages\contracts\observation.json') (Join-Path $ourData 'observation.json') -Force
 
 # config.lua from config.lua.dist with explicit overrides; fail if a key is missing upstream.
 $overrides = [ordered]@{
-    'dataPackDirectory'       = '"data-canary"'
+    'dataPackDirectory'       = "`"$DataPack`""
     'ip'                      = "`"$(Get-WorldHost $cfg)`""
     'bindOnlyGlobalAddress'   = 'true'
     'serverName'              = '"TibiaAI"'
     'serverMotd'              = '"TibiaAI local lab"'
     'toggleDownloadMap'       = 'false'
-    'mapName'                 = '"canary"'
+    'mapName'                 = "`"$MapName`""
     'mysqlHost'               = '"127.0.0.1"'
     'mysqlUser'               = "`"$($cfg.TIBIAAI_DB_USER)`""
     'mysqlPass'               = "`"$($cfg.TIBIAAI_DB_PASSWORD)`""
@@ -62,6 +70,8 @@ $overrides = [ordered]@{
     'mysqlPort'               = $cfg.TIBIAAI_DB_PORT
     'metricsPrometheusAddress' = '"127.0.0.1:9464"'
     'worldType'               = '"pvp"'
+    # Upstream stops the whole server at the daily save (06:00). Here the world and its agents live on.
+    'globalServerSaveShutdown' = 'false'
     # Forge would turn arena monsters into Fiendish ones (health x3.6, stronger hits) every 10 s,
     # which breaks predictable training and floods the log on a map without monsters.
     'forgeInfluencedLimit'    = '0'

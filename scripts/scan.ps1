@@ -1,5 +1,5 @@
 # Engine view of map walkability around a position, for choosing agent waypoints without GUI.
-#   powershell -ExecutionPolicy Bypass -File scripts\scan.ps1 -X 5010 -Y 5003 [-Z 7] [-Radius 12]
+#   powershell -ExecutionPolicy Bypass -File scripts\scan.ps1 -X 32369 -Y 32251 [-Z 7] [-Radius 12]
 # Legend: '.' walkable, '#' solid, '^' floor change (stairs/holes), ' ' no tile, '@' centre.
 param([Parameter(Mandatory = $true)][int]$X, [Parameter(Mandatory = $true)][int]$Y, [int]$Z = 7, [ValidateRange(1, 20)][int]$Radius = 12)
 . "$PSScriptRoot\lib.ps1"

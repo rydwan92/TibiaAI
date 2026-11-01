@@ -6,13 +6,15 @@
 // and open commitments live in their own tables and are not touched.
 // One summary covers rows of one visibility and one trust level, so a private line never surfaces in
 // a public memory and a rumour never becomes confirmed by sitting next to a fact.
-import type { LocalModelClient } from '../providers/local-model.ts';
+import type { ModelClient } from '../providers/local-model.ts';
 import type { NpcEventRow, NpcMemoryRow, NpcMemoryStore } from './store.ts';
 
 export const PROCESS_VERSION = 1;
 
 export interface CompressionConfig {
   retentionMs: number;
+  /** A character may hold days in detail longer than the common window (its `memory.detailDays`). */
+  retentionByNpc?: Record<string, number>;
   maxBatchesPerRun: number;
   maxAttempts: number;
   /** Long-term limits per NPC. Above them the least important old memories are merged or forgotten. */
@@ -49,20 +51,20 @@ const utcDayStart = (ms: number) => Math.floor(ms / DAY_MS) * DAY_MS;
 
 /** Writes one short episode with the local model. Invalid output fails the batch and keeps the details. */
 export class ModelSummarizer implements Summarizer {
-  private readonly client: LocalModelClient;
+  private readonly client: ModelClient;
 
-  constructor(client: LocalModelClient) {
+  constructor(client: ModelClient) {
     this.client = client;
   }
 
   async summarize(npcKey: string, events: NpcEventRow[]): Promise<Summary> {
-    const lines = events.map((e) => `${e.kind === 'said_by_npc' ? npcKey : e.actor_name} (${e.source}, ${e.certainty}): ${e.text}`.slice(0, 200));
+    const lines = events.map((e) => `${e.kind === 'said_by_npc' || e.actor_name === 'ty' ? npcKey : e.actor_name} (${e.source}, ${e.certainty}): ${e.text}`.slice(0, 200));
     const r = await this.client.chat([
       { role: 'system', content: `Streszczasz wspomnienia postaci ${npcKey} w jednym lub dwoch zdaniach po polsku, w trzeciej osobie. Zachowaj kto bral udzial, co sie stalo i co jest niepewne (twierdzenie, plotka). Nie zgaduj i nie dodawaj niczego spoza zapisu. Kazda linia zaczyna sie od imienia osoby, ktora mowi lub dziala. Zwroc JSON z polami summary (tekst) i importance (1-10).` },
       { role: 'user', content: lines.join('\n') },
     ], {
       schema: { type: 'object', properties: { summary: { type: 'string' }, importance: { type: 'integer' } }, required: ['summary', 'importance'] },
-      timeoutMs: 60_000, maxTokens: 160,
+      timeoutMs: 60_000, maxTokens: 160, purpose: 'compress',
     });
     return parseSummary(r.text);
   }
@@ -114,13 +116,15 @@ export class MemoryCompressor {
     if (this.running) return report;
     this.running = true;
     try {
-      const cutoff = utcDayStart(this.now() - this.cfg.retentionMs); // only whole closed days
+      const cutoff = (ms: number) => utcDayStart(this.now() - ms); // only whole closed days
+      const own = Object.entries(this.cfg.retentionByNpc ?? {});
+      const limitByNpc = own.length > 0 ? `CASE e.npc_key ${own.map(() => 'WHEN ? THEN ?').join(' ')} ELSE ? END` : '?';
       const candidates = this.store.db.prepare(`SELECT npc_key, COALESCE(subject_guid, 0) AS subject,
-        (real_at_ms / ${DAY_MS}) * ${DAY_MS} AS day_start FROM npc_events e WHERE real_at_ms < ?
+        (real_at_ms / ${DAY_MS}) * ${DAY_MS} AS day_start FROM npc_events e WHERE real_at_ms < ${limitByNpc}
         AND NOT EXISTS (SELECT 1 FROM npc_memory_batches b WHERE b.npc_key = e.npc_key AND b.subject_guid = COALESCE(e.subject_guid, 0)
           AND b.from_ms = (e.real_at_ms / ${DAY_MS}) * ${DAY_MS} AND b.process_version = ? AND b.status = 'failed' AND b.attempts >= ?)
         GROUP BY 1, 2, 3 ORDER BY day_start LIMIT ?`)
-        .all(cutoff, PROCESS_VERSION, this.cfg.maxAttempts, this.cfg.maxBatchesPerRun) as unknown as Candidate[];
+        .all(...own.flatMap(([key, ms]) => [key, cutoff(ms)]), cutoff(this.cfg.retentionMs), PROCESS_VERSION, this.cfg.maxAttempts, this.cfg.maxBatchesPerRun) as unknown as Candidate[];
       for (const c of candidates) {
         // A busy day takes several passes: each reads a limited group and deletes only that.
         const lastId = Math.max(0, ...this.eventsOf(c).map((e) => e.id)); // rows arriving now wait for the next run

@@ -25,6 +25,7 @@ function Start-Brain {
     Remove-Item (Join-Path $Runtime 'control\brain-stop.request') -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force (Join-Path $Runtime 'control') | Out-Null
     $env:TIBIAAI_BRAIN_PROVIDER = $cfg.TIBIAAI_BRAIN_PROVIDER
+$env:TIBIAAI_CLOUD_AI = $cfg.TIBIAAI_CLOUD_AI
     $main = Join-Path $Root 'apps\brain\src\main.ts'
     # Brain writes its own JSONL log (runtime\logs\brain.log); console output goes to brain.console.log.
     $line = "/c `"`"$node`" --disable-warning=ExperimentalWarning `"$main`" > `"$(Join-Path $LogDir 'brain.console.log')`" 2>&1`""

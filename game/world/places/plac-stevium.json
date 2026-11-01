@@ -1,0 +1,78 @@
+{
+  "name": "Plac Stevium",
+  "_comment": "Open square on the meadow south-west of Thais. Everything here can be walked over except what is listed in blocks.",
+  "area": {
+    "x": 32324,
+    "y": 32297,
+    "z": 7,
+    "w": 7,
+    "h": 7
+  },
+  "floor": 416,
+  "blocks": [
+    1922,
+    2108,
+    2021
+  ],
+  "tiles": [
+    {
+      "x": 3,
+      "y": 3,
+      "items": [
+        {
+          "id": 1922
+        }
+      ]
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "items": [
+        {
+          "id": 2108
+        }
+      ]
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "items": [
+        {
+          "id": 2108
+        }
+      ]
+    },
+    {
+      "x": 0,
+      "y": 6,
+      "items": [
+        {
+          "id": 2108
+        }
+      ]
+    },
+    {
+      "x": 6,
+      "y": 6,
+      "items": [
+        {
+          "id": 2108
+        }
+      ]
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "items": [
+        {
+          "id": 2021,
+          "text": "Plac Stevium. Tu spotykaja sie ludzie i ci, ktorzy tylko tak wygladaja."
+        }
+      ]
+    }
+  ],
+  "meet": {
+    "x": 3,
+    "y": 1
+  }
+}

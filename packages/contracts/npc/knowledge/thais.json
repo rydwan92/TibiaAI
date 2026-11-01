@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
   "_comment": "Approved lore and local facts of THIS server. Entries are selected by scope and tags for each conversation; never sent all at once. category: lore | mechanics | geography | factions | social | economy. Players cannot change these files.",
-  "source": "projekt TibiaAI, mapa data-canary",
+  "source": "projekt TibiaAI, mapa otservbr, Thais",
   "serverVersion": "canary fe0f932, protokol 15.11",
   "entries": [
     {
-      "id": "montag-town",
+      "id": "thais-town",
       "category": "geography",
       "scope": "common",
       "tags": [
-        "montag",
+        "thais",
         "miasto",
         "gdzie",
         "tutaj",
         "plac"
       ],
-      "text": "Montag to miasto ze swiatynia na polnocy i placem na poludnie od niej."
+      "text": "Thais to wielkie miasto. Swiatynia lezy w srodku, a plac jest tuz na poludnie od niej. Port jest na zachodzie."
     },
     {
       "id": "temple-safe",
@@ -39,7 +39,7 @@
         "droga",
         "miasto"
       ],
-      "text": "Brama lezy na poludniowy wschod od placu. Przy alarmie straz obsadza brame."
+      "text": "Przy alarmie straz obsadza wschodni koniec placu."
     },
     {
       "id": "no-trade",
@@ -54,7 +54,7 @@
         "sklep",
         "mikstura"
       ],
-      "text": "Na placu nie ma jeszcze kupcow. Nikt tu nie sprzedaje ani nie skupuje towarow."
+      "text": "Mira przy swoim stoisku sprzedaje mikstury, strzaly, jedzenie, liny, lopaty i proste wyposazenie, skupuje tez lup. Wystarczy powiedziec trade. Sa tez inni kupcy w miescie."
     },
     {
       "id": "alarm-training",
@@ -65,7 +65,7 @@
         "cwiczenia",
         "zagrozenie"
       ],
-      "text": "Alarm w Montag to cwiczenia strazy. Cywile ida wtedy do swiatyni."
+      "text": "Alarm w Thais to cwiczenia strazy. Cywile ida wtedy do swiatyni."
     },
     {
       "id": "guard-order",
@@ -77,7 +77,7 @@
         "rozkaz",
         "regulamin"
       ],
-      "text": "Straz Montag podlega radzie miasta. Straznik nie moze opuscic sluzby na prosbe przybysza."
+      "text": "Straz Thais podlega radzie miasta. Straznik nie moze opuscic sluzby na prosbe przybysza."
     },
     {
       "id": "potions-heal",
@@ -101,7 +101,7 @@
         "las",
         "rosliny"
       ],
-      "text": "Najlepsze ziola rosna w lasach na zachod od Montag."
+      "text": "Najlepsze ziola rosna w lasach na zachod od Thais."
     },
     {
       "id": "greeting-custom",
@@ -112,7 +112,7 @@
         "zwyczaj",
         "powitanie"
       ],
-      "text": "W Montag przybysz wita sie pierwszy."
+      "text": "W Thais przybysz wita sie pierwszy."
     },
     {
       "id": "local-guides",
@@ -127,7 +127,7 @@
         "lena",
         "tolek"
       ],
-      "text": "Tolek stoi przy placu i prowadzi przybyszow po Montag. Lena, nauczycielka angielskiego, siedzi przy swiatyni od strony placu."
+      "text": "Tolek stoi przy placu i prowadzi przybyszow po Thais. Lena, nauczycielka angielskiego, siedzi przy swiatyni od strony placu."
     },
     {
       "id": "temple-way",
@@ -139,7 +139,7 @@
         "gdzie",
         "dojsc"
       ],
-      "text": "Do swiatyni idzie sie z placu na poludnie do drogi, potem na zachod i na polnoc przez przejscie przy zachodnim murze."
+      "text": "Do swiatyni wchodzi sie drzwiami z placu, od poludnia. Depo jest niedaleko, a statki odplywaja z portu na zachodzie, kapitan Bluebear stoi pietro wyzej."
     },
     {
       "id": "geo-towns",
@@ -158,7 +158,7 @@
         "daleko",
         "swiat"
       ],
-      "text": "Poza Montag sa tu Tihamah na poludniu, Nahag Village na zachodzie, Alexandria na wschodzie, dalej Thalom, Katorga daleko na polnocy i bardzo odlegly Strongarm.",
+      "text": "Z Thais dojdziesz pieszo do Carlin, Ab'Dendriel i Kazordoon. Statkiem poplyniesz do Venore, Edron, Port Hope, Liberty Bay, Ankrahmun, Darashia i Svargrond.",
       "source": "mapa canary.otbm, lista miast"
     },
     {
@@ -178,7 +178,7 @@
         "osoby",
         "ludzie"
       ],
-      "text": "Na placu mieszkaja: Ardan, ktory patroluje, Brom przy starym posterunku, Mira przy stoisku na wschodzie, Tolek po zachodniej stronie i Lena na lawce blisko muru swiatyni.",
+      "text": "Na placu przed swiatynia mieszkaja: Ardan, ktory patroluje, Brom przy posterunku, Mira przy stoisku na wschodzie, Tolek i Lena blizej zachodu.",
       "source": "packages/contracts/agents.json"
     },
     {

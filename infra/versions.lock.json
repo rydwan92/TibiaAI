@@ -5,8 +5,6 @@
     "tag": "v3.6.1",
     "commit": "fe0f932c380583871ce640a32628d397d3fa02ff",
     "clientVersion": 1511,
-    "datapack": "data-canary",
-    "map": "data-canary/world/canary.otbm (in source at commit)",
     "binary": {
       "url": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/canary-windows-cmake-release.zip",
       "file": "canary-win/canary-windows-cmake-release.zip",
@@ -62,5 +60,13 @@
     "game": 7172,
     "loginHttp": 8088,
     "loginGrpc": 9090
+  },
+  "world": {
+    "dataPack": "data-otservbr-global",
+    "mapName": "otservbr",
+    "mapFile": "vendor/downloads/otservbr-v3.6.1/otservbr.otbm",
+    "mapUrl": "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm",
+    "mapBytes": 184776037,
+    "mapSha256": "a80de1dda6a9aca3956a9d5b7fb2e0caebb451570d26853fc21beb40d5f31da2"
   }
 }

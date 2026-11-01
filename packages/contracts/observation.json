@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Characters whose owner agreed to have their play recorded (STEVIUM_PRODUCT_VISION section 9). Empty means nobody is recorded. Position, kills, deaths and levels, every 10 seconds at most; speech never. Files: runtime/logs/observe-<name>.jsonl, deleted with scripts\\observe.ps1 -Delete. Add a name only after asking that person.",
+  "sampleSeconds": 10,
+  "consented": []
+}

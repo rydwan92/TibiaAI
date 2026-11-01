@@ -14,7 +14,7 @@ function cmd(action: string, args: Record<string, string>, extra: Partial<Comman
 
 test('valid events parse', () => {
   assert.ok(parseEvent(makeEvent('abc123', { type: 'player_greeted', playerGuid: 7, playerName: 'GOD', text: 'hi' })).ok);
-  assert.ok(parseEvent(makeEvent('abc123', { type: 'training_alarm_started', zoneId: 'montag_gate' })).ok);
+  assert.ok(parseEvent(makeEvent('abc123', { type: 'training_alarm_started', zoneId: 'thais_gate' })).ok);
 });
 
 test('invalid events are rejected', () => {

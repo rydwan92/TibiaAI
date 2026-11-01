@@ -211,8 +211,8 @@
         "hunt",
         "walka"
       ],
-      "text": "Potwory zyja na calej mapie. Tuz przy miastach na powierzchni jest spokojnie, a im dalej i im glebiej, tym sa silniejsze. Pietro w dol znaczy tyle, co okolo 60 pol dalej.",
-      "source": "tools/make_spawns.py, game/world/canary-monster.xml (2339 potworow)"
+      "text": "Potwory zyja na calym swiecie. W miastach jest spokojnie, a za murami i pod ziemia jest coraz grozniej.",
+      "source": "data-otservbr-global/world/otservbr-monster.xml"
     },
     {
       "id": "mech-travel",
@@ -232,8 +232,8 @@
         "tihamah",
         "strongarm"
       ],
-      "text": "Na mapie jest 7 miast: Montag, Tihamah, Nahag Village, Alexandria, Thalom, Katorga i Strongarm. Z Montag dojdziesz i wrocisz pieszo oraz przez teleporty z Nahag Village, Alexandrii i Thalom. Z Katorgi nie ma drogi powrotnej, a Tihamah i Strongarm sa odciete. Nie ma tu statkow.",
-      "source": "runtime/atlas: 180 teleportow, przejscie po mapie z silnika, iteracja 0014"
+      "text": "Z Thais pieszo dojdziesz do Carlin, Ab'Dendriel i Kazordoon. Dalej plynie sie statkiem: Captain Bluebear w porcie Thais wozi do Carlin, Ab'Dendriel, Venore, Edron, Port Hope, Liberty Bay, Svargrond i innych. Trzeba powiedziec hi, nazwe miasta i yes, rejs kosztuje 110 do 230 zlota.",
+      "source": "data-otservbr-global/npc/captain_bluebear.lua, packages/contracts/boats.json"
     }
   ]
 }

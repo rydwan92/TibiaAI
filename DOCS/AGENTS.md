@@ -3,9 +3,9 @@
 Agenci są opisani danymi w `packages/contracts/agents.json` (ADR 0004). Ten sam plik czytają Lua w Canary i Brain. Nowy agent nie wymaga kodu, jeśli jego zachowanie mieści się w istniejących typach.
 
 ## Obecni agenci
-| Klucz | NPC | Zachowanie | Alarm `montag_gate` |
+| Klucz | NPC | Zachowanie | Alarm `thais_gate` |
 | --- | --- | --- | --- |
-| `ardan` | Ardan, strażnik | `patrol`, trasa `montag_square` (4 punkty) | idzie do `gate_watch`, krzyczy, ostrzega co 20 s |
+| `ardan` | Ardan, strażnik | `patrol`, trasa `thais_square` (4 punkty) | idzie do `gate_watch`, krzyczy, ostrzega co 20 s |
 | `mira` | Mira, zielarka | `stationary`, dom `herb_stall` (5020,5003,7) | chowa się w `temple_shelter` (świątynia, PZ) |
 | `brom` | Brom, strażnik (wariant weterana) | `stationary`, dom `old_post` (5014,5003,7) | nie reaguje |
 | `tolek` | Tolek, przewodnik | `stationary`, dom `guide_post` (5005,5004,7), umiejętność `guide` | przerywa prowadzenie, idzie do świątyni |

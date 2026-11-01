@@ -79,7 +79,7 @@ Agenci nie są trenowani: wagi modelu się nie zmieniają. Uczymy ich plikami wi
 | Plik | Co zawiera | Zakres |
 | --- | --- | --- |
 | `server-mechanics.json` | profesje, mikstury, komendy, śmierć, brak potworów; każdy wpis ma źródło z tej wersji serwera | wszyscy |
-| `montag.json` | geografia, miasta z mapy, mieszkańcy | wszyscy, część tylko strażnicy lub zielarka |
+| `thais.json` | geografia, miasta z mapy, mieszkańcy | wszyscy, część tylko strażnicy lub zielarka |
 | `world-lore.json` | opowieść projektu: historia, rada, handel. Fikcja, nie mechanika | wszyscy, część tylko role |
 
 Nowy wpis: `id`, `category`, `scope`, `tags` i `text`, a mechanika także `source`. Działa dla wszystkich NPC z tym zakresem i dla każdego modelu, po restarcie Brain. Tagi trzeba dobierać do słów, których użyje gracz: dopasowanie to pierwsze 4 litery.

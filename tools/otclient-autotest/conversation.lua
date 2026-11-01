@@ -78,7 +78,7 @@ local function walkPhase()
         g_game.talk(cfg.cancelLine)
       elseif cfg.walk == "alarm" then
         acted = true
-        T.request("alarm-start.request", "montag_gate")
+        T.request("alarm-start.request", "thais_gate")
       elseif cfg.walk == "logout" then
         T.log("logging out in the middle of the walk")
         g_game.safeLogout()

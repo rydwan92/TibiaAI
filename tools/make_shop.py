@@ -2,7 +2,8 @@
 
 Sold goods are chosen by hand. Bought goods come from the loot of monsters that really spawn, and
 the price follows the item's stats, so new spawns bring new trade without manual work.
-Usage: python -I tools/make_shop.py <canary dir> <canary-monster.xml> packages/contracts/shop.json
+Only loot of monsters a young character meets, so the window stays usable.
+Usage: python -I tools/make_shop.py <canary dir> <monster.xml> game-data.json packages/contracts/shop.json
 """
 import glob
 import json
@@ -11,11 +12,16 @@ import re
 import sys
 
 SOLD = [
-    ('health potion', 266, 15), ('mana potion', 268, 15), ('arrow', 3447, 1), ('meat', 3577, 2), ('rope', 3003, 30), ('shovel', 3457, 30),
-    ('lightest magic missile rune', 17512, 3),
+    ('health potion', 266, 15), ('mana potion', 268, 15), ('arrow', 3447, 1), ('meat', 3577, 2), ('rope', 3003, 15), ('shovel', 3457, 15),
+    ('lightest magic missile rune', 17512, 3), ('light magic missile rune', 3174, 6), ('heavy magic missile rune', 3198, 12), ('stalagmite rune', 3179, 14),
+    ('strong health potion', 236, 40), ('strong mana potion', 237, 40), ('great health potion', 239, 90), ('great mana potion', 238, 90),
+    ('backpack', 2854, 10), ('leather armor', 3361, 25), ('leather helmet', 3355, 12), ('leather legs', 3559, 10), ('leather boots', 3552, 8),
+    ('sword', 3264, 40), ('wooden shield', 3412, 12), ('bow', 3350, 40), ('quiver', 35562, 30), ('wand of vortex', 3074, 60),
 ]
+DATAPACK = 'data-otservbr-global'
 KEEPS_VALUE = {'gold coin', 'platinum coin', 'crystal coin', 'health potion', 'mana potion', 'meat'}
 TOKEN_PRICE = 1
+MAX_EXPERIENCE = 300
 FOOD = re.compile(r'bread|cheese|ham|fish|cookie|apple|cherry|carrot|mushroom|grape|meat|melon|banana|roll')
 
 
@@ -38,11 +44,13 @@ def price_of(item):
     return 1 if FOOD.search(item['name']) else 3
 
 
-def main(canary, spawns, out):
-    names = set(re.findall(r'<monster name="([^"]+)"', open(spawns, encoding='utf-8').read()))
+def main(canary, spawns, game_data, out):
+    monsters = json.load(open(game_data, encoding='utf-8'))['monsters']
+    names = {n for n in set(re.findall(r'<monster name="([^"]+)"', open(spawns, encoding='utf-8', errors='ignore').read()))
+             if monsters.get(n, {}).get('experience', 10 ** 9) <= MAX_EXPERIENCE}
     items = item_table(os.path.join(canary, 'data', 'items', 'items.xml'))
     looted = {}
-    for path in glob.glob(os.path.join(canary, 'data-canary', 'monster', '**', '*.lua'), recursive=True):
+    for path in glob.glob(os.path.join(canary, DATAPACK, 'monster', '**', '*.lua'), recursive=True):
         text = open(path, encoding='utf-8', errors='ignore').read()
         name = re.search(r'Game\.createMonsterType\("([^"]+)"\)', text)
         block = re.search(r'monster\.loot\s*=\s*\{(.*?)\n\}', text, re.S)
@@ -64,4 +72,4 @@ def main(canary, spawns, out):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])

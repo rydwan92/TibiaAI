@@ -18,6 +18,11 @@ $ServerDir = Join-Path $Runtime 'server'
 $LogDir = Join-Path $Runtime 'logs'
 $PidDir = Join-Path $Runtime 'pids'
 $Overlay = Join-Path $Root 'game\overlays\tibia-ai'
+# The world: which datapack and map run (infra\versions.lock.json). The map stays in vendor\downloads,
+# outside the repository: engine licence does not cover it.
+$DataPack = $Lock.world.dataPack
+$MapName = $Lock.world.mapName
+$MapFile = Join-Path $Root $Lock.world.mapFile
 
 function Read-DotEnv {
     $path = Join-Path $Root '.env'
@@ -91,6 +96,21 @@ function Get-TableRowCounts([string]$database) {
         $counts[$name] = [long]$n
     }
     return $counts
+}
+
+function Get-KeeperProcess {
+    $file = Join-Path $PidDir 'keeper.pid'
+    if (-not (Test-Path $file)) { return $null }
+    $proc = Get-Process -Id ([int](Get-Content $file)) -ErrorAction SilentlyContinue
+    if ($proc -and $proc.ProcessName -eq 'powershell') { return $proc }
+    return $null
+}
+
+# Stopping by hand means it: the keeper must not bring back what a person has just stopped.
+function Stop-Keeper {
+    $proc = Get-KeeperProcess
+    if ($proc) { Stop-Process -Id $proc.Id -Force }
+    Remove-Item (Join-Path $PidDir 'keeper.pid') -ErrorAction SilentlyContinue
 }
 
 function Write-ControlRequest([string]$name, [string]$content) {

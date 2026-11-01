@@ -1,10 +1,10 @@
-# Long run of the player agents with evidence: samples what each character reached and what the
+﻿# Long run of the player agents with evidence: samples what each character reached and what the
 # machine paid for it, then writes a summary to runtime\evidence\player-run-<time>.json.
 #   powershell -ExecutionPolicy Bypass -File scripts\player-run.ps1 -Minutes 20
-param([int]$Minutes = 20, [int]$SampleSeconds = 60)
+param([int]$Minutes = 20, [int]$SampleSeconds = 60, [string[]]$Only = @())
 . "$PSScriptRoot\lib.ps1"
 $defs = Get-Content -Raw -Encoding UTF8 (Join-Path $Root 'packages\contracts\players.json') | ConvertFrom-Json
-$keys = @($defs.agents.PSObject.Properties.Name)
+$keys = @($defs.agents.PSObject.Properties.Name | Where-Object { $Only.Count -eq 0 -or $Only -contains $_ })
 
 function Read-Json([string]$path) {
     if (-not (Test-Path $path)) { return $null }

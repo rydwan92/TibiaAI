@@ -1,7 +1,7 @@
 -- Training arena scenario controller (WorldPolicy for one place). Only this module may place
 -- monsters, and only from the allowlist in agents.json "arena". Agents never call it directly.
 -- Requests through runtime/control (local administrator or test harness):
---   arena-spawn.request   "Troll,5014,5004,7"
+--   arena-spawn.request   "Troll,32373,32251,7"
 --   arena-clear.request   removes monsters placed by this controller
 -- Developer exceptions are separate, explicit and journaled as dev_exception_used. They exist to
 -- reach states that are slow to reach in play (e.g. near-death) and are limited to arena.devCharacters:
@@ -201,7 +201,8 @@ T.registerControl("dev-kit.request", function(arg)
 	if player:getStorageValue(storage) == 1 and refresh ~= "refresh" then
 		return T.journal("dev_exception_used", { action = "kit", ok = true, character = name, already = true })
 	end
-	if refresh == "refresh" then
+	-- A slot already taken makes addItem drop the new piece on the floor, so a first kit clears them too.
+	if refresh == "refresh" or (config().replaceWorn or {})[kitName] then
 		for _, slot in pairs(KIT_SLOTS) do
 			local worn = player:getSlotItem(slot)
 			if worn then
@@ -220,6 +221,25 @@ T.registerControl("dev-kit.request", function(arg)
 	player:setStorageValue(storage, 1)
 	player:kv():set("talkaction.potions.flask", true) -- empty flasks would only eat capacity
 	T.journal("dev_exception_used", { action = "kit", ok = true, character = name, kit = kitName })
+end)
+
+-- Test hooks: what a death or a thief would do, on demand and only to dev characters.
+T.registerControl("dev-strip.request", function(arg)
+	local name, slot = (arg or ""):match("^([%a ]+),(%d+)$")
+	local player = devPlayer(name)
+	local worn = player and player:getSlotItem(tonumber(slot))
+	if worn then
+		worn:remove()
+	end
+	T.journal("dev_exception_used", { action = "strip", ok = worn ~= nil, character = name, slot = slot })
+end)
+
+T.registerControl("dev-kill.request", function(arg)
+	local player = devPlayer(arg)
+	if player then
+		player:addHealth(-player:getHealth())
+	end
+	T.journal("dev_exception_used", { action = "kill", ok = player ~= nil, character = arg })
 end)
 
 T.registerControl("dev-give-item.request", function(arg)

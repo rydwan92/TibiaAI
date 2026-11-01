@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "_comment": "Models from the owner's GitHub Copilot account (ADR 0011). A player opts in through its own `model` entry in players.json and the whole thing stays off unless TIBIAAI_CLOUD_AI=1. Credits are enforced here by the application: the SDK session limit starts at 30 credits. No secrets: the SDK uses the login of the gh or copilot CLI.",
+  "allowedModels": ["gpt-6-luna", "claude-haiku-5.5"],
+  "maxCallsPerMinute": 40,
+  "maxConcurrent": 3,
+  "maxQueue": 6,
+  "maxPromptChars": 14000,
+  "maxOutputTokens": 500,
+  "timeoutMs": 20000,
+  "retries": 1,
+  "retryDelayMs": 2000,
+  "failureCooldownMs": 30000,
+  "reserveCredits": 0.05,
+  "runBudgetCredits": 150,
+  "dailyBudgetCredits": 150,
+  "monthlyBudgetCredits": 1000
+}

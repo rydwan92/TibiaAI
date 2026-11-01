@@ -13,11 +13,11 @@
         "powstalo",
         "zalozenie",
         "dawniej",
-        "montag",
+        "thais",
         "poczatki",
         "swiatynia"
       ],
-      "text": "Montag wyroslo wokol swiatyni, przy ktorej wedrowcy szukali schronienia. Dlatego do dzis swiatynia jest miejscem, gdzie nikt nie walczy."
+      "text": "Thais wyroslo wokol swiatyni, przy ktorej wedrowcy szukali schronienia. Dlatego do dzis swiatynia jest miejscem, gdzie nikt nie walczy."
     },
     {
       "id": "lore-council",
@@ -31,7 +31,7 @@
         "krol",
         "dowodca"
       ],
-      "text": "Montag nie ma krola. Sprawami miasta zajmuje sie rada, a straz jej podlega."
+      "text": "Thais nie ma krola. Sprawami miasta zajmuje sie rada, a straz jej podlega."
     },
     {
       "id": "lore-quiet",
@@ -46,7 +46,7 @@
         "alarm",
         "wojna"
       ],
-      "text": "W samym Montag jest bezpiecznie, ale za miastem zyja bestie: wilki, pajaki, a glebiej gorsze rzeczy. Straz cwiczy alarmy, bo starsi mowia, ze spokoj nie trwa wiecznie."
+      "text": "W samym Thais jest bezpiecznie, ale za miastem zyja bestie: wilki, pajaki, a glebiej gorsze rzeczy. Straz cwiczy alarmy, bo starsi mowia, ze spokoj nie trwa wiecznie."
     },
     {
       "id": "lore-trade",
@@ -86,7 +86,7 @@
         "choroba",
         "leczenie"
       ],
-      "text": "Mira parzy napary z ziol z zachodnich lasow. Znaja je wszyscy w Montag, choc mikstury z nich nie powstaja."
+      "text": "Mira parzy napary z ziol z zachodnich lasow. Znaja je wszyscy w Thais, choc mikstury z nich nie powstaja."
     }
   ]
 }

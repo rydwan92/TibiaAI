@@ -16,13 +16,13 @@ test('packages/contracts/agents.json is valid', () => {
 test('invalid definitions are reported precisely', () => {
   const bad = clone();
   bad.agents.ardan.spawn = 'nowhere';
-  bad.agents.ardan.routes.montag_square.push('ghost');
+  bad.agents.ardan.routes.thais_square.push('ghost');
   bad.agents.mira.behavior = { type: 'fight' };
   bad.agents.mira.texts.greetFirst = 'Dzień dobry'; // non-ASCII
   bad.agents.mira.alarm.zones = ['elsewhere'];
   const errors = validateAgentsDocument(bad);
   assert.ok(errors.includes('ardan: spawn must be a waypoint id'));
-  assert.ok(errors.includes('ardan: route montag_square -> ghost'));
+  assert.ok(errors.includes('ardan: route thais_square -> ghost'));
   assert.ok(errors.includes('mira: behavior.type'));
   assert.ok(errors.some((e) => e.startsWith('mira: texts.greetFirst')));
   assert.ok(errors.includes('mira: alarm zone elsewhere not in alarmZones'));

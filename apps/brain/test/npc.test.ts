@@ -486,6 +486,17 @@ test('compression: long-term merging keeps private and public apart', async () =
   for (const r of merged) assert.equal(r.summary.includes('tajne'), r.visibility === 'private');
 });
 
+test('what happened before a world change stays stored but is no longer recalled', () => {
+  const memory = new Memory(':memory:');
+  const old = new NpcMemoryStore(memory);
+  old.addEvent(row({ eventKey: 'old', text: 'swiatynia w Montag', realAtMs: 1000 }));
+  old.addEvent(row({ eventKey: 'new', text: 'swiatynia w Thais', realAtMs: 5000 }));
+  const after = new NpcMemoryStore(memory, { maxEventsPerDay: 2000, keepAboveLimitImportance: 6, duplicateWindowMs: 0, memoryFromMs: 2000 });
+  assert.deepEqual(after.recentTurns('ardan', 5, 10).map((e) => e.text), ['swiatynia w Thais']);
+  assert.deepEqual(after.visibleEvents('ardan', 5, 10).map((e) => e.text), ['swiatynia w Thais']);
+  assert.equal(old.visibleEvents('ardan', 5, 10).length, 2, 'the rows themselves stay');
+});
+
 test('compression: invalid model summaries are refused', () => {
   assert.throws(() => parseSummary('{"summary":"x"}'));
   assert.throws(() => parseSummary('nie json'));

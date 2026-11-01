@@ -19,7 +19,7 @@ Filary:
 | Silnik Canary | GPL-2.0 | Można modyfikować; przy rozpowszechnianiu binarki obowiązują warunki GPL, także udostępnienie źródeł |
 | Klient OTClient | licencja w `vendor/otclient/.../LICENSE` | Sprawdzić przed publikacją |
 | Grafiki, dźwięki, `appearances` | zasoby Tibii, CipSoft | **Nie są nasze.** Licencja silnika ich nie obejmuje |
-| Mapa `canary.otbm` | z datapacku Canary | Pochodzenie do ustalenia, zawiera nazwy i układ inspirowane Tibią |
+| Mapa `otservbr.otbm` | wydanie Canary, odwzorowanie mapy Tibii | Nie jest nasza. Trzymana poza repozytorium, tylko do prywatnego laboratorium |
 | Nazwa „Tibia” | znak towarowy | Nie może być nazwą własnej gry |
 
 Prywatne laboratorium na własnym komputerze to jedno. **Gra pokazywana publicznie jako własna nie może stać na tych zasobach.** „Praktycznie nowa gra” w pełnym sensie wymaga własnej grafiki, własnej mapy i własnej nazwy. To nie jest opinia prawna: przed publikacją trzeba to sprawdzić u prawnika.
@@ -43,15 +43,13 @@ Każdy kawałek działa w całości i kończy się testem w kliencie, zanim zacz
 | 1 | **Pierwsze zlecenie** | Mira prosi o przysługę, a wykonanie zmienia jej stosunek | Przedmiot i nagroda z silnika, zapis po restarcie |
 | 2 | Relacja otwiera drzwi | Po kilku przysługach NPC mówi i robi więcej | Warunek z pamięci, nie ze słów gracza |
 | 3 | Plotka o czynach | Brom wie, że pomogłeś Mirze, bo to słyszał | Pochodzenie informacji w pamięci |
-| 4 | Dzień w Montag | Mieszkańcy mają pory dnia, handel, odpoczynek | Rutyny z konfiguracji, czas świata |
+| 4 | Dzień w Thais | Mieszkańcy mają pory dnia, handel, odpoczynek | Rutyny z konfiguracji, czas świata |
 | 5 | Reżyser zdarzeń | Wilk w mieście, przewrócony wóz, prośby o pomoc | Limit, cooldown, bez dowolnego spawnowania przez model |
 | 6 | Towarzysz na wyprawie | Kael idzie z Tobą i reaguje | Plan z COMBAT_PLAN.md |
-| 7 | Własna mapa | Pierwsza nowa kraina zamiast Montag | Mapa w edytorze, TOOLING.md |
+| 7 | Własna mapa | Pierwsza własna kraina obok prawdziwej mapy | Mapa w edytorze, TOOLING.md |
 
 ## Świat i mapa
-Mapa `canary.otbm` to nie Rookgard: ma 7 miast (Montag, Tihamah, Nahag Village, Alexandria, Thalom, Katorga, Strongarm) i pokój serwisowy. Postacie mają profesję od początku i nikt nie musi jej opuszczać po poziomie 8. Mapa ma 1,84 mln pól na 16 piętrach i 180 teleportów, ale tylko jednego NPC z upstreamu, zero statków i nie miała żadnych potworów.
-
-Własne spawny (`tools/make_spawns.py`) dają 2339 potworów w 1199 grupach. Z Montag da się dojść i wrócić pieszo i przez teleporty z Nahag Village, Alexandrii i Thalom. Do Katorgi prowadzi droga bez powrotu, a Tihamah i Strongarm są odcięte, dopóki nie powstanie do nich połączenie.
+Świat to prawdziwa mapa z pakietu Canary (`data-otservbr-global`): 18 mln pól, 31 miast, 1035 NPC, 1656 potworów, statki u kapitanów. Rookgardu i Dawnport nie używamy: gra zaczyna się od razu w Thais, z profesją i na poziomie 8, bez bramy poziomu. Nasi NPC z pamięcią mieszkają na placu w Thais obok NPC z pakietu. 12 miast ma z Thais drogę w obie strony.
 
 ## Pomysły na rozgrywkę (PLAN)
 Wszystko poniżej wynika z tego, co agenci już potrafią. Kolejność to propozycja, nie obietnica.
@@ -59,8 +57,6 @@ Wszystko poniżej wynika z tego, co agenci już potrafią. Kolejność to propoz
 | Pomysł | Co gracz czuje | Na czym stoi | Koszt |
 | --- | --- | --- | --- |
 | **Kronika świata** | NPC wiedzą, że Ravn padł od hydry, bo to słyszeli; w mieście krążą historie zrobione przez agentów | Pamięć NPC, rozmowy agentów z NPC, pochodzenie plotki | Mały |
-| **Bank i wypłata z depo** | Agent po śmierci wypłaca oszczędności i rusza dalej. Znika ostatni wyjątek zestawu | Depozyt działa w jedną stronę | Mały |
-| **Wejście do świata jak Rookgard** | Montag to początek, a brama teleportu otwiera się od poziomu 8. Dzięki temu wyjście z miasta coś znaczy | Teleporty z warunkiem poziomu, bez patcha silnika | Mały |
 | **Agent-mentor** | Nowy gracz spotyka Sirę, która pokazuje mu łowisko i pomaga, gdy mu ciężko | Wspólna wyprawa i pomoc działają już dla agentów | Mały |
 | **Nazwane miejsca** | Pierwszy, kto odkryje jaskinię, nadaje jej nazwę, a nazwa rozchodzi się przez rozmowy | Rady idą mową; potrzebny rejestr nazw | Mały |
 | **Rywalizacja i gildia** | Agenci mają ranking i spór o łowisko, można stanąć po jednej ze stron | `metrics.json`, relacje między agentami | Średni |

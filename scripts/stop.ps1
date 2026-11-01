@@ -8,6 +8,7 @@
 param([switch]$KeepDb, [switch]$BrainOnly, [int]$TimeoutSec = 60)
 . "$PSScriptRoot\lib.ps1"
 $cfg = Read-DotEnv
+if (-not $BrainOnly) { Stop-Keeper }
 
 $brain = Get-TrackedProcess 'brain'
 if ($brain) {

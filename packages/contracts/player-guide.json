@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "_comment": "General advice a character can read, in our own words: what players commonly say about making money and growing. Places and monsters are not here: those are worked out from the world's own data.",
+  "money": [
+    "Zloto i sprzet nosza potwory ludzkie: orki, krasnoludy, minotaury, trolle. Zwierzeta daja mieso, a nie pieniadze.",
+    "Czesci potworow sprzedaje sie u kupcow: zanim wyrzucisz lup, sprawdz, kto go skupuje.",
+    "Pieniadze w plecaku przepadaja po smierci, w depo sa bezpieczne.",
+    "Liczy sie zysk po odjeciu mikstur: polowanie za 1000 zlota, ktore pije 800 zlota mikstur, jest biedne.",
+    "Krasnoludy i Dwarf Guardy dobrze placa na srednim poziomie, a Dragony i Giant Spider dla silniejszych."
+  ],
+  "growth": [
+    "Gdy potwor przestaje byc wyzwaniem, zmien miejsce: exp rosnie z sila potwora, nie z liczba szczurow.",
+    "Po kazdych kilku poziomach sprawdz nowe miejsca: to, co bylo niebezpieczne, moze byc juz dobre.",
+    "Nowe czary kupuje sie u nauczycieli w gildii, dostepne od okreslonego poziomu.",
+    "Lepsza zbroja pozwala isc na silniejsze potwory, wiec zwykle zwraca sie szybko.",
+    "We dwojke da sie polowac na potwory, ktore samemu sa za silne, a exp dzieli druzyna."
+  ],
+  "people": [
+    "Znajomi z innych miast wiedza o miejscach, ktorych nie znasz: warto zapytac.",
+    "Spotkanie z kims na wyprawie daje czesto wiecej niz samotne polowanie."
+  ]
+}

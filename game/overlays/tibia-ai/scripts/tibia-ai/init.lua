@@ -5,11 +5,12 @@
 TibiaAI = TibiaAI or {}
 
 local base = DATA_DIRECTORY .. "/tibia-ai/lib/"
-for _, module in ipairs({ "core", "registry", "movement", "controller", "guide", "tasks", "bridge", "npc_types", "startup", "control", "arena", "survey", "perception", "talkactions", "selftest" }) do
+for _, module in ipairs({ "core", "registry", "movement", "controller", "guide", "tasks", "bridge", "npc_types", "startup", "observe", "control", "events", "arena", "perception", "talkactions", "selftest" }) do
 	dofile(base .. module .. ".lua")
 end
 
 TibiaAI.loadDefinitions()
 TibiaAI.loadWorldConfig()
 TibiaAI.loadTasks()
+TibiaAI.loadObservation()
 TibiaAI.registerNpcTypes()

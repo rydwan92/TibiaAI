@@ -418,7 +418,7 @@ test('changing your mind: only the guided player cancels a walk, without the mod
 });
 
 test('walk outcomes come from the engine and go to the memory of that NPC, for that player', () => {
-  const ev = makeEvent('s', { type: 'guide_ended', playerGuid: 5, playerName: 'A', placeId: 'temple', outcome: 'arrived', x: 5004, y: 4999, z: 7 }, { agentKey: 'tolek' });
+  const ev = makeEvent('s', { type: 'guide_ended', playerGuid: 5, playerName: 'A', placeId: 'temple', outcome: 'arrived', x: 32369, y: 32243, z: 7 }, { agentKey: 'tolek' });
   assert.equal(parseEvent(ev).ok, true);
   const row = perceive(ev)!;
   assert.equal(row.kind, 'action_result');

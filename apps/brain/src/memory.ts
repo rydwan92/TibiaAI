@@ -202,6 +202,42 @@ const MIGRATIONS: { version: number; sql: string }[] = [
         PRIMARY KEY (npc_key, player_guid, pref_key)
       );`,
   },
+  {
+    // ADR 0011: every cloud model call with its reported cost. Budgets are read from here.
+    version: 5,
+    sql: `
+      CREATE TABLE model_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        at_ms INTEGER NOT NULL,
+        agent_key TEXT NOT NULL,
+        model TEXT NOT NULL,
+        effort TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        input_tokens INTEGER NOT NULL,
+        output_tokens INTEGER NOT NULL,
+        cache_read_tokens INTEGER NOT NULL,
+        credits REAL NOT NULL,
+        estimated INTEGER NOT NULL,
+        duration_ms INTEGER NOT NULL,
+        ok INTEGER NOT NULL,
+        error TEXT NOT NULL
+      );
+      CREATE INDEX model_usage_time ON model_usage(at_ms);`,
+  },
+  {
+    // A person's own notes for the helper, apart from everything the world remembers.
+    version: 6,
+    sql: `
+      CREATE TABLE assistant_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        owner TEXT NOT NULL,
+        text TEXT NOT NULL,
+        created_at_ms INTEGER NOT NULL,
+        due_at_ms INTEGER,
+        done INTEGER NOT NULL
+      );
+      CREATE INDEX assistant_notes_owner ON assistant_notes(owner, done);`,
+  },
 ];
 
 export interface HeardStatement {

@@ -130,13 +130,13 @@ check('unreachable move fails without teleport', Boolean(acc) && failed?.payload
   statusAfter?.agents.ardan?.position?.y !== 4994, { accepted: acc?.payload.reasonCode, failed: failed?.payload, positionAfter: statusAfter?.agents.ardan?.position }, Date.now() - t0);
 
 // 10. older planRevision after a newer one -> stale_plan
-const old = command('patrol', { routeId: 'montag_square' }, { planRevision: 0 });
+const old = command('patrol', { routeId: 'thais_square' }, { planRevision: 0 });
 writeRaw(JSON.stringify(old));
 r = await waitFor(byId(old.payload.commandId), 5000);
 check('older plan revision rejected', r?.payload.status === 'rejected' && r.payload.reasonCode === 'stale_plan', r?.payload);
 
 // 11. resume patrol with the current revision
-const patrol = command('patrol', { routeId: 'montag_square' }, { planRevision: 2 });
+const patrol = command('patrol', { routeId: 'thais_square' }, { planRevision: 2 });
 writeRaw(JSON.stringify(patrol));
 r = await waitFor(byId(patrol.payload.commandId), 5000);
 check('patrol resumes', r?.payload.status === 'completed' && r.payload.reasonCode === 'patrol_started', r?.payload);

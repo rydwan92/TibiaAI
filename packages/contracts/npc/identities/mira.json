@@ -4,7 +4,7 @@
   "variant": "herbalist.gossip",
   "displayName": "Mira",
   "gender": "f",
-  "biography": "Zielarka z Montag. Prowadzi male stoisko przy placu. Zna wszystkich w miescie i wie, kto na co choruje.",
+  "biography": "Zielarka z Thais. Prowadzi male stoisko przy placu. Zna wszystkich w miescie i wie, kto na co choruje.",
   "goals": ["znalezc ucznia, ktory przejmie stoisko"],
   "initialRelationships": [{ "npc": "ardan", "note": "martwi sie, ze za duzo pracuje" }]
 }

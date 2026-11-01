@@ -70,11 +70,13 @@ Kody wykonania ruchu: `arrived`, `no_path` (pathfinder nie znalazł drogi przez 
 
 ## Gracze-agenci (pliki, nie mailbox)
 Ciało w kliencie i umysł w Brain wymieniają pliki w `runtime/players/<klucz>/`, opis w PLAYER_AGENTS.md.
-- `state.json` (ciało, co 1 s): atMs, name, level, experience, hp, hpMax, mana, manaMax, cap, x, y, z, target, potions, gold, vips `[{name, online}]`, seen `[{name, kind, hp, x, y, z}]`.
+- `state.json` (ciało, co 1 s): atMs, name, level, experience, hp, hpMax, mana, manaMax, cap, x, y, z, target, potions, gold, arrows, food, vocation, worn (slot → id), have (id → liczba), vips `[{name, online}]`, seen `[{name, kind, hp, x, y, z}]`.
 - `events.jsonl` (ciało): `heard` {from, text, level, private}, `message` {text}, `death`, `vip` {from, online}, `adapter_error` {error}.
-- `orders.json` (umysł): goal {type: idle|goto|floor|door|hunt|explore|follow|trade|depot, id, x, y, z, kind, name, heading, flee, buy, deposit}, say `[{id, text, atMs, to?}]`, healSpell, healMana, attackSpell, attackMana, runes, keep (identyfikatory wartego zabrania łupu), pvp (nazwa celu).
-- `events.jsonl` ma też `trade_done` {money} i `depot_done` {stored, ok}.
-- Żądania deweloperskie: `dev-kit.request` `Postać,zestaw[,refresh]`, `nav-survey.request`, `survey.request`.
+- `orders.json` (umysł): goal {type: idle|goto|floor|door|hunt|explore|follow|sail|talk|trade|depot, id, words (kolejne zdania do NPC przy talk), x, y, z, kind, name, heading, flee, buy, deposit}, say `[{id, text, atMs, to?}]`, healSpell, healMana, attackSpell, attackMana, runes, keep (identyfikatory wartego zabrania łupu), pvp (nazwa celu), wear `[{id, slot}]`, needKit (numer żądania zestawu).
+- `events.jsonl` ma też `trade_done` {money}, `depot_done` {stored, taken, ok} i `loot_stuck`.
+- Każdy rekord ma `session` (bieg ciała) i `seq`. Umysł przesuwa kursor (`players/events.ts`) wyłącznie za kompletne linie. Skrócony lub wymieniony plik poznaje po pierwszych bajtach i czyta od początku; ciało przenosi plik powyżej 2 MB do `events.jsonl.1` przy starcie, a umysł najpierw kończy nieprzeczytaną resztę. Odczyt to najwyżej 256 KB na raz.
+- Kursor zapisuje się w tej samej transakcji co stan umysłu. Po restarcie te same rekordy trafiają na ten sam stan, więc skutki w `mind` nie liczą się podwójnie. Rekordy starsze niż 60 s liczą się do statystyk, ale agent nie odpowiada na nie ani nie oddaje ciosu. Powtórzenie w obrębie sesji jest pomijane.
+- Żądania deweloperskie: `dev-kit.request` `Postać,zestaw[,refresh]`, `dev-strip.request` `Postać,slot`, `dev-kill.request` `Postać`, `nav-survey.request`, `survey.request`.
 - Słowo `trade` przy NPC z `"shop": true` otwiera okno sklepu bez udziału Brain.
 
 ## Odporność
@@ -83,3 +85,13 @@ Ciało w kliencie i umysł w Brain wymieniają pliki w `runtime/players/<klucz>/
 - Kolejka zdarzeń ograniczona do 100 niepotwierdzonych; nadwyżka trafia do dziennika jako `event_dropped_backpressure`.
 - Brak exactly-once po awarii procesu; deduplikacja komend w pamięci sesji świata (200 ostatnich).
 - Restart świata: nowa `worldSessionId`, więc komendy starej sesji nie są nawet otwierane, a Brain oznacza je jako `expired` (`world_session_ended`).
+
+## Ciało postaci: dopisane pola
+- `orders.addVip`: lista ludzi do dodania do VIP, po jednej osobie na 5 s.
+- `orders.wear`: może zawierać kupioną zbroję; ciało zakłada ją zamiast tego, co nosi, gdy ma ją w plecaku.
+- `goal.greet` przy `trade`: najpierw `hi`, potem `trade` na kanale NPC.
+- `goal.deposit`: identyfikatory przedmiotów do depo; do `stored` liczą się tylko monety.
+- Zdarzenie `message`: pola `broadcast` (ogłoszenie dla wszystkich) i `mode` (tryb klienta).
+
+## Odpowiedź modelu na rozmowę
+Oprócz `say`, `opinion`, `follow`: `lead_to` (identyfikator z listy własnych miejsc), `promise`, `their_promise`, `kept`, `note`. Wszystkie opcjonalne, sprawdzane przez mind. Identyfikator spoza listy jest ignorowany.

@@ -76,7 +76,7 @@ Sprawdzenie, czy pliki są na miejscu: w katalogu `...\data\things\1511\` powinn
 Alternatywa bez downloadera: skopiuj zawartość katalogu `assets` z własnej instalacji klienta Tibia **15.11** do `...\data\things\1511\`.
 
 ### 4.3 Po wejściu do gry
-Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz). Start w świątyni Montag (5010,4998,7). Kolejne logowania: te same wartości, a klient zapamiętuje serwer i wersję.
+Postacie: **GOD** (komendy administratora) albo **Knight Sample** (zwykły gracz). Start od razu w Thais (świątynia 32369,32241,7), z profesją i na poziomie 8. Rookgardu i Dawnport nie używamy.
 
 Rozróżnienie: HTTP login (8088) zwraca tylko listę postaci i adres świata 127.0.0.1:7172. Wejście do gry to osobne połączenie TCP z 7172. Odpowiedź HTTP nie jest dowodem wejścia do gry.
 
@@ -93,14 +93,14 @@ Skrypt otwiera okno klienta, zminimalizowane; nie klikaj w nim, scenariusze walk
 Rozmowa z NPC przez model: DOCS/NPC_RUNTIME.md.
 - `Knight Sample` i `GOD` startują obok placu po `scripts\lab-fixture.ps1` (poza grą). Kael to postać eksperymentu; nie zaleca się gry nią.
 Definicje i procedura dodawania: DOCS/AGENTS.md.
-- **Ardan** (strażnik): spawn 5010,5003,7, na południe od świątyni Montag. Patroluje trasę `montag_square`: temple_south (5010,5003), square_west (5006,5005), road_south (5010,5009), square_east (5016,5005). Przy alarmie idzie do gate_watch (5019,5012).
-- **Mira** (zielarka): stoi przy herb_stall (5020,5003,7). Przy alarmie chowa się w świątyni (temple_shelter 5007,4998,7).
-- **Brom** (strażnik, wariant weterana): stoi w old_post (5014,5003,7). Bez reakcji na alarm.
-- **Tolek** (przewodnik): stoi w guide_post (5005,5004,7). Prowadzi do świątyni, na plac, do stoiska Miry i do bramy.
-- **Lena** (nauczycielka angielskiego): stoi w lesson_bench (5007,5002,7). Prowadzi do świątyni i na plac.
-- Ze świątyni wyjdź na zachód, potem na południe i na wschód przez otwarcie przy x≈4998–5001, y=5001.
+- **Ardan** (strażnik): spawn 32369,32251,7, plac na południe od świątyni Thais. Patroluje trasę `thais_square`. Przy alarmie idzie do `gate_watch` (32383,32252).
+- **Mira** (zielarka i kupiec): stoi przy `herb_stall` (32379,32250,7). Sklep otwiera słowo `trade`. Przy alarmie chowa się w świątyni.
+- **Brom** (strażnik, wariant weterana): stoi w `old_post` (32374,32250,7).
+- **Tolek** (przewodnik): stoi w `guide_post` (32364,32252,7).
+- **Lena** (nauczycielka angielskiego): stoi w `lesson_bench` (32364,32250,7).
+- Ze świątyni wychodzi się na południe, na plac.
 - Powitanie: stań blisko NPC (Ardan: 4 kratki, Mira: 3) i napisz `hi`, `witaj`, `czesc` lub `dzien dobry` na kanale Default. NPC się odwraca i odpowiada. Przy włączonym Brain odpowiedź pochodzi z pamięci („Znowu ty…”, „Milo cie znow widziec…”), bez Brain z reguły lokalnej.
-- Alarm treningowy (zdarzenie testowe, nie wykrycie potwora), działa na wszystkich agentów strefy `montag_gate`:
+- Alarm treningowy (zdarzenie testowe, nie wykrycie potwora), działa na wszystkich agentów strefy `thais_gate`:
   - w grze postacią GOD: `/alarm start` i `/alarm clear`;
   - z konsoli: `powershell -ExecutionPolicy Bypass -File scripts\alarm.ps1 start` (oraz `clear`).
 - W grze postacią GOD: `/ai status`, `/ai check ardan` (punkty w silniku), `/ai patrol ardan`, `/ai scan`.
@@ -109,14 +109,28 @@ Definicje i procedura dodawania: DOCS/AGENTS.md.
   - `scripts\scan.ps1 -X 5010 -Y 5003`: mapa przejść w okolicy;
   - `python -I tools\journal.py`: dziennik bieżącej sesji.
 
-## 5a. Gracze-agenci (Kael, Sira, Ravn)
+## 5a. Gracze-agenci (Kael, Sira, Ravn, Luna, Haiku)
 Opis: DOCS/PLAYER_AGENTS.md. Każdy to osobny klient, około 540 MB RAM.
 - Konta i postacie raz: `scripts\player-agents.ps1 -Create`.
 - Start po `scripts\start.ps1`: `scripts\player-agents.ps1 -Start` (`-Only kael,sira`, aby wybrać).
 - Co robią: `scripts\player-agents.ps1 -Status`, dziennik w `runtime\players\<klucz>\diary.log`.
 - Bieg z pomiarami: `scripts\player-run.ps1 -Minutes 20`, wynik w `runtime\evidence\player-run-*.json`.
 - Koniec: `scripts\player-agents.ps1 -Stop`.
-- Po zmianie mapy: `tools\world_atlas.py`, żądania `nav-survey.request` i `survey.request`, `tools\make_spawns.py`, `scripts\sync-server.ps1`, restart. Skan zostawia Canary z 1,3 GB RAM do następnego restartu.
+- Po zmianie mapy: `tools\world_atlas.py <mapa> <items.xml> <appearances.dat> runtime\atlas\atlas.json packages\contracts\game-data.json` (trasy i przejścia, 74 s), `tools\make_grounds.py`, `tools\make_boats.py`, `tools\make_shop.py`, `scripts\sync-server.ps1`, restart. Skan silnikiem nie jest już potrzebny.
+- Luna i Haiku grają na modelach z konta GitHub (ADR 0011). Wymagają `TIBIAAI_CLOUD_AI=1` w `.env` i zalogowanego `gh`. Bez tego grają na modelu lokalnym albo regułach. Start samych tych postaci, bez Ollamy: `scripts\start.ps1 -NoModel`, potem `scripts\player-agents.ps1 -Start -Only luna,haiku`.
+- Zużycie kredytów, bez wywołania modelu: `scripts\ai-budget.ps1`, a z limitem konta: `-Quota`. Wyłącznik: `-Stop`, powrót: `-Resume`. Budżety w `packages\contracts\cloud-ai.json`.
+- Porównanie modeli na 30 scenariuszach (płatne, około 1 kredytu): `node --disable-warning=ExperimentalWarning apps\brain\test-integration\model-compare.ts`, wynik w `runtime\evidence\model-compare-*.json`.
+- Pomocnik Notka: raz `scripts\player-agents.ps1 -Create -Only notka`, potem `-Start -Only notka`. W grze dodaj Notkę do VIP i napisz `pomoc`.
+- Podgląd świata bez uruchamiania gry: `node --disable-warning=ExperimentalWarning apps\brain\src\cli\world.ts near 32369,32241,7 20` pokazuje NPC, przejścia i łowiska w okolicy, a `check` sprawdza, czy punkty NPC są osiągalne z Thais. `Ardan/test_unreachable` jest bez drogi celowo.
+- Stałe wejście do gry: skrót „TibiaAI gra” na pulpicie, czyli `scripts\client.ps1 -CopyPassword`.
+- Przegląd podstaw świata w klientach: `scripts\world-check.ps1`, wynik w `runtime\evidence\world-check-*.json`. Wymaga świata bez innych klientów.
+
+## 5b. Narzędzia właściciela
+- Narzędziownik: `scripts\panel.ps1` otwiera stronę z postaciami, rankingiem, pamięcią i kosztami. To plik w `runtime\panel`, Brain odświeża go co 30 s, nic nie nasłuchuje.
+- Strażnik: `scripts\keeper.ps1 -Start` co minutę przywraca serwer, Brain i klienty, najwyżej 6 razy na godzinę. Zapisy w `runtime\logs\keeper.log`. `stop.ps1` i `player-agents.ps1 -Stop` zatrzymują go same.
+- Dubler człowieka: `scripts\stand-in.ps1 -Start` i `tools\scene.py`. Używa konta testowego, więc przed ręcznym logowaniem na `GOD` albo `Knight Sample` zatrzymaj go przez `scene.py away 3000`, potem `stand-in.ps1 -Stop`.
+- Obserwacja za zgodą: nazwa postaci w `packages\contracts\observation.json`, po restarcie serwera powstaje `runtime\logs\observe-<postać>.jsonl`. Podgląd i usuwanie: `scripts\observe.ps1`.
+- Nowe miejsca: plik w `game\world\places`, potem `stop.ps1 -KeepDb`, `sync-server.ps1`, `start.ps1`.
 
 ## 6. Brain i pamięć
 - Dostawca: `.env` → `TIBIAAI_BRAIN_PROVIDER=local-model` (Ollama, tylko lokalnie) lub `rules` (bez modelu). Zmiana wymaga `stop.ps1 -BrainOnly` i `start.ps1 -BrainOnly`. Polityka: `packages\contracts\local-ai.json`, ADR 0007. Gdy Ollama nie działa, Brain sam używa reguł (`model_unavailable_using_rules` w logu).
@@ -163,7 +177,6 @@ Co minutę dziennik dostaje wpis `perf_stats` z czasem naszych GlobalEventów (`
 | NPC stoi lub go nie ma | `python -I tools\journal.py --kinds agent_definition_invalid,agent_spawn_failed,state_changed,move_failed,controller_error`; `/ai check <agent>` |
 | `brainOnline=false` w `runtime\mailbox\world.json` | Brain nie działa albo heartbeat jest starszy niż 5 s; gra działa dalej na regułach Lua |
 | Zaległe pliki w `runtime\mailbox\events` | Brain wyłączony; maksymalnie 100 zdarzeń, potem `event_dropped_backpressure` w dzienniku |
-| Spam „createFiendishMonsters … no progress” w logu | `data-canary` nie ma potworów; ostrzeżenie upstream, nieszkodliwe |
 | XAMPP uruchomiony | `.htaccess` blokuje projekt (403). Nie wyłączaj go bez potrzeby |
 
 ## Granice środowiska

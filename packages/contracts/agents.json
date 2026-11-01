@@ -13,12 +13,12 @@
     "speechCooldownSeconds": 2
   },
   "alarmZones": [
-    "montag_gate"
+    "thais_gate"
   ],
   "arena": {
     "center": {
-      "x": 5012,
-      "y": 5004,
+      "x": 32371,
+      "y": 32251,
       "z": 7
     },
     "radius": 10,
@@ -30,9 +30,19 @@
       "Valkyrie"
     ],
     "devCharacters": [
+      "Astra",
+      "Borgar",
+      "Claude",
+      "Elowen",
+      "Haiku",
       "Kael",
+      "Knight Sample",
+      "Luna",
+      "Notka",
+      "Ravn",
       "Sira",
-      "Ravn"
+      "Sol",
+      "Vesna"
     ],
     "devTasks": [
       "letter_for_brom"
@@ -206,6 +216,198 @@
           "id": 17512,
           "count": 25
         }
+      ],
+      "noviceknight": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3359,
+          "slot": "armor"
+        },
+        {
+          "id": 3354,
+          "slot": "head"
+        },
+        {
+          "id": 3372,
+          "slot": "legs"
+        },
+        {
+          "id": 3552,
+          "slot": "feet"
+        },
+        {
+          "id": 7773,
+          "slot": "left"
+        },
+        {
+          "id": 3425,
+          "slot": "right"
+        }
+      ],
+      "veteranknight": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3381,
+          "slot": "armor"
+        },
+        {
+          "id": 3385,
+          "slot": "head"
+        },
+        {
+          "id": 3382,
+          "slot": "legs"
+        },
+        {
+          "id": 3554,
+          "slot": "feet"
+        },
+        {
+          "id": 3295,
+          "slot": "left"
+        },
+        {
+          "id": 3415,
+          "slot": "right"
+        },
+        {
+          "id": 239,
+          "count": 40
+        },
+        {
+          "id": 237,
+          "count": 10
+        },
+        {
+          "id": 3035,
+          "count": 50
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 15
+        }
+      ],
+      "midknight": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3370,
+          "slot": "armor"
+        },
+        {
+          "id": 3351,
+          "slot": "head"
+        },
+        {
+          "id": 3371,
+          "slot": "legs"
+        },
+        {
+          "id": 3554,
+          "slot": "feet"
+        },
+        {
+          "id": 3271,
+          "slot": "left"
+        },
+        {
+          "id": 3415,
+          "slot": "right"
+        },
+        {
+          "id": 236,
+          "count": 30
+        },
+        {
+          "id": 268,
+          "count": 10
+        },
+        {
+          "id": 3035,
+          "count": 20
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 15
+        }
+      ],
+      "veterandruid": [
+        {
+          "id": 2854,
+          "slot": "backpack"
+        },
+        {
+          "id": 3567,
+          "slot": "armor"
+        },
+        {
+          "id": 3351,
+          "slot": "head"
+        },
+        {
+          "id": 3362,
+          "slot": "legs"
+        },
+        {
+          "id": 3554,
+          "slot": "feet"
+        },
+        {
+          "id": 3067,
+          "slot": "left"
+        },
+        {
+          "id": 3415,
+          "slot": "right"
+        },
+        {
+          "id": 237,
+          "count": 40
+        },
+        {
+          "id": 266,
+          "count": 15
+        },
+        {
+          "id": 3035,
+          "count": 20
+        },
+        {
+          "id": 3003,
+          "count": 1
+        },
+        {
+          "id": 3457,
+          "count": 1
+        },
+        {
+          "id": 3577,
+          "count": 15
+        }
       ]
     },
     "kitSpells": {
@@ -281,7 +483,144 @@
         "Summon Creature",
         "Terra Strike",
         "Ultimate Healing"
+      ],
+      "veteranknight": [
+        "Berserk",
+        "Blood Rage",
+        "Bruise Bane",
+        "Brutal Strike",
+        "Challenge",
+        "Charge",
+        "Cure Bleeding",
+        "Cure Poison",
+        "Fierce Berserk",
+        "Find Fiend",
+        "Find Person",
+        "Front Sweep",
+        "Great Light",
+        "Groundshaker",
+        "Haste",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Inflict Wound",
+        "Intense Recovery",
+        "Intense Wound Cleansing",
+        "Lesser Front Sweep",
+        "Levitate",
+        "Light",
+        "Magic Rope",
+        "Protector",
+        "Recovery",
+        "Train Party",
+        "Whirlwind Throw",
+        "Wound Cleansing"
+      ],
+      "midknight": [
+        "Berserk",
+        "Bruise Bane",
+        "Brutal Strike",
+        "Challenge",
+        "Charge",
+        "Cure Bleeding",
+        "Cure Poison",
+        "Find Fiend",
+        "Find Person",
+        "Great Light",
+        "Groundshaker",
+        "Haste",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Inflict Wound",
+        "Lesser Front Sweep",
+        "Levitate",
+        "Light",
+        "Magic Rope",
+        "Recovery",
+        "Train Party",
+        "Whirlwind Throw",
+        "Wound Cleansing"
+      ],
+      "veterandruid": [
+        "Animate Dead Rune",
+        "Apprentice's Strike",
+        "Avalanche Rune",
+        "Blank Rune",
+        "Cancel Magic Shield",
+        "Chameleon Rune",
+        "Chill Out",
+        "Convince Creature Rune",
+        "Creature Illusion",
+        "Cure Bleeding",
+        "Cure Burning",
+        "Cure Electrification",
+        "Cure Poison",
+        "Cure Poison Rune",
+        "Destroy Field Rune",
+        "Disintegrate Rune",
+        "Energy Field Rune",
+        "Energy Strike",
+        "Energy Wall Rune",
+        "Envenom",
+        "Explosion Rune",
+        "Find Fiend",
+        "Find Person",
+        "Fire Bomb Rune",
+        "Fire Field Rune",
+        "Fire Wall Rune",
+        "Flame Strike",
+        "Food",
+        "Great Light",
+        "Haste",
+        "Heal Friend",
+        "Heal Party",
+        "Heavy Magic Missile Rune",
+        "House Door List",
+        "House Guest List",
+        "House Kick",
+        "House Subowner List",
+        "Ice Strike",
+        "Ice Wave",
+        "Icicle Rune",
+        "Intense Healing",
+        "Intense Healing Rune",
+        "Invisibility",
+        "Levitate",
+        "Light",
+        "Light Healing",
+        "Light Magic Missile Rune",
+        "Light Stone Shower Rune",
+        "Lightest Missile Rune",
+        "Magic Patch",
+        "Magic Rope",
+        "Magic Shield",
+        "Mass Healing",
+        "Mud Attack",
+        "Physical Strike",
+        "Poison Bomb Rune",
+        "Poison Field Rune",
+        "Poison Wall Rune",
+        "Soulfire Rune",
+        "Stalagmite Rune",
+        "Stone Shower Rune",
+        "Strong Haste",
+        "Strong Ice Wave",
+        "Summon Creature",
+        "Terra Strike",
+        "Terra Wave",
+        "Ultimate Healing",
+        "Ultimate Healing Rune",
+        "Ultimate Light",
+        "Wild Growth Rune"
       ]
+    },
+    "replaceWorn": {
+      "veteranknight": true,
+      "midknight": true,
+      "veterandruid": true
     }
   },
   "aiMarker": {
@@ -293,10 +632,10 @@
   },
   "places": {
     "temple": {
-      "label": "swiatynia",
+      "label": "przed swiatynia",
       "position": {
-        "x": 5004,
-        "y": 4999,
+        "x": 32369,
+        "y": 32250,
         "z": 7
       },
       "aliases": [
@@ -313,8 +652,8 @@
     "square": {
       "label": "plac",
       "position": {
-        "x": 5008,
-        "y": 5005,
+        "x": 32367,
+        "y": 32252,
         "z": 7
       },
       "aliases": [
@@ -328,8 +667,8 @@
     "herb_stall": {
       "label": "stoisko Miry",
       "position": {
-        "x": 5019,
-        "y": 5004,
+        "x": 32378,
+        "y": 32251,
         "z": 7
       },
       "aliases": [
@@ -346,8 +685,8 @@
     "gate": {
       "label": "brama",
       "position": {
-        "x": 5018,
-        "y": 5012,
+        "x": 32383,
+        "y": 32252,
         "z": 7
       },
       "aliases": [
@@ -361,8 +700,8 @@
     "sealed_storeroom": {
       "label": "zamkniety magazyn",
       "position": {
-        "x": 5005,
-        "y": 4994,
+        "x": 32377,
+        "y": 32233,
         "z": 7
       },
       "aliases": [
@@ -426,7 +765,7 @@
   "agents": {
     "ardan": {
       "npcName": "Ardan",
-      "description": "Ardan, the guard of Montag",
+      "description": "Ardan, the guard of Thais",
       "actor": "npc",
       "outfit": {
         "lookType": 131,
@@ -440,42 +779,42 @@
       "spawn": "temple_south",
       "behavior": {
         "type": "patrol",
-        "defaultRoute": "montag_square"
+        "defaultRoute": "thais_square"
       },
       "waypoints": {
         "temple_south": {
-          "x": 5010,
-          "y": 5003,
+          "x": 32369,
+          "y": 32251,
           "z": 7
         },
         "square_west": {
-          "x": 5006,
-          "y": 5005,
+          "x": 32362,
+          "y": 32251,
           "z": 7
         },
         "square_east": {
-          "x": 5016,
-          "y": 5005,
+          "x": 32378,
+          "y": 32251,
           "z": 7
         },
         "road_south": {
-          "x": 5010,
-          "y": 5009,
+          "x": 32369,
+          "y": 32253,
           "z": 7
         },
         "gate_watch": {
-          "x": 5019,
-          "y": 5012,
+          "x": 32383,
+          "y": 32252,
           "z": 7
         },
         "test_unreachable": {
-          "x": 5005,
-          "y": 4994,
+          "x": 32377,
+          "y": 32233,
           "z": 7
         }
       },
       "routes": {
-        "montag_square": [
+        "thais_square": [
           "temple_south",
           "square_west",
           "road_south",
@@ -501,15 +840,15 @@
       },
       "alarm": {
         "zones": [
-          "montag_gate"
+          "thais_gate"
         ],
         "moveTo": "gate_watch",
         "yell": true,
         "rewarnSeconds": 20
       },
       "texts": {
-        "greetFallback": "Witaj, {name}. Jestem Ardan, straznik Montag. Trzymaj sie blisko swiatyni.",
-        "greetFirst": "Witaj, {name}. Jestem Ardan, straznik Montag. Nie widzialem cie tu wczesniej.",
+        "greetFallback": "Witaj, {name}. Jestem Ardan, straznik Thais. Trzymaj sie blisko swiatyni.",
+        "greetFirst": "Witaj, {name}. Jestem Ardan, straznik Thais. Nie widzialem cie tu wczesniej.",
         "greetRepeat": "Znowu ty, {name}. To nasze {nth}. spotkanie, ostatnio {since}.",
         "greetDuringAlarm": "Nie teraz, trwa alarm. Idz do swiatyni!",
         "alarmStart": "ALARM! Cwiczenia przy bramie. Cywile do swiatyni!",
@@ -525,7 +864,7 @@
     },
     "mira": {
       "npcName": "Mira",
-      "description": "Mira, the herbalist of Montag",
+      "description": "Mira, the herbalist of Thais",
       "actor": "npc",
       "outfit": {
         "lookType": 136,
@@ -543,13 +882,13 @@
       },
       "waypoints": {
         "herb_stall": {
-          "x": 5020,
-          "y": 5003,
+          "x": 32379,
+          "y": 32250,
           "z": 7
         },
         "temple_shelter": {
-          "x": 5007,
-          "y": 4998,
+          "x": 32368,
+          "y": 32250,
           "z": 7
         }
       },
@@ -573,7 +912,7 @@
       },
       "alarm": {
         "zones": [
-          "montag_gate"
+          "thais_gate"
         ],
         "moveTo": "temple_shelter",
         "yell": false,
@@ -581,7 +920,7 @@
       },
       "texts": {
         "greetFallback": "Dzien dobry, {name}. Mira, zielarka. Ziola dla zdrowia, nie dla handlu.",
-        "greetFirst": "Dzien dobry, {name}. Jestem Mira. Pierwszy raz w Montag?",
+        "greetFirst": "Dzien dobry, {name}. Jestem Mira. Pierwszy raz w Thais?",
         "greetRepeat": "Milo cie znow widziec, {name}. To juz {nth}. raz, ostatnio {since}.",
         "greetDuringAlarm": "Alarm! Chowam sie w swiatyni, ty tez uwazaj.",
         "alarmStart": "Alarm? Ide do swiatyni.",
@@ -601,7 +940,7 @@
     },
     "brom": {
       "npcName": "Brom",
-      "description": "Brom, an old guard of Montag",
+      "description": "Brom, an old guard of Thais",
       "actor": "npc",
       "outfit": {
         "lookType": 128,
@@ -619,8 +958,8 @@
       },
       "waypoints": {
         "old_post": {
-          "x": 5014,
-          "y": 5003,
+          "x": 32374,
+          "y": 32250,
           "z": 7
         }
       },
@@ -663,7 +1002,7 @@
         "Tolka",
         "Tolkiem"
       ],
-      "description": "Tolek, a guide of Montag",
+      "description": "Tolek, a guide of Thais",
       "actor": "npc",
       "outfit": {
         "lookType": 129,
@@ -691,13 +1030,13 @@
       ],
       "waypoints": {
         "guide_post": {
-          "x": 5005,
-          "y": 5004,
+          "x": 32364,
+          "y": 32252,
           "z": 7
         },
         "temple_safe": {
-          "x": 5008,
-          "y": 4999,
+          "x": 32367,
+          "y": 32250,
           "z": 7
         }
       },
@@ -721,7 +1060,7 @@
       },
       "alarm": {
         "zones": [
-          "montag_gate"
+          "thais_gate"
         ],
         "moveTo": "temple_safe",
         "yell": false,
@@ -761,7 +1100,7 @@
         "Leny",
         "Lene"
       ],
-      "description": "Lena, an English teacher in Montag",
+      "description": "Lena, an English teacher in Thais",
       "actor": "npc",
       "outfit": {
         "lookType": 138,
@@ -786,13 +1125,13 @@
       ],
       "waypoints": {
         "lesson_bench": {
-          "x": 5007,
-          "y": 5002,
+          "x": 32364,
+          "y": 32250,
           "z": 7
         },
         "temple_safe": {
-          "x": 5009,
-          "y": 4998,
+          "x": 32366,
+          "y": 32250,
           "z": 7
         }
       },
@@ -816,7 +1155,7 @@
       },
       "alarm": {
         "zones": [
-          "montag_gate"
+          "thais_gate"
         ],
         "moveTo": "temple_safe",
         "yell": false,

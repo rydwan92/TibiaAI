@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { buildTimeline, parseJsonLines } from '../src/timeline.ts';
 
 const world = [
-  { ts: '2026-10-29T22:47:46Z', kind: 'event', agentKey: 'ardan', eventType: 'training_alarm_started', eventId: 'E1', delivered: true, payload: { type: 'training_alarm_started', zoneId: 'montag_gate' } },
+  { ts: '2026-10-29T22:47:46Z', kind: 'event', agentKey: 'ardan', eventType: 'training_alarm_started', eventId: 'E1', delivered: true, payload: { type: 'training_alarm_started', zoneId: 'thais_gate' } },
   { ts: '2026-10-29T22:47:46Z', kind: 'state_changed', agentKey: 'ardan', from: 'PATROL', to: 'ALERT' },
   { ts: '2026-10-29T22:47:50Z', kind: 'command_accepted', agentKey: 'ardan', commandId: 'C1', correlationId: 'E1', action: 'say', planRevision: 0 },
   { ts: '2026-10-29T22:47:50Z', kind: 'npc_said', agentKey: 'ardan', text: 'To 2. alarm', source: 'brain', commandId: 'C1', correlationId: 'E1' },

@@ -24,24 +24,174 @@
   {
    "name": "rope",
    "id": 3003,
-   "price": 30
+   "price": 15
   },
   {
    "name": "shovel",
    "id": 3457,
-   "price": 30
+   "price": 15
   },
   {
    "name": "lightest magic missile rune",
    "id": 17512,
    "price": 3
+  },
+  {
+   "name": "light magic missile rune",
+   "id": 3174,
+   "price": 6
+  },
+  {
+   "name": "heavy magic missile rune",
+   "id": 3198,
+   "price": 12
+  },
+  {
+   "name": "stalagmite rune",
+   "id": 3179,
+   "price": 14
+  },
+  {
+   "name": "strong health potion",
+   "id": 236,
+   "price": 40
+  },
+  {
+   "name": "strong mana potion",
+   "id": 237,
+   "price": 40
+  },
+  {
+   "name": "great health potion",
+   "id": 239,
+   "price": 90
+  },
+  {
+   "name": "great mana potion",
+   "id": 238,
+   "price": 90
+  },
+  {
+   "name": "backpack",
+   "id": 2854,
+   "price": 10
+  },
+  {
+   "name": "leather armor",
+   "id": 3361,
+   "price": 25
+  },
+  {
+   "name": "leather helmet",
+   "id": 3355,
+   "price": 12
+  },
+  {
+   "name": "leather legs",
+   "id": 3559,
+   "price": 10
+  },
+  {
+   "name": "leather boots",
+   "id": 3552,
+   "price": 8
+  },
+  {
+   "name": "sword",
+   "id": 3264,
+   "price": 40
+  },
+  {
+   "name": "wooden shield",
+   "id": 3412,
+   "price": 12
+  },
+  {
+   "name": "bow",
+   "id": 3350,
+   "price": 40
+  },
+  {
+   "name": "quiver",
+   "id": 35562,
+   "price": 30
+  },
+  {
+   "name": "wand of vortex",
+   "id": 3074,
+   "price": 60
   }
  ],
  "bought": [
   {
+   "name": "seeds",
+   "id": 647,
+   "price": 3
+  },
+  {
+   "name": "small enchanted amethyst",
+   "id": 678,
+   "price": 3
+  },
+  {
+   "name": "shiver arrow",
+   "id": 762,
+   "price": 28
+  },
+  {
+   "name": "flaming arrow",
+   "id": 763,
+   "price": 28
+  },
+  {
+   "name": "terra boots",
+   "id": 813,
+   "price": 12
+  },
+  {
+   "name": "glacier shoes",
+   "id": 819,
+   "price": 12
+  },
+  {
+   "name": "glacier robe",
+   "id": 824,
+   "price": 66
+  },
+  {
+   "name": "glacier mask",
+   "id": 829,
+   "price": 30
+  },
+  {
+   "name": "walnut",
+   "id": 836,
+   "price": 3
+  },
+  {
+   "name": "peanut",
+   "id": 841,
+   "price": 3
+  },
+  {
+   "name": "marlin",
+   "id": 901,
+   "price": 3
+  },
+  {
+   "name": "nail",
+   "id": 953,
+   "price": 3
+  },
+  {
    "name": "small stone",
    "id": 1781,
    "price": 10
+  },
+  {
+   "name": "small blue pillow",
+   "id": 2389,
+   "price": 3
   },
   {
    "name": "scroll",
@@ -49,8 +199,38 @@
    "price": 1
   },
   {
+   "name": "blank parchment",
+   "id": 2817,
+   "price": 3
+  },
+  {
+   "name": "book",
+   "id": 2824,
+   "price": 3
+  },
+  {
+   "name": "book",
+   "id": 2828,
+   "price": 3
+  },
+  {
+   "name": "book",
+   "id": 2829,
+   "price": 3
+  },
+  {
+   "name": "book",
+   "id": 2831,
+   "price": 3
+  },
+  {
    "name": "brown flask",
    "id": 2885,
+   "price": 3
+  },
+  {
+   "name": "waterskin",
+   "id": 2901,
    "price": 3
   },
   {
@@ -59,8 +239,33 @@
    "price": 3
   },
   {
+   "name": "candlestick",
+   "id": 2917,
+   "price": 3
+  },
+  {
    "name": "torch",
    "id": 2920,
+   "price": 3
+  },
+  {
+   "name": "small oil lamp",
+   "id": 2933,
+   "price": 3
+  },
+  {
+   "name": "lute",
+   "id": 2950,
+   "price": 3
+  },
+  {
+   "name": "doll",
+   "id": 2991,
+   "price": 3
+  },
+  {
+   "name": "voodoo doll",
+   "id": 3002,
    "price": 3
   },
   {
@@ -84,6 +289,11 @@
    "price": 3
   },
   {
+   "name": "white pearl",
+   "id": 3026,
+   "price": 3
+  },
+  {
    "name": "black pearl",
    "id": 3027,
    "price": 3
@@ -104,6 +314,51 @@
    "price": 3
   },
   {
+   "name": "small emerald",
+   "id": 3032,
+   "price": 3
+  },
+  {
+   "name": "small amethyst",
+   "id": 3033,
+   "price": 3
+  },
+  {
+   "name": "violet gem",
+   "id": 3036,
+   "price": 3
+  },
+  {
+   "name": "yellow gem",
+   "id": 3037,
+   "price": 3
+  },
+  {
+   "name": "green gem",
+   "id": 3038,
+   "price": 3
+  },
+  {
+   "name": "red gem",
+   "id": 3039,
+   "price": 3
+  },
+  {
+   "name": "blue gem",
+   "id": 3041,
+   "price": 3
+  },
+  {
+   "name": "scarab coin",
+   "id": 3042,
+   "price": 3
+  },
+  {
+   "name": "tusk",
+   "id": 3044,
+   "price": 3
+  },
+  {
    "name": "strange talisman",
    "id": 3045,
    "price": 3
@@ -111,6 +366,11 @@
   {
    "name": "magic light wand",
    "id": 3046,
+   "price": 3
+  },
+  {
+   "name": "stealth ring",
+   "id": 3049,
    "price": 3
   },
   {
@@ -124,13 +384,73 @@
    "price": 3
   },
   {
+   "name": "time ring",
+   "id": 3053,
+   "price": 3
+  },
+  {
    "name": "silver amulet",
    "id": 3054,
    "price": 3
   },
   {
+   "name": "bronze amulet",
+   "id": 3056,
+   "price": 3
+  },
+  {
+   "name": "strange symbol",
+   "id": 3058,
+   "price": 3
+  },
+  {
+   "name": "spellbook",
+   "id": 3059,
+   "price": 28
+  },
+  {
    "name": "life crystal",
    "id": 3061,
+   "price": 3
+  },
+  {
+   "name": "mind stone",
+   "id": 3062,
+   "price": 3
+  },
+  {
+   "name": "terra rod",
+   "id": 3065,
+   "price": 3
+  },
+  {
+   "name": "snakebite rod",
+   "id": 3066,
+   "price": 3
+  },
+  {
+   "name": "hailstorm rod",
+   "id": 3067,
+   "price": 3
+  },
+  {
+   "name": "necrotic rod",
+   "id": 3069,
+   "price": 3
+  },
+  {
+   "name": "wand of decay",
+   "id": 3072,
+   "price": 3
+  },
+  {
+   "name": "wand of cosmic energy",
+   "id": 3073,
+   "price": 3
+  },
+  {
+   "name": "wand of dragonbreath",
+   "id": 3075,
    "price": 3
   },
   {
@@ -139,13 +459,23 @@
    "price": 3
   },
   {
-   "name": "boots of haste",
-   "id": 3079,
+   "name": "mysterious fetish",
+   "id": 3078,
    "price": 3
   },
   {
    "name": "stone skin amulet",
    "id": 3081,
+   "price": 3
+  },
+  {
+   "name": "elven amulet",
+   "id": 3082,
+   "price": 3
+  },
+  {
+   "name": "garlic necklace",
+   "id": 3083,
    "price": 3
   },
   {
@@ -159,14 +489,39 @@
    "price": 3
   },
   {
+   "name": "sword ring",
+   "id": 3091,
+   "price": 3
+  },
+  {
+   "name": "axe ring",
+   "id": 3092,
+   "price": 3
+  },
+  {
    "name": "club ring",
    "id": 3093,
    "price": 3
   },
   {
-   "name": "ring of healing",
-   "id": 3098,
+   "name": "dwarven ring",
+   "id": 3097,
    "price": 3
+  },
+  {
+   "name": "dirty fur",
+   "id": 3105,
+   "price": 3
+  },
+  {
+   "name": "fishbone",
+   "id": 3111,
+   "price": 1
+  },
+  {
+   "name": "rotten meat",
+   "id": 3112,
+   "price": 1
   },
   {
    "name": "skull",
@@ -179,9 +534,24 @@
    "price": 3
   },
   {
+   "name": "big bone",
+   "id": 3116,
+   "price": 3
+  },
+  {
    "name": "mouldy cheese",
    "id": 3120,
    "price": 1
+  },
+  {
+   "name": "dirty cape",
+   "id": 3122,
+   "price": 3
+  },
+  {
+   "name": "worn leather boots",
+   "id": 3123,
+   "price": 3
   },
   {
    "name": "twigs",
@@ -189,9 +559,19 @@
    "price": 3
   },
   {
-   "name": "sword",
-   "id": 3264,
-   "price": 52
+   "name": "blank rune",
+   "id": 3147,
+   "price": 3
+  },
+  {
+   "name": "thunderstorm rune",
+   "id": 3202,
+   "price": 3
+  },
+  {
+   "name": "two handed sword",
+   "id": 3265,
+   "price": 110
   },
   {
    "name": "battle axe",
@@ -212,6 +592,11 @@
    "name": "halberd",
    "id": 3269,
    "price": 98
+  },
+  {
+   "name": "spike sword",
+   "id": 3271,
+   "price": 90
   },
   {
    "name": "rapier",
@@ -249,14 +634,44 @@
    "price": 110
   },
   {
+   "name": "morning star",
+   "id": 3282,
+   "price": 72
+  },
+  {
+   "name": "carlin sword",
+   "id": 3283,
+   "price": 56
+  },
+  {
+   "name": "ice rapier",
+   "id": 3284,
+   "price": 86
+  },
+  {
+   "name": "longsword",
+   "id": 3285,
+   "price": 62
+  },
+  {
    "name": "mace",
    "id": 3286,
    "price": 54
   },
   {
+   "name": "throwing star",
+   "id": 3287,
+   "price": 60
+  },
+  {
    "name": "staff",
    "id": 3289,
    "price": 70
+  },
+  {
+   "name": "silver dagger",
+   "id": 3290,
+   "price": 32
   },
   {
    "name": "knife",
@@ -269,14 +684,39 @@
    "price": 28
   },
   {
+   "name": "sickle",
+   "id": 3293,
+   "price": 18
+  },
+  {
    "name": "short sword",
    "id": 3294,
    "price": 44
   },
   {
+   "name": "serpent sword",
+   "id": 3297,
+   "price": 66
+  },
+  {
+   "name": "throwing knife",
+   "id": 3298,
+   "price": 50
+  },
+  {
    "name": "poison dagger",
    "id": 3299,
    "price": 48
+  },
+  {
+   "name": "katana",
+   "id": 3300,
+   "price": 56
+  },
+  {
+   "name": "broadsword",
+   "id": 3301,
+   "price": 98
   },
   {
    "name": "battle hammer",
@@ -287,6 +727,31 @@
    "name": "scimitar",
    "id": 3307,
    "price": 64
+  },
+  {
+   "name": "machete",
+   "id": 3308,
+   "price": 42
+  },
+  {
+   "name": "clerical mace",
+   "id": 3311,
+   "price": 86
+  },
+  {
+   "name": "obsidian lance",
+   "id": 3313,
+   "price": 88
+  },
+  {
+   "name": "orcish axe",
+   "id": 3316,
+   "price": 70
+  },
+  {
+   "name": "daramian mace",
+   "id": 3327,
+   "price": 66
   },
   {
    "name": "heavy machete",
@@ -304,13 +769,38 @@
    "price": 40
   },
   {
+   "name": "bone sword",
+   "id": 3338,
+   "price": 46
+  },
+  {
+   "name": "beastslayer axe",
+   "id": 3344,
+   "price": 94
+  },
+  {
+   "name": "templar scytheblade",
+   "id": 3345,
+   "price": 76
+  },
+  {
+   "name": "ripper lance",
+   "id": 3346,
+   "price": 70
+  },
+  {
    "name": "hunting spear",
    "id": 3347,
    "price": 64
   },
   {
-   "name": "bow",
-   "id": 3350,
+   "name": "banana staff",
+   "id": 3348,
+   "price": 80
+  },
+  {
+   "name": "crossbow",
+   "id": 3349,
    "price": 3
   },
   {
@@ -334,11 +824,6 @@
    "price": 18
   },
   {
-   "name": "leather helmet",
-   "id": 3355,
-   "price": 6
-  },
-  {
    "name": "plate armor",
    "id": 3357,
    "price": 60
@@ -354,9 +839,9 @@
    "price": 48
   },
   {
-   "name": "leather armor",
-   "id": 3361,
-   "price": 24
+   "name": "studded legs",
+   "id": 3362,
+   "price": 12
   },
   {
    "name": "viking helmet",
@@ -369,9 +854,29 @@
    "price": 48
   },
   {
-   "name": "knight armor",
-   "id": 3370,
-   "price": 72
+   "name": "brass legs",
+   "id": 3372,
+   "price": 30
+  },
+  {
+   "name": "strange helmet",
+   "id": 3373,
+   "price": 36
+  },
+  {
+   "name": "legion helmet",
+   "id": 3374,
+   "price": 24
+  },
+  {
+   "name": "soldier helmet",
+   "id": 3375,
+   "price": 30
+  },
+  {
+   "name": "studded helmet",
+   "id": 3376,
+   "price": 12
   },
   {
    "name": "scale armor",
@@ -379,14 +884,29 @@
    "price": 54
   },
   {
+   "name": "studded armor",
+   "id": 3378,
+   "price": 30
+  },
+  {
+   "name": "doublet",
+   "id": 3379,
+   "price": 12
+  },
+  {
+   "name": "dark armor",
+   "id": 3383,
+   "price": 60
+  },
+  {
    "name": "dark helmet",
    "id": 3384,
    "price": 36
   },
   {
-   "name": "royal helmet",
-   "id": 3392,
-   "price": 54
+   "name": "tribal mask",
+   "id": 3403,
+   "price": 12
   },
   {
    "name": "leopard armor",
@@ -397,6 +917,21 @@
    "name": "horseman helmet",
    "id": 3405,
    "price": 36
+  },
+  {
+   "name": "feather headdress",
+   "id": 3406,
+   "price": 12
+  },
+  {
+   "name": "charmer's tiara",
+   "id": 3407,
+   "price": 12
+  },
+  {
+   "name": "bonelord helmet",
+   "id": 3408,
+   "price": 42
   },
   {
    "name": "steel shield",
@@ -414,14 +949,29 @@
    "price": 32
   },
   {
-   "name": "wooden shield",
-   "id": 3412,
-   "price": 28
-  },
-  {
    "name": "battle shield",
    "id": 3413,
    "price": 46
+  },
+  {
+   "name": "guardian shield",
+   "id": 3415,
+   "price": 60
+  },
+  {
+   "name": "bonelord shield",
+   "id": 3418,
+   "price": 56
+  },
+  {
+   "name": "dwarven shield",
+   "id": 3425,
+   "price": 52
+  },
+  {
+   "name": "studded shield",
+   "id": 3426,
+   "price": 30
   },
   {
    "name": "black shield",
@@ -429,9 +979,39 @@
    "price": 36
   },
   {
-   "name": "medusa shield",
-   "id": 3436,
-   "price": 66
+   "name": "copper shield",
+   "id": 3430,
+   "price": 38
+  },
+  {
+   "name": "ancient shield",
+   "id": 3432,
+   "price": 54
+  },
+  {
+   "name": "bone shield",
+   "id": 3441,
+   "price": 40
+  },
+  {
+   "name": "tusk shield",
+   "id": 3443,
+   "price": 54
+  },
+  {
+   "name": "sentinel shield",
+   "id": 3444,
+   "price": 44
+  },
+  {
+   "name": "salamander shield",
+   "id": 3445,
+   "price": 52
+  },
+  {
+   "name": "bolt",
+   "id": 3446,
+   "price": 60
   },
   {
    "name": "poison arrow",
@@ -444,13 +1024,58 @@
    "price": 54
   },
   {
+   "name": "pick",
+   "id": 3456,
+   "price": 3
+  },
+  {
+   "name": "wooden hammer",
+   "id": 3459,
+   "price": 1
+  },
+  {
    "name": "small axe",
    "id": 3462,
    "price": 3
   },
   {
+   "name": "wooden spoon",
+   "id": 3470,
+   "price": 3
+  },
+  {
+   "name": "cleaver",
+   "id": 3471,
+   "price": 3
+  },
+  {
+   "name": "rolling pin",
+   "id": 3473,
+   "price": 1
+  },
+  {
+   "name": "closed trap",
+   "id": 3481,
+   "price": 3
+  },
+  {
+   "name": "fishing rod",
+   "id": 3483,
+   "price": 1
+  },
+  {
    "name": "worm",
    "id": 3492,
+   "price": 3
+  },
+  {
+   "name": "letter",
+   "id": 3505,
+   "price": 3
+  },
+  {
+   "name": "inkwell",
+   "id": 3509,
    "price": 3
   },
   {
@@ -459,23 +1084,53 @@
    "price": 3
   },
   {
-   "name": "leather boots",
-   "id": 3552,
-   "price": 6
-  },
-  {
    "name": "crocodile boots",
    "id": 3556,
    "price": 6
   },
   {
-   "name": "leather legs",
-   "id": 3559,
-   "price": 6
+   "name": "plate legs",
+   "id": 3557,
+   "price": 42
+  },
+  {
+   "name": "bast skirt",
+   "id": 3560,
+   "price": 3
   },
   {
    "name": "coat",
    "id": 3562,
+   "price": 6
+  },
+  {
+   "name": "green tunic",
+   "id": 3563,
+   "price": 6
+  },
+  {
+   "name": "cape",
+   "id": 3565,
+   "price": 6
+  },
+  {
+   "name": "red robe",
+   "id": 3566,
+   "price": 6
+  },
+  {
+   "name": "simple dress",
+   "id": 3568,
+   "price": 3
+  },
+  {
+   "name": "scarf",
+   "id": 3572,
+   "price": 6
+  },
+  {
+   "name": "mystic turban",
+   "id": 3574,
    "price": 6
   },
   {
@@ -484,9 +1139,29 @@
    "price": 1
   },
   {
+   "name": "northern pike",
+   "id": 3580,
+   "price": 3
+  },
+  {
+   "name": "shrimp",
+   "id": 3581,
+   "price": 3
+  },
+  {
    "name": "ham",
    "id": 3582,
    "price": 1
+  },
+  {
+   "name": "dragon ham",
+   "id": 3583,
+   "price": 1
+  },
+  {
+   "name": "pear",
+   "id": 3584,
+   "price": 3
   },
   {
    "name": "red apple",
@@ -499,8 +1174,48 @@
    "price": 3
   },
   {
+   "name": "banana",
+   "id": 3587,
+   "price": 1
+  },
+  {
+   "name": "coconut",
+   "id": 3589,
+   "price": 3
+  },
+  {
+   "name": "cherry",
+   "id": 3590,
+   "price": 1
+  },
+  {
+   "name": "strawberry",
+   "id": 3591,
+   "price": 3
+  },
+  {
+   "name": "grapes",
+   "id": 3592,
+   "price": 1
+  },
+  {
+   "name": "melon",
+   "id": 3593,
+   "price": 1
+  },
+  {
+   "name": "carrot",
+   "id": 3595,
+   "price": 1
+  },
+  {
    "name": "tomato",
    "id": 3596,
+   "price": 3
+  },
+  {
+   "name": "corncob",
+   "id": 3597,
    "price": 3
   },
   {
@@ -524,13 +1239,88 @@
    "price": 1
   },
   {
+   "name": "egg",
+   "id": 3606,
+   "price": 3
+  },
+  {
    "name": "cheese",
    "id": 3607,
    "price": 1
   },
   {
-   "name": "hydra egg",
-   "id": 4839,
+   "name": "red rose",
+   "id": 3658,
+   "price": 3
+  },
+  {
+   "name": "blue rose",
+   "id": 3659,
+   "price": 3
+  },
+  {
+   "name": "grave flower",
+   "id": 3661,
+   "price": 3
+  },
+  {
+   "name": "white mushroom",
+   "id": 3723,
+   "price": 1
+  },
+  {
+   "name": "brown mushroom",
+   "id": 3725,
+   "price": 1
+  },
+  {
+   "name": "dark mushroom",
+   "id": 3728,
+   "price": 1
+  },
+  {
+   "name": "star herb",
+   "id": 3736,
+   "price": 3
+  },
+  {
+   "name": "fern",
+   "id": 3737,
+   "price": 3
+  },
+  {
+   "name": "sling herb",
+   "id": 3738,
+   "price": 3
+  },
+  {
+   "name": "shadow herb",
+   "id": 3740,
+   "price": 3
+  },
+  {
+   "name": "troll green",
+   "id": 3741,
+   "price": 1
+  },
+  {
+   "name": "wooden trash",
+   "id": 4849,
+   "price": 3
+  },
+  {
+   "name": "treasure map",
+   "id": 5090,
+   "price": 3
+  },
+  {
+   "name": "mango",
+   "id": 5096,
+   "price": 3
+  },
+  {
+   "name": "rum flask",
+   "id": 5552,
    "price": 3
   },
   {
@@ -539,8 +1329,53 @@
    "price": 3
   },
   {
+   "name": "light shovel",
+   "id": 5710,
+   "price": 3
+  },
+  {
+   "name": "die",
+   "id": 5792,
+   "price": 3
+  },
+  {
+   "name": "pirate voodoo doll",
+   "id": 5810,
+   "price": 3
+  },
+  {
    "name": "sniper gloves",
    "id": 5875,
+   "price": 3
+  },
+  {
+   "name": "lizard leather",
+   "id": 5876,
+   "price": 3
+  },
+  {
+   "name": "minotaur leather",
+   "id": 5878,
+   "price": 3
+  },
+  {
+   "name": "iron ore",
+   "id": 5880,
+   "price": 3
+  },
+  {
+   "name": "lizard scale",
+   "id": 5881,
+   "price": 3
+  },
+  {
+   "name": "ape fur",
+   "id": 5883,
+   "price": 3
+  },
+  {
+   "name": "chicken feather",
+   "id": 5890,
    "price": 3
   },
   {
@@ -549,13 +1384,33 @@
    "price": 3
   },
   {
+   "name": "fish fin",
+   "id": 5895,
+   "price": 1
+  },
+  {
+   "name": "bear paw",
+   "id": 5896,
+   "price": 3
+  },
+  {
    "name": "wolf paw",
    "id": 5897,
    "price": 3
   },
   {
+   "name": "bonelord eye",
+   "id": 5898,
+   "price": 3
+  },
+  {
    "name": "turtle shell",
    "id": 5899,
+   "price": 3
+  },
+  {
+   "name": "wood",
+   "id": 5901,
    "price": 3
   },
   {
@@ -569,6 +1424,26 @@
    "price": 3
   },
   {
+   "name": "white piece of cloth",
+   "id": 5909,
+   "price": 3
+  },
+  {
+   "name": "green piece of cloth",
+   "id": 5910,
+   "price": 3
+  },
+  {
+   "name": "red piece of cloth",
+   "id": 5911,
+   "price": 3
+  },
+  {
+   "name": "blue piece of cloth",
+   "id": 5912,
+   "price": 3
+  },
+  {
    "name": "brown piece of cloth",
    "id": 5913,
    "price": 3
@@ -579,14 +1454,129 @@
    "price": 3
   },
   {
+   "name": "bandana",
+   "id": 5917,
+   "price": 6
+  },
+  {
+   "name": "pirate knee breeches",
+   "id": 5918,
+   "price": 6
+  },
+  {
+   "name": "heaven blossom",
+   "id": 5921,
+   "price": 3
+  },
+  {
+   "name": "holy orchid",
+   "id": 5922,
+   "price": 3
+  },
+  {
+   "name": "pirate backpack",
+   "id": 5926,
+   "price": 3
+  },
+  {
+   "name": "pirate bag",
+   "id": 5927,
+   "price": 3
+  },
+  {
+   "name": "empty goldfish bowl",
+   "id": 5928,
+   "price": 1
+  },
+  {
+   "name": "music sheet",
+   "id": 6087,
+   "price": 3
+  },
+  {
+   "name": "music sheet",
+   "id": 6088,
+   "price": 3
+  },
+  {
+   "name": "very noble-looking watch",
+   "id": 6091,
+   "price": 3
+  },
+  {
+   "name": "pirate shirt",
+   "id": 6095,
+   "price": 18
+  },
+  {
+   "name": "hook",
+   "id": 6097,
+   "price": 3
+  },
+  {
+   "name": "eye patch",
+   "id": 6098,
+   "price": 3
+  },
+  {
+   "name": "peg leg",
+   "id": 6126,
+   "price": 3
+  },
+  {
    "name": "tortoise shield",
    "id": 6131,
    "price": 52
   },
   {
+   "name": "rainbow trout",
+   "id": 7158,
+   "price": 3
+  },
+  {
+   "name": "green perch",
+   "id": 7159,
+   "price": 3
+  },
+  {
+   "name": "shard",
+   "id": 7290,
+   "price": 3
+  },
+  {
+   "name": "fur bag",
+   "id": 7343,
+   "price": 3
+  },
+  {
+   "name": "piercing bolt",
+   "id": 7363,
+   "price": 66
+  },
+  {
+   "name": "sniper arrow",
+   "id": 7364,
+   "price": 56
+  },
+  {
    "name": "viper star",
    "id": 7366,
    "price": 56
+  },
+  {
+   "name": "royal spear",
+   "id": 7378,
+   "price": 70
+  },
+  {
+   "name": "brutetamer's staff",
+   "id": 7379,
+   "price": 100
+  },
+  {
+   "name": "mammoth whopper",
+   "id": 7381,
+   "price": 90
   },
   {
    "name": "wolf trophy",
@@ -609,13 +1599,103 @@
    "price": 3
   },
   {
+   "name": "minotaur trophy",
+   "id": 7401,
+   "price": 3
+  },
+  {
+   "name": "taurus mace",
+   "id": 7425,
+   "price": 96
+  },
+  {
+   "name": "furry club",
+   "id": 7432,
+   "price": 100
+  },
+  {
+   "name": "elvish bow",
+   "id": 7438,
+   "price": 3
+  },
+  {
+   "name": "ice cube",
+   "id": 7441,
+   "price": 3
+  },
+  {
+   "name": "crystal sword",
+   "id": 7449,
+   "price": 122
+  },
+  {
    "name": "spiked squelcher",
    "id": 7452,
    "price": 124
   },
   {
-   "name": "cucumber",
-   "id": 8014,
+   "name": "fur boots",
+   "id": 7457,
+   "price": 12
+  },
+  {
+   "name": "norse shield",
+   "id": 7460,
+   "price": 56
+  },
+  {
+   "name": "krimhorn helmet",
+   "id": 7461,
+   "price": 36
+  },
+  {
+   "name": "ragnir helmet",
+   "id": 7462,
+   "price": 36
+  },
+  {
+   "name": "mammoth fur cape",
+   "id": 7463,
+   "price": 60
+  },
+  {
+   "name": "mammoth fur shorts",
+   "id": 7464,
+   "price": 3
+  },
+  {
+   "name": "nomad parchment",
+   "id": 7533,
+   "price": 3
+  },
+  {
+   "name": "cockroach leg",
+   "id": 7882,
+   "price": 3
+  },
+  {
+   "name": "potato",
+   "id": 8010,
+   "price": 3
+  },
+  {
+   "name": "plum",
+   "id": 8011,
+   "price": 3
+  },
+  {
+   "name": "raspberry",
+   "id": 8012,
+   "price": 3
+  },
+  {
+   "name": "beetroot",
+   "id": 8017,
+   "price": 3
+  },
+  {
+   "name": "silkweaver bow",
+   "id": 8029,
    "price": 3
   },
   {
@@ -624,13 +1704,128 @@
    "price": 3
   },
   {
+   "name": "belted cape",
+   "id": 8044,
+   "price": 60
+  },
+  {
+   "name": "crystalline armor",
+   "id": 8050,
+   "price": 78
+  },
+  {
+   "name": "northwind rod",
+   "id": 8083,
+   "price": 3
+  },
+  {
+   "name": "bulb of garlic",
+   "id": 8197,
+   "price": 3
+  },
+  {
+   "name": "gear wheel",
+   "id": 8775,
+   "price": 3
+  },
+  {
+   "name": "heavily rusted armor",
+   "id": 8894,
+   "price": 3
+  },
+  {
+   "name": "rusted armor",
+   "id": 8895,
+   "price": 3
+  },
+  {
+   "name": "flask of rust remover",
+   "id": 9016,
+   "price": 3
+  },
+  {
+   "name": "glob of mercury",
+   "id": 9053,
+   "price": 3
+  },
+  {
+   "name": "glob of acid slime",
+   "id": 9054,
+   "price": 3
+  },
+  {
+   "name": "glob of tar",
+   "id": 9055,
+   "price": 3
+  },
+  {
+   "name": "sacred tree amulet",
+   "id": 9302,
+   "price": 3
+  },
+  {
+   "name": "moon backpack",
+   "id": 9604,
+   "price": 3
+  },
+  {
+   "name": "ancient stone",
+   "id": 9632,
+   "price": 3
+  },
+  {
+   "name": "bloody pincers",
+   "id": 9633,
+   "price": 3
+  },
+  {
+   "name": "cobra tongue",
+   "id": 9634,
+   "price": 3
+  },
+  {
+   "name": "elvish talisman",
+   "id": 9635,
+   "price": 3
+  },
+  {
+   "name": "fiery heart",
+   "id": 9636,
+   "price": 3
+  },
+  {
+   "name": "cultish robe",
+   "id": 9639,
+   "price": 3
+  },
+  {
    "name": "poisonous slime",
    "id": 9640,
    "price": 3
   },
   {
+   "name": "piece of scarab shell",
+   "id": 9641,
+   "price": 3
+  },
+  {
+   "name": "spooky blue eye",
+   "id": 9642,
+   "price": 3
+  },
+  {
+   "name": "thorn",
+   "id": 9643,
+   "price": 3
+  },
+  {
    "name": "book of prayers",
    "id": 9646,
+   "price": 3
+  },
+  {
+   "name": "demonic skeletal hand",
+   "id": 9647,
    "price": 3
   },
   {
@@ -644,8 +1839,58 @@
    "price": 3
   },
   {
+   "name": "polar bear paw",
+   "id": 9650,
+   "price": 3
+  },
+  {
+   "name": "scorpion tail",
+   "id": 9651,
+   "price": 3
+  },
+  {
+   "name": "witch broom",
+   "id": 9652,
+   "price": 3
+  },
+  {
+   "name": "witch hat",
+   "id": 9653,
+   "price": 18
+  },
+  {
+   "name": "gear crystal",
+   "id": 9655,
+   "price": 3
+  },
+  {
    "name": "cyclops toe",
    "id": 9657,
+   "price": 3
+  },
+  {
+   "name": "frost giant pelt",
+   "id": 9658,
+   "price": 3
+  },
+  {
+   "name": "half-eaten brain",
+   "id": 9659,
+   "price": 3
+  },
+  {
+   "name": "frosty heart",
+   "id": 9661,
+   "price": 3
+  },
+  {
+   "name": "tattered piece of robe",
+   "id": 9684,
+   "price": 3
+  },
+  {
+   "name": "swamp grass",
+   "id": 9686,
    "price": 3
   },
   {
@@ -654,14 +1899,79 @@
    "price": 1
   },
   {
+   "name": "ghostly tissue",
+   "id": 9690,
+   "price": 3
+  },
+  {
+   "name": "lion's mane",
+   "id": 9691,
+   "price": 3
+  },
+  {
+   "name": "lump of dirt",
+   "id": 9692,
+   "price": 3
+  },
+  {
+   "name": "pig foot",
+   "id": 9693,
+   "price": 3
+  },
+  {
+   "name": "orc tooth",
+   "id": 10196,
+   "price": 3
+  },
+  {
+   "name": "crab pincers",
+   "id": 10272,
+   "price": 3
+  },
+  {
+   "name": "terrorbird beak",
+   "id": 10273,
+   "price": 3
+  },
+  {
+   "name": "skunk tail",
+   "id": 10274,
+   "price": 3
+  },
+  {
+   "name": "carrion worm fang",
+   "id": 10275,
+   "price": 3
+  },
+  {
+   "name": "elder bonelord tentacle",
+   "id": 10276,
+   "price": 3
+  },
+  {
+   "name": "stone wing",
+   "id": 10278,
+   "price": 3
+  },
+  {
    "name": "piece of crocodile leather",
    "id": 10279,
    "price": 3
   },
   {
-   "name": "hydra head",
-   "id": 10282,
+   "name": "giant eye",
+   "id": 10280,
    "price": 3
+  },
+  {
+   "name": "tarantula egg",
+   "id": 10281,
+   "price": 3
+  },
+  {
+   "name": "half-digested piece of meat",
+   "id": 10283,
+   "price": 1
   },
   {
    "name": "mini mummy",
@@ -674,8 +1984,138 @@
    "price": 3
   },
   {
+   "name": "silky fur",
+   "id": 10292,
+   "price": 3
+  },
+  {
+   "name": "striped fur",
+   "id": 10293,
+   "price": 3
+  },
+  {
+   "name": "stuffed toad",
+   "id": 10294,
+   "price": 3
+  },
+  {
+   "name": "winter wolf fur",
+   "id": 10295,
+   "price": 3
+  },
+  {
+   "name": "acorn",
+   "id": 10296,
+   "price": 3
+  },
+  {
+   "name": "antlers",
+   "id": 10297,
+   "price": 3
+  },
+  {
+   "name": "badger fur",
+   "id": 10299,
+   "price": 3
+  },
+  {
+   "name": "carniphila seeds",
+   "id": 10300,
+   "price": 3
+  },
+  {
+   "name": "centipede leg",
+   "id": 10301,
+   "price": 3
+  },
+  {
+   "name": "compass",
+   "id": 10302,
+   "price": 3
+  },
+  {
+   "name": "dark rosary",
+   "id": 10303,
+   "price": 3
+  },
+  {
+   "name": "thick fur",
+   "id": 10307,
+   "price": 3
+  },
+  {
+   "name": "mutated flesh",
+   "id": 10308,
+   "price": 3
+  },
+  {
+   "name": "shiny stone",
+   "id": 10310,
+   "price": 3
+  },
+  {
+   "name": "nettle blossom",
+   "id": 10314,
+   "price": 3
+  },
+  {
+   "name": "sulphurous stone",
+   "id": 10315,
+   "price": 3
+  },
+  {
+   "name": "warwolf fur",
+   "id": 10318,
+   "price": 3
+  },
+  {
+   "name": "wool",
+   "id": 10319,
+   "price": 3
+  },
+  {
+   "name": "mammoth tusk",
+   "id": 10321,
+   "price": 3
+  },
+  {
+   "name": "shaggy tail",
+   "id": 10407,
+   "price": 3
+  },
+  {
+   "name": "piece of marble rock",
+   "id": 10426,
+   "price": 3
+  },
+  {
+   "name": "terramite shell",
+   "id": 10452,
+   "price": 3
+  },
+  {
+   "name": "terramite eggs",
+   "id": 10453,
+   "price": 3
+  },
+  {
+   "name": "terramite legs",
+   "id": 10454,
+   "price": 3
+  },
+  {
+   "name": "lancer beetle shell",
+   "id": 10455,
+   "price": 3
+  },
+  {
    "name": "sandcrawler shell",
    "id": 10456,
+   "price": 3
+  },
+  {
+   "name": "beetle necklace",
+   "id": 10457,
    "price": 3
   },
   {
@@ -686,6 +2126,66 @@
   {
    "name": "protective charm",
    "id": 11444,
+   "price": 3
+  },
+  {
+   "name": "bamboo stick",
+   "id": 11445,
+   "price": 3
+  },
+  {
+   "name": "black wool",
+   "id": 11448,
+   "price": 3
+  },
+  {
+   "name": "broken crossbow",
+   "id": 11451,
+   "price": 3
+  },
+  {
+   "name": "broken shamanic staff",
+   "id": 11452,
+   "price": 1
+  },
+  {
+   "name": "broken helmet",
+   "id": 11453,
+   "price": 3
+  },
+  {
+   "name": "cultish symbol",
+   "id": 11455,
+   "price": 3
+  },
+  {
+   "name": "dirty turban",
+   "id": 11456,
+   "price": 3
+  },
+  {
+   "name": "dragon's tail",
+   "id": 11457,
+   "price": 3
+  },
+  {
+   "name": "geomancer's robe",
+   "id": 11458,
+   "price": 3
+  },
+  {
+   "name": "geomancer's staff",
+   "id": 11463,
+   "price": 3
+  },
+  {
+   "name": "elven scouting glass",
+   "id": 11464,
+   "price": 3
+  },
+  {
+   "name": "elven astral observer",
+   "id": 11465,
    "price": 3
   },
   {
@@ -704,8 +2204,63 @@
    "price": 3
   },
   {
+   "name": "kongra's shoulderpad",
+   "id": 11471,
+   "price": 3
+  },
+  {
+   "name": "minotaur horn",
+   "id": 11472,
+   "price": 3
+  },
+  {
+   "name": "purple robe",
+   "id": 11473,
+   "price": 3
+  },
+  {
+   "name": "miraculum",
+   "id": 11474,
+   "price": 3
+  },
+  {
+   "name": "nettle spit",
+   "id": 11476,
+   "price": 3
+  },
+  {
+   "name": "orcish gear",
+   "id": 11477,
+   "price": 3
+  },
+  {
+   "name": "shamanic hood",
+   "id": 11478,
+   "price": 1
+  },
+  {
+   "name": "orc leather",
+   "id": 11479,
+   "price": 3
+  },
+  {
+   "name": "skull belt",
+   "id": 11480,
+   "price": 3
+  },
+  {
    "name": "pelvis bone",
    "id": 11481,
+   "price": 3
+  },
+  {
+   "name": "piece of warrior armor",
+   "id": 11482,
+   "price": 3
+  },
+  {
+   "name": "piece of archer armor",
+   "id": 11483,
    "price": 3
   },
   {
@@ -719,6 +2274,16 @@
    "price": 3
   },
   {
+   "name": "quara tentacle",
+   "id": 11487,
+   "price": 3
+  },
+  {
+   "name": "mantassin tail",
+   "id": 11489,
+   "price": 3
+  },
+  {
    "name": "rope belt",
    "id": 11492,
    "price": 3
@@ -729,14 +2294,294 @@
    "price": 3
   },
   {
+   "name": "banana sash",
+   "id": 11511,
+   "price": 1
+  },
+  {
+   "name": "small flask of eyedrops",
+   "id": 11512,
+   "price": 3
+  },
+  {
+   "name": "small pitchfork",
+   "id": 11513,
+   "price": 3
+  },
+  {
+   "name": "colourful feather",
+   "id": 11514,
+   "price": 3
+  },
+  {
+   "name": "trollroot",
+   "id": 11515,
+   "price": 1
+  },
+  {
    "name": "goblin ear",
    "id": 11539,
+   "price": 3
+  },
+  {
+   "name": "broken key ring",
+   "id": 11652,
+   "price": 3
+  },
+  {
+   "name": "downy feather",
+   "id": 11684,
+   "price": 3
+  },
+  {
+   "name": "reins",
+   "id": 12308,
+   "price": 3
+  },
+  {
+   "name": "haunch of boar",
+   "id": 12310,
+   "price": 3
+  },
+  {
+   "name": "carrot on a stick",
+   "id": 12311,
+   "price": 1
+  },
+  {
+   "name": "medicine pouch",
+   "id": 12517,
+   "price": 3
+  },
+  {
+   "name": "fist on a stick",
+   "id": 12546,
+   "price": 3
+  },
+  {
+   "name": "bag of apple slices",
+   "id": 12548,
+   "price": 1
+  },
+  {
+   "name": "coal",
+   "id": 12600,
+   "price": 3
+  },
+  {
+   "name": "slime mould",
+   "id": 12601,
+   "price": 3
+  },
+  {
+   "name": "heavy trident",
+   "id": 12683,
+   "price": 104
+  },
+  {
+   "name": "eye of a deepling",
+   "id": 12730,
+   "price": 3
+  },
+  {
+   "name": "flintstone",
+   "id": 12806,
+   "price": 3
+  },
+  {
+   "name": "deepling scales",
+   "id": 14017,
+   "price": 3
+  },
+  {
+   "name": "glacial rod",
+   "id": 16118,
+   "price": 3
+  },
+  {
+   "name": "insectoid eggs",
+   "id": 17457,
+   "price": 3
+  },
+  {
+   "name": "damselfly wing",
+   "id": 17458,
+   "price": 3
+  },
+  {
+   "name": "marsh stalker beak",
+   "id": 17461,
+   "price": 3
+  },
+  {
+   "name": "marsh stalker feather",
+   "id": 17462,
+   "price": 3
+  },
+  {
+   "name": "damselfly eye",
+   "id": 17463,
+   "price": 3
+  },
+  {
+   "name": "bola",
+   "id": 17809,
+   "price": 3
+  },
+  {
+   "name": "spike shield",
+   "id": 17810,
+   "price": 56
+  },
+  {
+   "name": "ratana",
+   "id": 17812,
+   "price": 92
+  },
+  {
+   "name": "life preserver",
+   "id": 17813,
+   "price": 92
+  },
+  {
+   "name": "cheese cutter",
+   "id": 17817,
+   "price": 1
+  },
+  {
+   "name": "cheesy figurine",
+   "id": 17818,
+   "price": 3
+  },
+  {
+   "name": "earflap",
+   "id": 17819,
+   "price": 3
+  },
+  {
+   "name": "soft cheese",
+   "id": 17820,
+   "price": 1
+  },
+  {
+   "name": "rat cheese",
+   "id": 17821,
+   "price": 1
+  },
+  {
+   "name": "swampling moss",
+   "id": 17822,
+   "price": 3
+  },
+  {
+   "name": "piece of swampling wood",
+   "id": 17823,
+   "price": 3
+  },
+  {
+   "name": "swampling club",
+   "id": 17824,
+   "price": 58
+  },
+  {
+   "name": "rat god doll",
+   "id": 17825,
+   "price": 3
+  },
+  {
+   "name": "leather harness",
+   "id": 17846,
+   "price": 54
+  },
+  {
+   "name": "rorc feather",
+   "id": 18993,
+   "price": 3
+  },
+  {
+   "name": "rorc egg",
+   "id": 18996,
+   "price": 3
+  },
+  {
+   "name": "hatched rorc egg",
+   "id": 18997,
+   "price": 3
+  },
+  {
+   "name": "dowser",
+   "id": 19110,
+   "price": 3
+  },
+  {
+   "name": "fir cone",
+   "id": 19111,
+   "price": 3
+  },
+  {
+   "name": "fireproof horn",
+   "id": 20356,
+   "price": 3
+  },
+  {
+   "name": "eggs of a sacred snake",
+   "id": 21469,
+   "price": 3
+  },
+  {
+   "name": "simple arrow",
+   "id": 21470,
+   "price": 40
+  },
+  {
+   "name": "gloom wolf fur",
+   "id": 22007,
+   "price": 3
+  },
+  {
+   "name": "ring of red plasma",
+   "id": 23533,
    "price": 3
   },
   {
    "name": "heavy old tome",
    "id": 23986,
    "price": 3
+  },
+  {
+   "name": "fox paw",
+   "id": 27462,
+   "price": 3
+  },
+  {
+   "name": "head",
+   "id": 33932,
+   "price": 3
+  },
+  {
+   "name": "apron",
+   "id": 33933,
+   "price": 3
+  },
+  {
+   "name": "gruesome fan",
+   "id": 34024,
+   "price": 3
+  },
+  {
+   "name": "simple jo staff",
+   "id": 50166,
+   "price": 32
+  },
+  {
+   "name": "light bandana",
+   "id": 50194,
+   "price": 18
+  },
+  {
+   "name": "zaoan monk robe",
+   "id": 50259,
+   "price": 42
   },
   {
    "name": "christmas token",

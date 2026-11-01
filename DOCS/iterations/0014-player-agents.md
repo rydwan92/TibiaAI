@@ -1,7 +1,7 @@
 # Iteracja 0014 — autonomiczni gracze w świecie
 Data: 2026-10-31
 Stan: VERIFIED w prawdziwych klientach, z wyjątkami w sekcji „Ograniczenia”
-Commit projektu: niezacommitowane. Upstream: Canary `fe0f932`, OTClient `dd56414`.
+Commit projektu: `f58b71b` na gałęzi `feat/player-agents`. Upstream: Canary `fe0f932`, OTClient `dd56414`.
 
 ## Cel i warunek odbioru
 Kilka postaci gra samo w prawdziwym kliencie: wychodzi z miasta, poluje, zmienia piętra, ginie, wraca, pisze do innych i pomaga im. Wybory są ich własne i zależą od doświadczeń. Odbiór: agent sam zdobywa doświadczenie na mapie, ginie i wraca bez pomocy, a wiedza przechodzi między agentami wyłącznie przez wiadomości.

@@ -56,8 +56,24 @@ export function loadLocalAiConfig(path: URL | string = DEFAULT_LOCAL_AI_PATH): L
 
 export interface ChatMessage { role: 'system' | 'user'; content: string }
 export interface ChatResult { text: string; totalMs: number; evalCount: number; promptCount: number; evalMs: number; loadMs: number }
+export interface ChatOptions { schema?: object; timeoutMs?: number; maxTokens?: number; purpose?: string; /** Harder than usual; metered models think longer for it. */ hard?: boolean }
 
-export class LocalModelClient {
+/** What a character needs from a model, wherever it runs. available() is set by metered models. */
+export interface ModelClient {
+  /** Room for what can wait. A client without a meter has no opinion. */
+  spare?: () => boolean;
+  chat(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResult>;
+  available?(): boolean;
+  /** Metered models: no call right now, but one soon, so a decision is worth waiting for. */
+  busyForNow?(): boolean;
+}
+
+/** What a dialogue needs from a model besides the call itself: its limits. */
+export interface DialogueClient extends ModelClient {
+  cfg: Pick<LocalAiConfig, 'model' | 'maxQueue' | 'maxCallsPerMinute' | 'maxConcurrent' | 'maxReplyChars' | 'maxPromptChars'>;
+}
+
+export class LocalModelClient implements ModelClient {
   readonly cfg: LocalAiConfig;
   private readonly fetchFn: typeof fetch;
 
@@ -88,7 +104,7 @@ export class LocalModelClient {
     if (m.remote_host) throw new Error(`model ${this.cfg.model} runs remotely (${m.remote_host})`);
   }
 
-  async chat(messages: ChatMessage[], options: { schema?: object; timeoutMs?: number; maxTokens?: number } = {}): Promise<ChatResult> {
+  async chat(messages: ChatMessage[], options: ChatOptions = {}): Promise<ChatResult> {
     const chars = messages.reduce((n, m) => n + m.content.length, 0);
     if (chars > this.cfg.maxPromptChars) throw new Error(`prompt too long: ${chars} chars`);
     const t0 = Date.now();

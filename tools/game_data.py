@@ -1,6 +1,6 @@
 """Game knowledge for agents, read from this server's own datapack, not from guides.
 
-Monsters come from data-canary (the only ones this world can spawn); spells, runes and tools from
+Monsters come from the running datapack (the only ones this world can spawn); spells, runes and tools from
 data/. Output: packages/contracts/game-data.json, shared by Brain and the player adapter.
 Usage: python -I tools/game_data.py <canary source dir> <out.json>
 """
@@ -9,6 +9,8 @@ import json
 import os
 import re
 import sys
+
+DATAPACK = 'data-otservbr-global'
 
 VOCATIONS = {'sorcerer': 'sorcerer', 'druid': 'druid', 'paladin': 'paladin', 'knight': 'knight', 'monk': 'monk'}
 
@@ -25,7 +27,7 @@ def field(text, name, default=None, cast=int):
 
 def monsters(root):
     out = {}
-    for path in sorted(glob.glob(os.path.join(root, 'data-canary', 'monster', '**', '*.lua'), recursive=True)):
+    for path in sorted(glob.glob(os.path.join(root, DATAPACK, 'monster', '**', '*.lua'), recursive=True)):
         text = open(path, encoding='utf-8', errors='ignore').read()
         name = re.search(r'createMonsterType\("([^"]+)"\)', text)
         if not name:

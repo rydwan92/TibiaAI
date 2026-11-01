@@ -1,6 +1,6 @@
 -- Local perception of world incidents (ADR 0008). An incident reaches only the agents that can see
 -- it: same floor and within def.sight.range (default 8). There is no global event stream.
---   incident.request "cart_crash,5020,5003,7"   (scripts\incident.ps1)
+--   incident.request "cart_crash,32379,32250,7"   (scripts\incident.ps1)
 local T = TibiaAI
 
 T.worldConfig = T.worldConfig or { incidents = {} }

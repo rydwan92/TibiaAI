@@ -1,0 +1,3 @@
+# koffi only serves an FFI mode of the Copilot SDK that Brain does not use; its build script stays off.
+allowBuilds:
+  koffi: false

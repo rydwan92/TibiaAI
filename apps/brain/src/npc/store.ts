@@ -77,11 +77,13 @@ export interface Commitment {
 export interface StoreLimits {
   /** Traffic cap per NPC and UTC day; above it only important rows are kept, and drops are counted. */
   maxEventsPerDay: number;
+  /** Older rows are history of another world: kept, but not recalled. */
+  memoryFromMs?: number;
   keepAboveLimitImportance: number;
   duplicateWindowMs: number;
 }
 
-export const DEFAULT_STORE_LIMITS: StoreLimits = { maxEventsPerDay: 2000, keepAboveLimitImportance: 6, duplicateWindowMs: 10 * 60_000 };
+export const DEFAULT_STORE_LIMITS: StoreLimits = { maxEventsPerDay: 2000, keepAboveLimitImportance: 6, duplicateWindowMs: 10 * 60_000, memoryFromMs: 0 };
 
 export const dayOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
@@ -128,20 +130,38 @@ export class NpcMemoryStore {
 
   /** Last turns of the conversation between this NPC and this player only, oldest first. */
   recentTurns(npcKey: string, playerGuid: number, limit: number): NpcEventRow[] {
-    const rows = this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND subject_guid = ? AND kind IN ('said_by_player', 'said_by_npc')
-      ORDER BY real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, playerGuid, limit) as unknown as NpcEventRow[];
+    const rows = this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND subject_guid = ? AND kind IN ('said_by_player', 'said_by_npc') AND real_at_ms >= ?
+      ORDER BY real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, playerGuid, this.limits.memoryFromMs ?? 0, limit) as unknown as NpcEventRow[];
     return rows.reverse();
   }
 
   /** Candidate events: private rows about this player, plus what this NPC perceived publicly. */
   visibleEvents(npcKey: string, playerGuid: number, limit: number): NpcEventRow[] {
-    return this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND (subject_guid = ? OR visibility = 'public')
-      ORDER BY real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, playerGuid, limit) as unknown as NpcEventRow[];
+    return this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND (subject_guid = ? OR visibility = 'public') AND real_at_ms >= ?
+      ORDER BY real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, playerGuid, this.limits.memoryFromMs ?? 0, limit) as unknown as NpcEventRow[];
+  }
+
+  /** A character's own memories of one person: who said what, and every memory naming them. */
+  eventsAbout(npcKey: string, name: string, limit: number): NpcEventRow[] {
+    return this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND real_at_ms >= ? AND (actor_name = ? OR instr(lower(text), lower(?)) > 0)
+      ORDER BY importance DESC, real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, this.limits.memoryFromMs ?? 0, name, name, limit) as unknown as NpcEventRow[];
+  }
+
+  /** A stretch of time by what mattered most in it, for looking back. Conversations stay out. */
+  mostImportant(npcKey: string, fromMs: number, toMs: number, limit: number): NpcEventRow[] {
+    return this.db.prepare(`SELECT * FROM npc_events WHERE npc_key = ? AND real_at_ms >= ? AND real_at_ms < ? AND kind NOT IN ('heard', 'said_by_npc')
+      ORDER BY importance DESC, real_at_ms DESC, id DESC LIMIT ?`).all(npcKey, fromMs, toMs, limit) as unknown as NpcEventRow[];
+  }
+
+  /** Older days of the same, already compressed. */
+  memoriesAbout(npcKey: string, name: string, limit: number): NpcMemoryRow[] {
+    return this.db.prepare(`SELECT * FROM npc_memories WHERE npc_key = ? AND to_ms >= ? AND (instr(lower(summary), lower(?)) > 0 OR instr(lower(participants_json), lower(?)) > 0)
+      ORDER BY importance DESC, to_ms DESC LIMIT ?`).all(npcKey, this.limits.memoryFromMs ?? 0, name, name, limit) as unknown as NpcMemoryRow[];
   }
 
   visibleMemories(npcKey: string, playerGuid: number, limit: number): NpcMemoryRow[] {
-    return this.db.prepare(`SELECT * FROM npc_memories WHERE npc_key = ? AND (subject_guid = ? OR visibility = 'public')
-      ORDER BY importance DESC, to_ms DESC LIMIT ?`).all(npcKey, playerGuid, limit) as unknown as NpcMemoryRow[];
+    return this.db.prepare(`SELECT * FROM npc_memories WHERE npc_key = ? AND (subject_guid = ? OR visibility = 'public') AND to_ms >= ?
+      ORDER BY importance DESC, to_ms DESC LIMIT ?`).all(npcKey, playerGuid, this.limits.memoryFromMs ?? 0, limit) as unknown as NpcMemoryRow[];
   }
 
   relationship(npcKey: string, playerGuid: number): Relationship | undefined {

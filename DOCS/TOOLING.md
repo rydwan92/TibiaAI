@@ -14,10 +14,12 @@ Stan na 2026-10-30. **SPRAWDZONE** oznacza użycie w tym projekcie z dowodem. **
 | `scripts\npc-two-players.ps1` | projekt | dwa prawdziwe klienty naraz, wynik z dziennika silnika | TESTING.md |
 | `scripts\player-agents.ps1` | projekt | konta, start, stop i stan graczy-agentów | PLAYER_AGENTS.md |
 | `scripts\player-run.ps1` | projekt | bieg agentów z pomiarami i raportem JSON | PLAYER_AGENTS.md |
-| `tools\world_atlas.py` | projekt | miasta, przejścia, teleporty i lista fragmentów z OTBM | PLAYER_AGENTS.md |
+| `tools\world_atlas.py` | projekt | miasta, przejścia, teleporty, szafki i mapa przejść z OTBM oraz `appearances.dat` | PLAYER_AGENTS.md |
 | `tools\game_data.py` | projekt | potwory, czary, runy i narzędzia z datapacku do `game-data.json` | PLAYER_AGENTS.md |
 | `tools\make_shop.py` | projekt | cennik kupca z łupu potworów, które naprawdę się pojawiają | PLAYER_AGENTS.md |
-| `tools\make_spawns.py` | projekt | spawny i łowiska z pomiaru silnika, deterministycznie | PLAYER_AGENTS.md |
+| `tools\make_grounds.py` | projekt | łowiska z prawdziwych spawnów, bez Rookgardu i Dawnport | PLAYER_AGENTS.md |
+| `tools\make_boats.py` | projekt | rejsy i ceny ze skryptów kapitanów | PLAYER_AGENTS.md |
+| `scripts\world-check.ps1` | projekt | podstawy świata w klientach, wynik z gry | RUNBOOK §5a |
 | `tools\otclient-agent` | projekt | ciało gracza-agenta w kliencie, aktywne tylko z `--agent-dir` | PLAYER_AGENTS.md |
 | `scripts\ai-status.ps1` | projekt | co robi AI teraz; bez zapytań do modelu | NPC_RUNTIME.md |
 | `scripts\incident.ps1` | projekt | incydent widziany tylko przez NPC w pobliżu | NPC_RUNTIME.md |
@@ -32,6 +34,9 @@ Stan na 2026-10-30. **SPRAWDZONE** oznacza użycie w tym projekcie z dowodem. **
 
 Konta i postacie: dziś przez SQL w skryptach (`setup.ps1`, `lab-fixture.ps1`).
 
+## Nowe miejsca bez edytora
+`tools\map_place.py` buduje z pliku JSON małą mapę OTBM do `world\custom`. Silnik wczytuje ją na mapę główną, a oryginał zostaje nietknięty: usunięcie pliku z `game\world\places` przywraca stare pola. Narzędzie odrzuca nieznane przedmioty, nakładanie się miejsc i obszary ponad 2500 pól. Pola z przeszkodami trafiają do `runtime\atlas\places-blocked.json`, które czyta nawigacja. `peek` czyta fragment mapy głównej, około 5 minut i 300 MB pamięci.
+
 ## Edytor mapy: KANDYDAT
 **Canary Map Editor v4.0** (`opentibiabr/remeres-map-editor`, tag `v4.0`, commit `2a28ef8b2c96ac84945a49088cf0dd0b85933640`, 2026-06-12). Plik `canary-map-editor-v4.0-windows.zip`, 124 MB, SHA-256 `3b237c1abe32b5ff2286e29fb1db97af3fd1b18df44ec99d49ad6854d825245b`. Wydanie jest sprzed Canary v3.6.1 (2026-07-01), od tego samego zespołu. Nowsze niż klasyczny Remere's; wersja v3.8 („13x”) z 2024 jest za stara.
 
@@ -39,7 +44,7 @@ Zgodność **nie jest potwierdzona**. Po stronie projektu przećwiczono tylko ko
 1. Pobierz ZIP z release, sprawdź SHA-256, rozpakuj poza projektem.
 2. `powershell -ExecutionPolicy Bypass -File scripts\map-dev.ps1 -Init`
 3. W edytorze wskaż assets klienta 15.11 (`vendor\otclient\otclient-dd5641492a71e966b96b8a91398b44bb3df67d88\data\things\1511`, według monitu edytora).
-4. Otwórz `runtime\maps\canary.otbm`, zrób małą zmianę na wolnym fragmencie w pobliżu placu (5012,5004,7), zapisz.
+4. Otwórz `runtime\maps\otservbr.otbm`, zrób małą zmianę na wolnym fragmencie w pobliżu placu (32371,32251,7), zapisz.
 5. `scripts\stop.ps1 -KeepDb`, `scripts\sync-server.ps1`, `scripts\start.ps1`.
 6. Sprawdź zmianę w `scripts\scan.ps1 -X 5012 -Y 5004` i w kliencie.
 
@@ -55,5 +60,5 @@ Panel wymaga PHP i dostępu do bazy. Na tym komputerze uruchomienie bez Dockera 
 | --- | --- | --- |
 | Agenci, teksty, punkty, arena | `packages/contracts/agents.json` | wdrożenie: sync + restart |
 | Kod agentów w Lua | `game/overlays/tibia-ai/tibia-ai/lib` | self-test w silniku |
-| Potwory, przedmioty, wydarzenia | kopie w `game/overlays/tibia-ai/<ścieżka datapacku>` nadpisują pliki `data-canary` | nie edytuj `vendor\` ani `runtime\server\` |
+| Potwory, przedmioty, wydarzenia | kopie w `game/overlays/tibia-ai/<ścieżka datapacku>` nadpisują pliki `data-otservbr-global` | nie edytuj `vendor\` ani `runtime\server\` |
 | Polityka modelu | `packages/contracts/local-ai.json` | ADR 0007 |

@@ -95,13 +95,13 @@ export function selectKnowledge(catalog: NpcCatalog, profile: NpcProfile, text: 
 function identityBlock(p: NpcProfile, phrases: string[], generalTopic: boolean): string {
   if (generalTopic) {
     return [
-      `Jestes ${p.displayName}, ${p.roleTitle} w Montag.`,
+      `Jestes ${p.displayName}, ${p.roleTitle} w Thais.`,
       `Charakter: ${p.temperament}.`,
       `Styl mowy: ${p.speechStyle}.`,
     ].join('\n');
   }
   return [
-    `Jestes ${p.displayName}, ${p.roleTitle} w Montag.`,
+    `Jestes ${p.displayName}, ${p.roleTitle} w Thais.`,
     p.biography,
     `Charakter: ${p.temperament}.`,
     `Styl mowy: ${p.speechStyle}.`,

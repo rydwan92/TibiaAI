@@ -1,6 +1,6 @@
 # Gracze-agenci
 
-Autonomiczne postacie grające w świecie przez prawdziwego klienta, tak samo jak człowiek. Kael (knight), Sira (paladin) i Ravn (sorcerer) wchodzą do gry, polują, schodzą pod ziemię, giną, wracają i piszą do siebie. Decyzja architektoniczna: ADR 0010. Dowody: `iterations/0014-player-agents.md`.
+Autonomiczne postacie grające w świecie przez prawdziwego klienta, tak samo jak człowiek. Kael (knight), Sira (paladin), Ravn (sorcerer) oraz Luna i Haiku (knight, ten sam charakter, różne modele) wchodzą do gry, polują, schodzą pod ziemię, giną, wracają i piszą do siebie. Decyzja architektoniczna: ADR 0010. Dowody: `iterations/0014-player-agents.md`.
 
 ## Podział ról
 | Część | Plik | Co robi | Czy czeka na model |
@@ -10,7 +10,7 @@ Autonomiczne postacie grające w świecie przez prawdziwego klienta, tak samo ja
 | Wybory | `players/choices.ts` | Lista działań możliwych teraz, wybór z temperamentu bez modelu | Nie |
 | Wiedza | `players/knowledge.ts` | Czary, runy, potwory, miasta, łowiska z danych serwera | Nie |
 | Mapa | `players/nav.ts` | Trasy po polach, drzwiach, piętrach i teleportach | Nie |
-| Flota | `players/fleet.ts` | Wspólny budżet: 8 wywołań modelu na minutę | Nie |
+| Flota | `players/fleet.ts` | Wspólny budżet modelu lokalnego: 8 wywołań na minutę. Postać z własnym `model` liczy się w budżecie kredytów (ADR 0011) | Nie |
 
 Ciało i umysł rozmawiają plikami w `runtime/players/<klucz>/`:
 
@@ -28,10 +28,68 @@ Ciało i umysł rozmawiają plikami w `runtime/players/<klucz>/`:
 - **Odczucia wynikają ze zdarzeń:** strach rośnie od obrażeń i śmierci, pewność od exp, nuda od chodzenia po znanym.
 - **Wiedza pochodzi z serwera:** `knowledgeFor` podaje czary dostępne na tym poziomie, kolejny czar, narzędzia, miasta i radę dla profesji. `lookupFacts` dokłada dane potwora, czaru lub runy nazwanych w wiadomości.
 
+## Czary znane naprawdę
+Znane są tylko czary potwierdzone przez serwer. Dane nauczycieli pochodzą z datapacku (`tools/make_teachers.py`, `teachers.json`: 48 NPC, 1778 lekcji). Opcja `learn_*` powstaje, gdy czar leczący lub celowany jest dostępny na ten poziom i profesję, a cenę da się zapłacić. Ciało idzie do nauczyciela i mówi `hi`, nazwę czaru, `yes`. Stan zmienia dopiero odpowiedź NPC: „You have learned” lub „You already know” dodaje czar, odmowa kończy sprawę i wraca do planera na 10 minut. Komunikat „You need to learn this spell first” przy rzucaniu wykreśla listę. Postacie ze starym zestawem (`kitSpells`) liczą te czary jako znane, to zadeklarowany wyjątek.
+
+## Gra bez wyjątków
+`selfReliant` w `players.json`: żadnego uzupełnienia z zestawu po złej śmierci. Bez pieniędzy postać zarabia na najsłabszym bezpiecznym celu zamiast iść do sklepu. Zostaje jeden wyjątek: pierwszy zestaw `noviceknight` przy pierwszym wejściu, bo pominęliśmy Rookgard, a nowa postać nie ma z czego wystartować.
+
+## Wspólna historia
+Warstwa, której kompresja nie dotyka (`players/story.ts`): chwile z konkretną osobą (`exp.moments`, najwyżej 8), obietnice w obie strony (`exp.vows`, po 14 dniach złamane) i jedna linia na tydzień (`exp.chronicle`). Znajomy, którego postać nie widziała od 3 godzin, dostaje od niej pierwszą wiadomość; ktoś z floty po 12 godzinach. Liczby w chwilach pochodzą z gry, model ich nie zmyśla. Lubiana osoba trafia na listę VIP przez `orders.addVip`.
+
+## Rozmowy o tym, co się dzieje
+Tematy to własne przeżycia (`exp.news`) i plotki (`exp.rumors`) z podaniem, od kogo pochodzą; plotka znika po dobie, ogłoszenia serwera mają źródło `serwer`. Gdy obok jest ktoś inny, a postać nie walczy, raz na 10–25 minut sama zagaduje (`gossip`). Bez wolnego budżetu mówi gotowe zdanie bez modelu. Człowiek pytający o nowości dostaje te same tematy w prompcie.
+
+Obok siebie agenci rozmawiają wyłącznie na czacie lokalnym, żeby ludzie mogli to usłyszeć i się włączyć. Gdy są daleko, raz na 20–45 minut jeden pisze prywatnie do drugiego: nowości, pytanie albo zaproszenie na wyprawę. Limit: 2 odpowiedzi na osobę i 4 na wszystkich znajomych w 5 minut, a pogawędka ustępuje decyzjom, gdy pula wywołań jest w połowie zajęta (`spare`).
+
+## Zwiedzanie
+Postać, która długo nie widziała niczego nowego (30 minut podzielone przez ciekawość plus 0,3), rusza do miasta, w którym nie była, jeśli ma 300 złota i zapasy. Gdy złoto leży w depo, najpierw je wypłaca. Trasę sprawdza `nav.route` dla pieniędzy w ręku. Nowe miasto trafia do pamięci, do opowieści i do panelu. Wokół odwiedzonych miast postać zna teren tak jak wokół domu.
+
+## Sama decyduje i sama się uczy
+Odruchy trzymają postać przy życiu: leczenie, ucieczka, zapasy. Wybór celu należy do modelu. Dobry pomysł, którego model odmówi, wraca przez kolejne decyzje, a po trzech odmowach dzieje się sam; każdy taki przypadek liczy `exp.overrides`. Co 30 minut, albo 2 minuty po śmierci, postać zamyka próbę liczbami z gry (exp, złoto, zgony) i wybiera następną. Popędy (`drives.ts`) mówią w prompcie, co ją teraz ciągnie.
+
+## Dobór łowisk
+`huntValue` szacuje exp/h i najmocniejsze uderzenie względem życia postaci. Granica ryzyka rośnie z pewnością siebie. Odległość obniża wartość, więc daleko idzie się tylko po coś lepszego. Własne pomiary z `exp.places` mają pierwszeństwo przed szacunkiem.
+
+## Ulepszanie sprzętu
+`tools/make_gear.py` czyta sklep Sama z datapacku. `nextGear` wybiera najwięcej ochrony za złoto, z zapasem 100 na mikstury i w granicach udźwigu. Zakup liczy się dopiero po linii serwera `Bought Nx`; `Bought 0x` to odmowa. Zapasowe bronie i zastąpiona zbroja idą do depo.
+
+## Pamięć o ludziach
+`memoriesOf` podaje modelowi to, co postać przeżyła z rozmówcą: jego słowa, własne odpowiedzi, wspólne wyprawy, a ze starszych dni streszczenia. Lista pochodzi z SQLite, więc przetrwa restart i zmianę modelu. Rozmowy nie trafiają do ogólnych wspomnień: to, co jedna osoba napisała prywatnie, nie pojawia się w rozmowie z inną.
+
+## Znajomość mapy
+`mapKnowledge: 'home'`: postać zna łowiska w promieniu 80 pól od domu i tam, gdzie była. Resztę musi odkryć albo usłyszeć od kogoś. System nawigacji dalej zna całą mapę, bo to narzędzie, a nie wiedza postaci. Domyślnie `all`.
+
+## PvP z charakteru
+Atak na obcego ma powód widoczny dla postaci: uraza, łatwy łup albo zabawa. `mischief` (0–1) mówi, jak często walka zaczyna się bez urazy. Znajomy wymaga powodu. Po walce ta sama osoba jest bezpieczna przez 30 minut, żeby nikt nie był nękany w pętli. Blokadę stref ochronnych i czaszki pilnuje silnik.
+
+## Rozmowa z człowiekiem
+Wystarczy raz zwrócić się po imieniu albo napisać prywatnie. Przez 90 sekund od ostatniej wymiany kolejne wiadomości tej osoby są skierowane do postaci, także bez imienia, a kilka krótkich linii trafia do modelu razem. Limit odpowiedzi to 20 na 5 minut (między agentami 3), odpowiedź ma do 25 słów. Model widzi swój cel, plan, miejsca, przekonania i wspomnienia o rozmówcy, więc może dzielić się tym, co wie. Propozycję wspólnej drogi rozstrzyga sam: `follow_them` zaczyna iść za osobą na 15 minut, `stop_following` kończy. Agenci nie rozmawiają z Notką, a Notka z agentami, bo dwa programy odpisywałyby sobie bez końca.
+
+## Obecność w grze
+Serwer wyrzuca po 15 minutach bezczynności, więc ciało obraca się co 8 minut. Po utracie połączenia wraca samo po 15 s, najpierw z listy postaci, a przy kolejnej próbie pełnym logowaniem.
+
+## Drużyny, przerwy, plotki
+Wspólna wyprawa zakłada drużynę ze wspólnym exp, gdy postacie się spotkają (`keepParty` w ciele). Co 45–90 minut postać, która nie walczy i nie ma sprawy do załatwienia, pisze do znajomego i wylogowuje się na 3–10 minut; w tym czasie nie wywołuje modelu. Napadnięta postać ostrzega znajomego („uwazaj na X”), a odbiorca zapisuje to jako zasłyszane i lekko obniża opinię o X. Nowy poziom bywa okazją do pochwalenia się znajomemu.
+
+## Osobisty pomocnik (Notka)
+Postać z `role: assistant` nie gra. Stoi w świątyni i odpowiada na prywatne wiadomości (`players/assistant.ts`). Dodajesz ją do VIP i piszesz: `zapisz <tekst>`, `moje notatki`, `usun <numer>`, `usun wszystko`, `przypomnij za 10 min <tekst>`, `pomoc`. Polecenia to zwykły kod i działają bez modelu. Inne wiadomości idą do modelu razem z notatkami tylko tej osoby. Notatki są w osobnej tabeli `assistant_notes`, poza pamięcią świata: nie trafiają do `npc_events`, plotek ani innych postaci. Czat lokalny jest ignorowany. Przy pierwszej wiadomości pomocnik mówi, że jest AI i że pytania idą do modelu w chmurze. Rozpoznaje osobę po nazwie postaci.
+
+## Relacje i długie cele
+`exp.people` (`players/people.ts`) trzyma dla każdej osoby liczbę spotkań, wspólnych wypraw, pomocy i walk oraz opinię od -5 do 5. Opinia powstaje ze zdarzeń: wspólna wyprawa i pomoc podnoszą, atak obniża, śmierć z ręki gracza obniża mocno, a odpowiedź modelu może ją lekko przesunąć. Model widzi jedno zdanie o każdej osobie w pobliżu i o rozmówcy. `ambition` w `players.json` to długi cel postaci, a `exp.plan` zostaje planem na najbliższy czas.
+
+## Przekonania
+Co 30 minut gry postać podsumowuje przeżycia, lekcje, miejsca i ludzi w najwyżej 5 przekonań w pierwszej osobie (`exp.beliefs`). Model myśli wtedy na `medium` i opiera się tylko na zapisie. Przekonanie to opinia postaci, nie fakt świata: może być błędne i następne podsumowanie może je zmienić. Widać je w dzienniku jako „przemyslalem” i w promptach decyzji i rozmów. Przechodzą przez restart i zmianę modelu.
+
+## Różne charaktery pamięci
+`memory` w `players.json` mnoży wagę tematów: `fights`, `friends`, `trade`, `danger`, a `detailDays` wydłuża szczegóły przed kompresją. Ravn trzyma walki i pieniądze, Sira ludzi.
+
+`forgives` (0–1) mówi, jak szybko gaśnie uraza: Sira 0,9 wybacza w kilka minut, Ravn 0,05 pamięta przez godziny. To pierwsza z różnic z wizji; zapis i odzyskiwanie wspomnień są jeszcze wspólne.
+
 ## Wiedza krąży tylko przez mowę
 Każdy agent pamięta wyłącznie to, co go spotkało. Nie ma wspólnej pamięci. Rada działa, bo ktoś ją napisał:
 
-- „polecam na polnoc od Montag, na powierzchni, sa tam Wolf” zamienia się u odbiorcy w działanie `tip_1` na liście wyborów.
+- „polecam na polnoc od Thais, na powierzchni, sa tam Wolf” zamienia się u odbiorcy w działanie `tip_1` na liście wyborów.
 - „uwazaj ...” dopisuje ostrzeżenie do etykiety łowiska.
 - Współrzędne przechodzą tylko przez tekst wiadomości, więc człowiek może uczestniczyć w tej samej rozmowie.
 
@@ -48,6 +106,7 @@ Każdy agent pamięta wyłącznie to, co go spotkało. Nie ma wspólnej pamięci
 | Zachowanie | Przebieg |
 | --- | --- |
 | Zaopatrzenie | Opcja `supply`: droga do Miry, okno handlu jak u człowieka: sprzedaje łup z cennika, kupuje listę z `players.json` (`supplies`), na ile starczy złota. Przy pustym plecaku bez modelu temperament sam tam prowadzi |
+| Ekwipunek | Co chwilę porównuje to, co ma na sobie i w plecaku, z zestawem postaci. Brak idzie na początek listy zakupów, a kupione zakłada sam |
 | Depozyt | Opcja `depot` od 100 złota: szafka w mieście, skrzynia, pudło, przeniesienie złota. Chroni przed stratą przy śmierci |
 | Łup | Zabiera złoto, mikstury, jedzenie, runy i wszystko, co kupuje Mira, jeśli zostaje udźwig |
 | Piętra | Trasa używa schodów, dziur, drabin, lin, łopat i teleportów. `ways` w `metrics.json` liczy, czego użył |
@@ -55,28 +114,24 @@ Każdy agent pamięta wyłącznie to, co go spotkało. Nie ma wspólnej pamięci
 | Urazy | Rosną od ataków, śmierci z czyjejś ręki i złych opinii po rozmowie, wygasają około 1 punktu na 5 minut. Decyzja o ataku należy do umysłu |
 | Reakcja na atak | Serwer mówi „You lose ... by X”: odwaga i zdrowie decydują, czy oddać, czy uciekać do miasta |
 | Nauka po śmierci | Model pisze jedną lekcję, która zostaje na stałe (ostatnich 6) i wraca w każdej decyzji. Bez modelu lekcję układa zdanie z danych. Łowisko z zabójcą ma ostrzeżenie w etykiecie |
+| Opowieści | Po zakupach lub rozmowie z NPC mówi na głos o śmierci, nowym poziomie albo nowym piętrze. NPC w pobliżu zapamiętują to jako publiczną plotkę |
+| Miejscówki | Własna mapa postaci (`places.ts`): pobyt liczy minuty, exp, złoto i zabicia w obszarze 48×48, a sklep, depo i port są zapisane z tym, po co się tam chodzi. Najlepsze wracają jako `spot_1`, `spot_2` z wynikiem exp/h, a śmierci obniżają wartość. Model widzi je w `TWOJE MIEJSCA`. To wiedza z przeżyć, nie z atlasu |
+| Zwiedzanie | „Idź na północ” to trasa 45 pól w tym kierunku, a nie pchanie się w ścianę. Nieużywane zejścia i niewidziane łowiska idą na początek listy |
+| Walka | Knight bije z bliska i goni. Paladyn, sorcerer i druid strzelają: odsuwają się od tego, co podeszło, a do celu poza zasięgiem podchodzą. Runy i mikstury zależą od poziomu, magii i profesji; lista zakupów rośnie razem z postacią |
 | Plan | Model prowadzi własny plan, a trudne łowiska są dostępne z ostrzeżeniem, nie zakazem |
 
 ## Mapa
-- `tools/world_atlas.py` czyta OTBM: 5720 przejść między piętrami, 180 teleportów, 11 922 fragmenty 16×16.
-- `nav-survey.request` pyta silnik o każde pole (`runtime/atlas/nav-map.jsonl`, 1 MB): co blokuje i gdzie są zamknięte drzwi, bez domów i drzwi z `actionId`.
-- `tools/make_spawns.py` tworzy `game/world/canary-monster.xml` i `packages/contracts/hunting-grounds.json`: 2339 potworów w 1199 grupach, 397 łowisk.
-- Przy starcie Brain liczy, skąd da się wrócić do Montag: 256 612 pól, 4 z 7 miast (Montag, Nahag Village, Alexandria, Thalom), 209 łowisk. Do Katorgi prowadzi teleport bez powrotu, więc nie jest celem; Tihamah i Strongarm są odcięte.
+- Świat: `otservbr.otbm`, 18 mln pól (hash w `infra/versions.lock.json`).
+- `tools/world_atlas.py` czyta OTBM, `items.xml` i `appearances.dat`: 31 477 przejść, 826 teleportów, 572 szafki, 95 736 fragmentów przejść w `runtime/atlas/nav-map.jsonl`. Liczy się 74 s, bez udziału silnika.
+- `tools/make_grounds.py` grupuje prawdziwe spawny w 5383 łowiska, `tools/make_boats.py` czyta 26 kapitanów i 116 rejsów.
+- Przy starcie Brain liczy pola z drogą w obie strony z Thais: 12 miast, 1641 łowisk, 344 stanowiska depo.
 
-Pola, po których wejściu zmienia się piętro, są końcem odcinka, więc trasa nie wchodzi na nie przypadkiem. Zablokowany odcinek trafia na listę tej postaci i trasa liczy się od nowa. Serwer sprawdza każdy krok, więc nieaktualna mapa kosztuje tylko ponowne liczenie.
+Pola, po których wejściu zmienia się piętro, są końcem odcinka, więc trasa nie wchodzi na nie przypadkiem. Zablokowany odcinek trafia na listę tej postaci, a trasa liczy się od nowa. Serwer sprawdza każdy krok, więc nieaktualna mapa kosztuje tylko ponowne liczenie.
 
-Skanowanie buduje wszystkie pola w pamięci silnika (1,3 GB zamiast 0,25 GB). Pamięć wraca dopiero po restarcie Canary, dlatego po skanie trzeba go zrestartować.
-
-Odświeżenie po zmianie mapy:
-
-```bash
-python -I tools/world_atlas.py runtime/maps/canary.otbm <items.xml> runtime/atlas/canary-atlas.json packages/contracts/game-data.json
-```
-
-Potem przy działającym Canary żądania `nav-survey.request` i `survey.request` (`Write-ControlRequest`), restart i `make_spawns.py`.
+Rejs to odcinek trasy z ceną. Agent idzie do kapitana, mówi `hi`, a nazwę miasta i `yes` pisze w oknie NPC. Trasa nie używa rejsu, na który go nie stać. Odmowa kapitana kończy plan i przez 10 minut agent nie liczy na statki.
 
 ## Ekwipunek
-Handel jest prawdziwy: Mira ma cennik `packages/contracts/shop.json` (`tools/make_shop.py`), a agent zarabia sam. Zostaje jeden wyjątek deweloperski, tylko dla postaci z `arena.devCharacters`: `dev-kit.request` daje startowy zestaw i po śmierci (`refresh`) ten sam zestaw, bo nie ma jeszcze sposobu na odzyskanie ekwipunku. Ten wyjątek uczy też czarów profesji do poziomu 30 (`arena.kitSpells`), bo świat nie ma nauczycieli. Paladyn ma łuk i kołczan w prawej ręce, bo tylko stamtąd ten silnik bierze strzały.
+Handel jest prawdziwy: Mira ma cennik `packages/contracts/shop.json` (`tools/make_shop.py`), a agent zarabia sam. Zostaje jeden wyjątek deweloperski, tylko dla postaci z `arena.devCharacters`: `dev-kit.request` daje startowy zestaw, a powtórnie (`refresh`) tylko komuś, komu czegoś brakuje i kto ma razem poniżej 30 złota. Ten wyjątek uczy też czarów profesji do poziomu 30 (`arena.kitSpells`), bo świat nie ma nauczycieli. Paladyn ma łuk i kołczan w prawej ręce, bo tylko stamtąd ten silnik bierze strzały; kupione strzały przekłada z plecaka do kołczanu.
 
 ## Uruchomienie
 ```bash
